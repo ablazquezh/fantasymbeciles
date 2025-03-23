@@ -7,7 +7,7 @@ export default createTheme({
       paper: '#fff',
     },
     primary: {
-      main: '#30b013',
+      main: '#BDBDBD',
     },
   },
   shape: {

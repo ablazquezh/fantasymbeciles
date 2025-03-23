@@ -6,7 +6,7 @@ import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
 // import IconButton from '@mui/material/IconButton';
 // import MenuIcon from '@mui/icons-material/Menu';
-// import TemporaryDrawer from './Drawer'
+import TemporaryDrawer from './Drawer'
 import UserMenu from './UserMenu'
 //import { useAuth0 } from '@auth0/auth0-react'
 import { request } from 'graphql-request'
@@ -32,12 +32,16 @@ export default function ButtonAppBar() {
   }, [isAuthenticated, user?.email]);*/
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Fantasymbeciles
-          </Typography>
+    <Box sx={{ flexGrow: 1}}>
+      <AppBar position="static" sx={{ height: 80 }}>
+        <Toolbar  sx={{ height: "100%", position: "relative"}}>
+          <TemporaryDrawer/>
+          <img src="/static/weblogo.png" alt="Logo" style={{
+            height: 50,
+            position: "absolute",
+            left: "50%",
+            transform: "translateX(-50%)",
+          }} />
         </Toolbar>
       </AppBar>
     </Box>

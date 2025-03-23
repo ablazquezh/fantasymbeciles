@@ -30,11 +30,9 @@ export default function TemporaryDrawer() {
 
   const getRedirection = (text: string) => {
     switch (text) {
-      case 'Búsqueda de producto':
-        return <Link href="/individualSearch"> <ListItemText primary={text} />  </Link>
-      case 'Mis Listas':
+      case 'Nosotros':
         return <Link href="/"> <ListItemText primary={text} />  </Link>
-      case 'Configuración':
+      case 'Ránking histórico':
         return <Link href="/textbox"> <ListItemText primary={text} />  </Link>
       default:
         return <Link href="/"> <ListItemText primary={text} />  </Link>
@@ -50,7 +48,7 @@ export default function TemporaryDrawer() {
       onKeyDown={toggleDrawer(false)}
     >
       <List>
-        {['Mis Listas', 'Configuración', 'Búsqueda de producto'].map((text) => (
+        {['Nosotros', 'Ránking histórico'].map((text) => (
           <ListItem key={text} disablePadding>
             {getRedirection(text)}
           </ListItem>
@@ -61,14 +59,14 @@ export default function TemporaryDrawer() {
   );
 
   return (
-    <div>
+    <div style={{ marginLeft: "20%" }}>
       <IconButton size="large"
                   edge="start"
                   color="inherit"
                   aria-label="menu"
                   sx={{ mr: 2 }}
                   onClick={toggleDrawer(true)}>
-        <MenuIcon />
+        <MenuIcon sx={{ fontSize: 40 }}/>
       </IconButton>
 
       <Drawer
