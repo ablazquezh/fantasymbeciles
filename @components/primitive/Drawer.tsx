@@ -31,7 +31,7 @@ export default function TemporaryDrawer() {
   const getRedirection = (text: string) => {
     switch (text) {
       case 'Nosotros':
-        return <Link href="/"> <ListItemText primary={text} />  </Link>
+        return <Link href="/aboutus"> <ListItemText primary={text} />  </Link>
       case 'Ránking histórico':
         return <Link href="/textbox"> <ListItemText primary={text} />  </Link>
       default:

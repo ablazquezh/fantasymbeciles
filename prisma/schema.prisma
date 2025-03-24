@@ -1,0 +1,219 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model cards {
+  ID           Int         @id @default(autoincrement())
+  match_id_fk  Int?
+  player_id_fk Int?
+  team_id_fk   Int?
+  type         cards_type?
+  matches      matches?    @relation(fields: [match_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "cards_ibfk_1")
+  players      players?    @relation(fields: [player_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "cards_ibfk_2")
+  teams        teams?      @relation(fields: [team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "cards_ibfk_3")
+
+  @@index([match_id_fk], map: "match_id_fk")
+  @@index([player_id_fk], map: "player_id_fk")
+  @@index([team_id_fk], map: "team_id_fk")
+}
+
+model goals {
+  ID           Int      @id @default(autoincrement())
+  match_id_fk  Int?
+  player_id_fk Int?
+  team_id_fk   Int?
+  matches      matches? @relation(fields: [match_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "goals_ibfk_1")
+  players      players? @relation(fields: [player_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "goals_ibfk_2")
+  teams        teams?   @relation(fields: [team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "goals_ibfk_3")
+
+  @@index([match_id_fk], map: "match_id_fk")
+  @@index([player_id_fk], map: "player_id_fk")
+  @@index([team_id_fk], map: "team_id_fk")
+}
+
+model league_participants {
+  ID           Int      @id @default(autoincrement())
+  league_ID_fk Int?
+  user_ID_fk   Int?
+  team_ID_fk   Int?
+  leagues      leagues? @relation(fields: [league_ID_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "league_participants_ibfk_1")
+  users        users?   @relation(fields: [user_ID_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "league_participants_ibfk_2")
+  teams        teams?   @relation(fields: [team_ID_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "league_participants_ibfk_3")
+
+  @@index([league_ID_fk], map: "league_ID_fk")
+  @@index([team_ID_fk], map: "team_ID_fk")
+  @@index([user_ID_fk], map: "user_ID_fk")
+}
+
+model leagues {
+  ID                      Int                              @id @default(autoincrement())
+  league_name             String?                          @db.VarChar(255)
+  type                    leagues_type?
+  winter_market_enabled   Boolean?                         @default(false)
+  yellow_cards_suspension Int?                             @default(0)
+  player_avg_limit        Int?                             @default(0)
+  budget_calculation_type leagues_budget_calculation_type?
+  game                    String?                          @db.VarChar(50)
+  created_at              DateTime?                        @default(now()) @db.Timestamp(0)
+  league_participants     league_participants[]
+  market                  market[]
+  matches                 matches[]
+  player_transfers        player_transfers[]
+}
+
+model market {
+  ID                   Int                          @id @default(autoincrement())
+  league_id_fk         Int?
+  player_id_fk         Int?
+  player_market_status market_player_market_status?
+  leagues              leagues?                     @relation(fields: [league_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "market_ibfk_1")
+  players              players?                     @relation(fields: [player_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "market_ibfk_2")
+
+  @@index([league_id_fk], map: "league_id_fk")
+  @@index([player_id_fk], map: "player_id_fk")
+}
+
+model matches {
+  ID                                      Int      @id @default(autoincrement())
+  local_team_id_fk                        Int?
+  visitor_team_id_fk                      Int?
+  league_id_fk                            Int?
+  matchday                                Int?
+  cards                                   cards[]
+  goals                                   goals[]
+  teams_matches_local_team_id_fkToteams   teams?   @relation("matches_local_team_id_fkToteams", fields: [local_team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "matches_ibfk_1")
+  teams_matches_visitor_team_id_fkToteams teams?   @relation("matches_visitor_team_id_fkToteams", fields: [visitor_team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "matches_ibfk_2")
+  leagues                                 leagues? @relation(fields: [league_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "matches_ibfk_3")
+
+  @@index([league_id_fk], map: "league_id_fk")
+  @@index([local_team_id_fk], map: "local_team_id_fk")
+  @@index([visitor_team_id_fk], map: "visitor_team_id_fk")
+}
+
+model player_transfers {
+  ID             Int                             @id @default(autoincrement())
+  player_id_fk   Int?
+  team_id_fk     Int?
+  league_id_fk   Int?
+  player_status  player_transfers_player_status?
+  transfer_type  player_transfers_transfer_type?
+  transferred_at DateTime?                       @default(now()) @db.Timestamp(0)
+  players        players?                        @relation(fields: [player_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "player_transfers_ibfk_1")
+  leagues        leagues?                        @relation(fields: [league_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "player_transfers_ibfk_2")
+  teams          teams?                          @relation(fields: [team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "player_transfers_ibfk_3")
+
+  @@index([league_id_fk], map: "league_id_fk")
+  @@index([player_id_fk], map: "player_id_fk")
+  @@index([team_id_fk], map: "team_id_fk")
+}
+
+model players {
+  ID               Int                @id @default(autoincrement())
+  name             String?            @db.VarChar(255)
+  nickname         String?            @db.VarChar(255)
+  country_code     String?            @db.VarChar(10)
+  age              Int?
+  height           Int?
+  average          Int?
+  global_position  String?            @db.VarChar(50)
+  value            Float?             @db.Float
+  wage             Float?             @db.Float
+  best_foot        String?            @db.VarChar(50)
+  weak_foot_5stars Int?
+  heading          Int?
+  jump             Int?
+  long_pass        Int?
+  short_pass       Int?
+  dribbling        Int?
+  acceleration     Int?
+  speed            Int?
+  shot_power       Int?
+  long_shot        Int?
+  stamina          Int?
+  defense          Int?
+  interception     Int?
+  team_id_fk       Int?
+  game             String?            @db.VarChar(50)
+  cards            cards[]
+  goals            goals[]
+  market           market[]
+  player_transfers player_transfers[]
+  teams            teams?             @relation(fields: [team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "players_ibfk_1")
+  positions_join   positions_join[]
+
+  @@index([team_id_fk], map: "team_id_fk")
+}
+
+model positions {
+  ID             Int              @id @default(autoincrement())
+  position       String?          @db.VarChar(10)
+  game           String?          @db.VarChar(50)
+  positions_join positions_join[]
+}
+
+model positions_join {
+  ID             Int        @id @default(autoincrement())
+  position_id_fk Int?
+  player_id_fk   Int?
+  game           String?    @db.VarChar(50)
+  positions      positions? @relation(fields: [position_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "positions_join_ibfk_1")
+  players        players?   @relation(fields: [player_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "positions_join_ibfk_2")
+
+  @@index([player_id_fk], map: "player_id_fk")
+  @@index([position_id_fk], map: "position_id_fk")
+}
+
+model teams {
+  ID                                        Int                   @id @default(autoincrement())
+  team_name                                 String?               @db.VarChar(100)
+  game                                      String?               @db.VarChar(50)
+  cards                                     cards[]
+  goals                                     goals[]
+  league_participants                       league_participants[]
+  matches_matches_local_team_id_fkToteams   matches[]             @relation("matches_local_team_id_fkToteams")
+  matches_matches_visitor_team_id_fkToteams matches[]             @relation("matches_visitor_team_id_fkToteams")
+  player_transfers                          player_transfers[]
+  players                                   players[]
+}
+
+model users {
+  ID                  Int                   @id @default(autoincrement())
+  user_name           String?               @db.VarChar(255)
+  league_participants league_participants[]
+}
+
+enum leagues_type {
+  raw
+  pro
+}
+
+enum market_player_market_status {
+  sold
+  available
+}
+
+enum cards_type {
+  yellow
+  red
+}
+
+enum player_transfers_player_status {
+  ok
+  suspended
+  injured
+}
+
+enum player_transfers_transfer_type {
+  base
+  transfer_window
+}
+
+enum leagues_budget_calculation_type {
+  restrictive
+  default
+}

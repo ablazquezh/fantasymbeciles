@@ -11,7 +11,8 @@ import UserMenu from './UserMenu'
 //import { useAuth0 } from '@auth0/auth0-react'
 import { request } from 'graphql-request'
 //import { creatUser } from '../../gql_queries'
-
+import HomeIcon from '@mui/icons-material/Home';
+import IconButton from '@mui/material/IconButton';
 
 export default function ButtonAppBar() {
 
@@ -36,6 +37,14 @@ export default function ButtonAppBar() {
       <AppBar position="static" sx={{ height: 80 }}>
         <Toolbar  sx={{ height: "100%", position: "relative"}}>
           <TemporaryDrawer/>
+          <IconButton size="large"
+                  edge="start"
+                  color="inherit"
+                  aria-label="menu"
+                  sx={{ mr: 2 }}
+                  href="/">
+            <HomeIcon sx={{ fontSize: 40 }}/>
+          </IconButton>
           <img src="/static/weblogo.png" alt="Logo" style={{
             height: 50,
             position: "absolute",
