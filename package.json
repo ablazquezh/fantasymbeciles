@@ -1,5 +1,5 @@
 {
-  "name": "fantasymbeciles",
+  "name": "test",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,25 +9,23 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@emotion/react": "^11.10.5",
-    "@emotion/styled": "^11.10.5",
-    "@mui/icons-material": "^5.13.7",
-    "@mui/material": "^5.11.7",
-    "@mui/x-data-grid": "^6.11.1",
-    "@prisma/client": "^6.5.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^6.4.8",
+    "@mui/material": "^6.4.8",
+    "@tanstack/react-query": "^5.69.0",
     "graphql": "^16.7.0",
     "graphql-request": "^6.1.0",
     "mysql2": "^3.14.0",
-    "next": "^15.2.3",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "react-hook-form": "^7.45.0",
-    "react-query": "^3.39.3",
-    "sharp": "^0.33.5"
+    "next": "15.2.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@prisma/client": "^6.5.0",
     "@types/node": "^20",
     "@types/react": "^19",
+    "@types/react-dom": "^19",
     "prisma": "^6.5.0",
     "typescript": "^5"
   }
