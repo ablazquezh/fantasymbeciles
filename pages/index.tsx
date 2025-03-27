@@ -16,64 +16,63 @@ import Typography from '@mui/material/Typography';
 import CardActionArea from '@mui/material/CardActionArea'
 import VerticalLayoutTextboxSearch from '../@components/layout/VerticalLayoutTextboxSearch'
 
-const TextBoxSearch: NextPage = ({}) => {
+import HomeSelection from "../@components/leagueCreation/HomeSelection"
+import GameSelectionStep from "../@components/leagueCreation/GameSelectionStep";
+import LeagueTypeSelectionStep from "../@components/leagueCreation/LeagueTypeSelectionStep";
+import SettingsStep from '../@components/leagueCreation/SettingsStep'
 
-  const [data, setData] = useState([]);
+import BreadcrumbsNav from "../@components/leagueCreation/BreadcrumbsNav";
+import { Fade, Container, Paper } from "@mui/material";
 
-  const fetchData = async () => {
-    try {
-      const res = await fetch("/api/players");
-      const result = await res.json();
-      setData(result);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
+
+type FormData = {
+  selection: string;
+  options?: Record<string, any>;
+};
+
+
+const FantasyHomePage: NextPage = ({}) => {
+ 
+  const [step, setStep] = useState<number>(1);
+  const [formData, setFormData] = useState<FormData>({ selection: "" });
+  const [showBreadcrumbs, setShowBreadcrumbs] = useState<boolean>(false);
+
+  const handleStepChange = (newStep: number) => {
+    if (newStep > 1) setShowBreadcrumbs(true); // Show breadcrumbs after Step 1
+    setStep(newStep);
   };
-  console.log(data)
 
   return (
 
     <VerticalLayoutTextboxSearch sx={{ width: "60%" }}>
 
-      <Box justifyContent="space-evenly" sx={{ display: "flex", marginTop: 10  }}>
       
-        <Card sx={{ maxWidth: 345, width: 345}}>
-          <CardActionArea 
-            onClick={fetchData}>
-            <CardMedia
-              component="img"
-              height="200"
-              image="/static/drogba_tity_1.jpg"
-              alt="nueva liga"
-            />
-            <CardContent>
-              <Typography gutterBottom variant="h5" component="div">
-                Nueva Liga
-              </Typography>
-            </CardContent>
-          </CardActionArea>
-        </Card>
+        {showBreadcrumbs && <BreadcrumbsNav step={step} setStep={handleStepChange} />}
 
-        <Card sx={{ maxWidth: 345 }}>
-          <CardActionArea>
-            <CardMedia
-              component="img"
-              height="200"
-              image="/static/floren_1.png"
-              alt="todas nuestras ligas"
-            />
-            <CardContent>
-              <Typography gutterBottom variant="h5" component="div">
-                Todas nuestras Ligas
-              </Typography>
-            </CardContent>
-          </CardActionArea>
-        </Card>
-      </Box>
-      
+        <Fade in={step === 1} timeout={500} unmountOnExit>
+          <div>{step === 1 ? <HomeSelection setStep={handleStepChange} /> : <span />}</div>
+        </Fade>     
+
+        <Fade in={step === 2} timeout={500} unmountOnExit>
+          <div>
+            {step === 2 && <GameSelectionStep setStep={handleStepChange} setFormData={setFormData} />}
+          </div>
+        </Fade>
+
+        <Fade in={step === 3} timeout={500} unmountOnExit>
+          <div>
+            {step === 3 && <LeagueTypeSelectionStep setStep={handleStepChange} setFormData={setFormData} />}
+          </div>
+        </Fade>
+
+        <Fade in={step === 4} timeout={500} unmountOnExit>
+          <div>
+            {step === 4 && <SettingsStep formData={formData} setStep={handleStepChange} />}
+          </div>
+        </Fade>
 
     </VerticalLayoutTextboxSearch>
   )
 }
 
-export default TextBoxSearch
+export default FantasyHomePage
