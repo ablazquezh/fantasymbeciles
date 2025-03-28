@@ -20,13 +20,13 @@ import HomeSelection from "../@components/leagueCreation/HomeSelection"
 import GameSelectionStep from "../@components/leagueCreation/GameSelectionStep";
 import LeagueTypeSelectionStep from "../@components/leagueCreation/LeagueTypeSelectionStep";
 import SettingsStep from '../@components/leagueCreation/SettingsStep'
+import TeamSelectStep from '../@components/leagueCreation/TeamSelectionStep'
 
-import BreadcrumbsNav from "../@components/leagueCreation/BreadcrumbsNav";
+import StepperNav from "../@components/leagueCreation/BreadcrumbsNav";
 import { Fade, Container, Paper } from "@mui/material";
 
 
 type FormData = {
-  selection: string;
   options?: Record<string, any>;
 };
 
@@ -34,20 +34,20 @@ type FormData = {
 const FantasyHomePage: NextPage = ({}) => {
  
   const [step, setStep] = useState<number>(1);
-  const [formData, setFormData] = useState<FormData>({ selection: "" });
+  const [formData, setFormData] = useState<FormData>({ options: {} });
   const [showBreadcrumbs, setShowBreadcrumbs] = useState<boolean>(false);
 
   const handleStepChange = (newStep: number) => {
     if (newStep > 1) setShowBreadcrumbs(true); // Show breadcrumbs after Step 1
     setStep(newStep);
   };
-
+  console.log(formData)
   return (
 
     <VerticalLayoutTextboxSearch sx={{ width: "60%" }}>
 
       
-        {showBreadcrumbs && <BreadcrumbsNav step={step} setStep={handleStepChange} />}
+        {step > 1 && <StepperNav step={step} setStep={handleStepChange} />}
 
         <Fade in={step === 1} timeout={500} unmountOnExit>
           <div>{step === 1 ? <HomeSelection setStep={handleStepChange} /> : <span />}</div>
@@ -66,11 +66,14 @@ const FantasyHomePage: NextPage = ({}) => {
         </Fade>
 
         <Fade in={step === 4} timeout={500} unmountOnExit>
-          <div>
-            {step === 4 && <SettingsStep formData={formData} setStep={handleStepChange} />}
-          </div>
+          <div>{step === 4 && <SettingsStep formData={formData} setStep={handleStepChange} setFormData={setFormData} />}</div>
         </Fade>
 
+        <Fade in={step === 5} timeout={500} unmountOnExit>
+          <div>{step === 5 && <TeamSelectStep formData={formData} setStep={handleStepChange} setFormData={setFormData} />}</div>
+        </Fade>
+
+      
     </VerticalLayoutTextboxSearch>
   )
 }

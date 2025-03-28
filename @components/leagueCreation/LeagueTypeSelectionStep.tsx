@@ -6,16 +6,24 @@ import Box from '@mui/material/Box';
 
 interface StepThreeProps {
   setStep: (step: number) => void;
-  setFormData: React.Dispatch<React.SetStateAction<{ selection: string }>>;
+  setFormData: React.Dispatch<React.SetStateAction<{ options?: Record<string, any> }>>;
 }
 
 const LeagueTypeSelectionStep: React.FC<StepThreeProps> = ({ setStep, setFormData }) => {
+
+  const handleSelect = (leaguetype: string) => {
+    setFormData((prev) => ({
+      options: { ...prev.options, leaguetype }, // Store inside options
+    }));    
+    
+    setStep(4);
+  };
 
   return (
     <Box justifyContent="space-evenly" sx={{ display: "flex", marginTop: 10  }}>
 
       <Card sx={{ maxWidth: 345, width: 345}}>
-          <CardActionArea onClick={() => setStep(4)}>
+          <CardActionArea onClick={() => handleSelect("raw")}>
             <CardMedia
               component="img"
               image="/static/rawmode3.png"
@@ -31,7 +39,7 @@ const LeagueTypeSelectionStep: React.FC<StepThreeProps> = ({ setStep, setFormDat
         </Card>
 
         <Card sx={{ maxWidth: 345 }}>
-          <CardActionArea>
+          <CardActionArea onClick={() => handleSelect("pro")}>
             <CardMedia
               component="img"
               image="/static/promode.png"

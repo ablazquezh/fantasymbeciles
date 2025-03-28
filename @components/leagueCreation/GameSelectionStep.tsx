@@ -6,13 +6,16 @@ import Box from '@mui/material/Box';
 
 interface StepTwoProps {
   setStep: (step: number) => void;
-  setFormData: React.Dispatch<React.SetStateAction<{ selection: string }>>;
+  setFormData: React.Dispatch<React.SetStateAction<{ options?: Record<string, any> }>>;
 }
 
 const GameSelectionStep: React.FC<StepTwoProps> = ({ setStep, setFormData }) => {
 
-  const handleSelect = (option:string) => {
-    setFormData((prev) => ({ ...prev, selection: option }));
+  const handleSelect = (game: string) => {
+    setFormData((prev) => ({
+      options: { ...prev.options, game }, // Store inside options
+    }));    
+    
     setStep(3);
   };
 

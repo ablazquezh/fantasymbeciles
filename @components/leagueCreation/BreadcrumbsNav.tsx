@@ -1,24 +1,28 @@
 import React from "react";
-import { Breadcrumbs, Link, Typography } from "@mui/material";
+import { Stepper, Step, StepLabel } from "@mui/material";
 
-interface BreadcrumbsProps {
+interface StepperNavProps {
   step: number;
   setStep: (step: number) => void;
 }
 
-const BreadcrumbsNav: React.FC<BreadcrumbsProps> = ({ step, setStep }) => {
+const steps = ["FIFA", "Tipo de liga", "Configuración", "Equipos"];
+
+const StepperNav: React.FC<StepperNavProps> = ({ step, setStep }) => {
   return (
-    <Breadcrumbs separator="›" sx={{ mb: 2 }}>
-      <Link
-        component="button"
-        onClick={() => setStep(2)}
-        color={step > 2 ? "primary" : "text.disabled"}
-      >
-        Select Option
-      </Link>
-      <Typography color="text.primary">Form</Typography>
-    </Breadcrumbs>
+    <Stepper style={{ position: "absolute", width: "60%", marginTop: "15px" }} activeStep={step - 2} alternativeLabel>
+      {steps.map((label, index) => (
+        <Step key={label} >
+          <StepLabel  
+            onClick={() => setStep(index+2)} 
+            sx={{ cursor: index < step - 1 ? "pointer" : "default"}} // Make past steps clickable
+          >
+            {label}
+          </StepLabel>
+        </Step>
+      ))}
+    </Stepper>
   );
 };
 
-export default BreadcrumbsNav;
+export default StepperNav;
