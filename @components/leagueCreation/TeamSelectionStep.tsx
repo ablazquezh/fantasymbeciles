@@ -10,14 +10,7 @@ import React, { useState, useEffect } from 'react';import {
   } from "@mui/material";
     import { Card, CardContent, IconButton, Modal, Box, Typography, Grid } from '@mui/material';
     import AddIcon from '@mui/icons-material/Add';
-    import { PrismaClient, Prisma, users } from "@prisma/client";
-  
-    const prisma = new PrismaClient();
-    
-    export async function getServerSideProps() {
-      const users: users[] = await prisma.users.findMany();
-      return { props: { users } };
-    }
+    import { users } from "@prisma/client";
   
   interface StepFiveProps {
     setStep: (step: number) => void;
@@ -40,15 +33,32 @@ import React, { useState, useEffect } from 'react';import {
 
   const TeamSelectStep: React.FC<StepFiveProps> = ({ setStep, setFormData, formData, users }) => {
 
+    console.log(formData.options?.["game"])
     const [localOptions, setLocalOptions] = useState<Record<string, any>>(
-        users.reduce((acc, item) => {
-            if (item.user_name) {
-            acc[item.user_name] = formData.options?.[item.user_name] ?? null;
-            }
-            return acc;
-        }, {} as Record<string, any>)
+      users 
+      ? users.reduce((acc, item) => {
+          if (item.user_name) {
+              acc[item.user_name] = formData.options?.[item.user_name] ?? null;
+          }
+          return acc;
+      }, {} as Record<string, any>) 
+      : {}
     );
   
+
+    const [teams, setTeams] = useState([]);
+
+    useEffect(() => {
+        const fetchTeams = async () => {
+            const res = await fetch(`/api/teams?game=${formData.options?.["game"]}`);
+            const data = await res.json();
+            setTeams(data.teams);
+        };
+
+        fetchTeams();
+    }, [formData.options?.["game"]]);
+    console.log(teams)
+
      // Update formData as user interacts
      useEffect(() => {
       setFormData((prev) => ({
@@ -78,40 +88,33 @@ import React, { useState, useEffect } from 'react';import {
             gap: 2, // spacing between items
             }}
         >
-            {users.map((item) => (
-            <Box
-                key={item.ID}
-                sx={{
-                flex: '1 0 calc(33.333% - 16px)', // Responsive layout for 3 items per row
-                marginBottom: 2,
-                display: 'flex',
-                justifyContent: 'center',
-                }}
-            >
-                <Card sx={{ position: 'relative', width: '100%' }}>
-                <CardContent>
-                    <Typography variant="h6">{item.user_name}</Typography>
-                    <Typography variant="body2" color="textSecondary">
-                    CHECK
-                    </Typography>
-                </CardContent>
-                {/* Add button with + icon */}
-                <IconButton
-                    sx={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    backgroundColor: '#1976d2',
-                    color: 'white',
-                    }}
-                    onClick={handleOpenModal}
-                >
-                    <AddIcon />
-                </IconButton>
-                </Card>
-            </Box>
-            ))}
+          {users && users.length > 0 ? (
+              users.map((item) => (
+                  <Box key={item.ID} sx={{ flex: '1 0 calc(33.333% - 16px)', marginBottom: 2, display: 'flex', justifyContent: 'center' }}>
+                      <Card sx={{ position: 'relative', width: '100%' }}>
+                          <CardContent>
+                              <Typography variant="h6">{item.user_name}</Typography>
+                              <Typography variant="body2" color="textSecondary">CHECK</Typography>
+                          </CardContent>
+                          <IconButton
+                              sx={{
+                                  position: 'absolute',
+                                  top: '50%',
+                                  left: '50%',
+                                  transform: 'translate(-50%, -50%)',
+                                  backgroundColor: '#1976d2',
+                                  color: 'white',
+                              }}
+                              onClick={handleOpenModal}
+                          >
+                              <AddIcon />
+                          </IconButton>
+                      </Card>
+                  </Box>
+              ))
+          ) : (
+              <Typography variant="body1">No users available</Typography>
+          )}
         </Box>
 
       {/* Modal Popup with an Empty Material UI Card inside */}
