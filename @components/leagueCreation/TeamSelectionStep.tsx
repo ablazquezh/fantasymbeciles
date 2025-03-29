@@ -24,7 +24,6 @@ import { Height } from '@mui/icons-material';
 
   const TeamSelectStep: React.FC<StepFiveProps> = ({ setStep, setFormData, formData, users }) => {
 
-    console.log(formData.options?.["game"])
     const [localOptions, setLocalOptions] = useState<Record<string, any>>(
       users 
       ? users.reduce((acc, item) => {
@@ -35,8 +34,9 @@ import { Height } from '@mui/icons-material';
       }, {} as Record<string, any>) 
       : {}
     );
-  
+    console.log(localOptions)
     const [teams, setTeams] = useState([]);
+    const [currentUser, setCurrentUser] = useState<string>('');
 
     useEffect(() => {
         const fetchTeams = async () => {
@@ -58,12 +58,20 @@ import { Height } from '@mui/icons-material';
 
     const [openModal, setOpenModal] = useState(false);
 
-    const handleOpenModal = () => {
+    const handleOpenModal = (user:string|null) => {
         setOpenModal(true); // Opens the modal
+        setCurrentUser(user || '');
     };
 
     const handleCloseModal = () => {
         setOpenModal(false); // Closes the modal
+    };
+
+    const handleSetLocalOption = (value: string) => {
+      setLocalOptions((prev) => ({
+        ...prev, // Preserve existing keys
+        [currentUser]: value, // Update or add a new key-value pair
+      }));
     };
 
 
@@ -95,7 +103,7 @@ import { Height } from '@mui/icons-material';
                                   backgroundColor: '#1976d2',
                                   color: 'white',
                               }}
-                              onClick={handleOpenModal}
+                              onClick={() => handleOpenModal(item.user_name)}
                           >
                               <AddIcon />
                           </IconButton>
@@ -109,7 +117,7 @@ import { Height } from '@mui/icons-material';
 
       {/* Modal Popup with an Empty Material UI Card inside */}
       <Modal open={openModal} onClose={handleCloseModal}>
-        <TeamStatsTable data={teams} game={formData.options?.["game"]} />
+        <TeamStatsTable data={teams} game={formData.options?.["game"]} onSelect={(value) => { handleSetLocalOption(value); setOpenModal(false); }} />
       </Modal>
         
       </Paper>

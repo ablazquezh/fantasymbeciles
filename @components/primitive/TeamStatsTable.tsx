@@ -48,11 +48,12 @@ interface TeamStats {
 interface TeamStatsTableProps {
     data: TeamStats[]; 
     game: string; 
+    onSelect: (value: string) => void;
   }
 
-const TeamStatsTable: React.FC<TeamStatsTableProps> = ({ data, game }) => {
+  const TeamStatsTable: React.FC<TeamStatsTableProps> = ({ data, game, onSelect}) => {
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(20);
+    const [rowsPerPage, setRowsPerPage] = useState(25);
     const [countryFilter, setCountryFilter] = useState<string>('');
     const [leagueFilter, setLeagueFilter] = useState<string>('');
     const [sortColumn, setSortColumn] = useState<string>('team_avg'); // Default sort by team_avg
@@ -280,7 +281,7 @@ const TeamStatsTable: React.FC<TeamStatsTableProps> = ({ data, game }) => {
                                 {/* Add a cell for the "Add" button */}
                                 <TableCell>
                                     <IconButton
-                                        onClick={() => handleAddButtonClick(row)} // Trigger function on click
+                                        onClick={() => onSelect(row.team_name)} // Trigger function on click
                                         color="primary"
                                         sx={{
                                             backgroundColor: "green", // Set the default color to green
