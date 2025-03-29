@@ -8,10 +8,12 @@ import React, { useState, useEffect } from 'react';import {
     Button,
     Paper,
   } from "@mui/material";
-    import { Card, CardContent, IconButton, Modal, Box, Typography, Grid } from '@mui/material';
-    import AddIcon from '@mui/icons-material/Add';
-    import { users } from "@prisma/client";
-  
+import { Card, CardContent, IconButton, Modal, Box, Typography, Grid } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import { users } from "@prisma/client";
+import TeamStatsTable from "../primitive/TeamStatsTable";
+import { Height } from '@mui/icons-material';
+
   interface StepFiveProps {
     setStep: (step: number) => void;
     setFormData: React.Dispatch<React.SetStateAction<{ options?: Record<string, any> }>>;
@@ -19,17 +21,6 @@ import React, { useState, useEffect } from 'react';import {
     users: users[];
   }
   
-  const modalStyle = {
-    position: 'absolute' as 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: 400,
-    bgcolor: 'background.paper',
-    border: '2px solid #000',
-    boxShadow: 24,
-    p: 4,
-  };
 
   const TeamSelectStep: React.FC<StepFiveProps> = ({ setStep, setFormData, formData, users }) => {
 
@@ -45,7 +36,6 @@ import React, { useState, useEffect } from 'react';import {
       : {}
     );
   
-
     const [teams, setTeams] = useState([]);
 
     useEffect(() => {
@@ -57,7 +47,6 @@ import React, { useState, useEffect } from 'react';import {
 
         fetchTeams();
     }, [formData.options?.["game"]]);
-    console.log(teams)
 
      // Update formData as user interacts
      useEffect(() => {
@@ -85,16 +74,17 @@ import React, { useState, useEffect } from 'react';import {
             sx={{
             display: 'flex',
             flexWrap: 'wrap',
-            gap: 2, // spacing between items
+            columnGap: 20, // spacing between items
+            rowGap: '40px',
+            justifyContent: 'center'
             }}
         >
           {users && users.length > 0 ? (
               users.map((item) => (
-                  <Box key={item.ID} sx={{ flex: '1 0 calc(33.333% - 16px)', marginBottom: 2, display: 'flex', justifyContent: 'center' }}>
-                      <Card sx={{ position: 'relative', width: '100%' }}>
+                  <Box key={item.ID} sx={{ display: 'flex', justifyContent: 'center', height: '200px' }}>
+                      <Card sx={{ position: 'relative', width: '200px' }}>
                           <CardContent>
                               <Typography variant="h6">{item.user_name}</Typography>
-                              <Typography variant="body2" color="textSecondary">CHECK</Typography>
                           </CardContent>
                           <IconButton
                               sx={{
@@ -119,17 +109,7 @@ import React, { useState, useEffect } from 'react';import {
 
       {/* Modal Popup with an Empty Material UI Card inside */}
       <Modal open={openModal} onClose={handleCloseModal}>
-        <Box sx={modalStyle}>
-          <Card>
-            <CardContent>
-              {/* This is an empty card */}
-              <Typography variant="h6">This is an empty card inside the modal.</Typography>
-              <Typography variant="body2" color="textSecondary">
-                You can add more content here if needed.
-              </Typography>
-            </CardContent>
-          </Card>
-        </Box>
+        <TeamStatsTable data={teams} />
       </Modal>
         
       </Paper>
