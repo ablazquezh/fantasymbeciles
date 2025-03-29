@@ -151,55 +151,8 @@ const TeamStatsTable = ({ data }: { data: TeamStats[] }) => {
 
     return (
         <Box sx={modalStyle}>
-        
-        <Box display="flex" justifyContent="space-between" marginBottom={2}>
-                <FormControl sx={{ minWidth: 120 }}>
-                    <InputLabel id="country-filter-label">Country</InputLabel>
-                    <Select
-                        labelId="country-filter-label"
-                        value={countryFilter}
-                        onChange={handleCountryFilterChange}
-                        label="Country"
-                    >
-                        <MenuItem value="">Todos los países</MenuItem>
-                        {Array.from(new Set(data.map((row) => row.team_country)))
-                            .sort()
-                            .map((country) => (
-                                <MenuItem key={country} value={country} sx={{justifyContent: 'center', backgroundColor: '#f0eeee'}}>
-                                    <img
-                                        src={`/static/flags/${country}.png`} // Load the image based on team_country
-                                        alt={country}
-                                        style={{
-                                            width: "30px", // Adjust the width of the image
-                                            height: "30px", // Adjust the height of the image
-                                        }}
-                                    />
-                                </MenuItem>
-                            ))}
-                    </Select>
-                </FormControl>
 
-                <FormControl sx={{ minWidth: 120 }}>
-                    <InputLabel id="league-filter-label">League</InputLabel>
-                    <Select
-                        labelId="league-filter-label"
-                        value={leagueFilter}
-                        onChange={handleLeagueFilterChange}
-                        label="League"
-                    >
-                        <MenuItem value="">Todas las ligas</MenuItem>
-                        {Array.from(new Set(data.map((row) => row.team_league)))
-                            .sort()
-                            .map((league) => (
-                                <MenuItem key={league} value={league} sx={{ backgroundColor: '#f0eeee'}}>
-                                    {league}
-                                </MenuItem>
-                            ))}
-                    </Select>
-                </FormControl>
-            </Box>
-
-            <TableContainer sx={{ maxHeight: "550px", overflowY: "auto" }}>
+            <TableContainer sx={{ minHeight: "550px", maxHeight: "550px", overflowY: "auto" }}>
                 <Table stickyHeader>
                     <TableHead>
                         <TableRow>
@@ -335,6 +288,65 @@ const TeamStatsTable = ({ data }: { data: TeamStats[] }) => {
                 </Table>
             </TableContainer>
 
+            <Box display="flex" marginTop={2} gap={2} >
+
+                <FormControl sx={{ minWidth: 80 }}>
+                    <InputLabel id="country-filter-label">País</InputLabel>
+                    <Select
+                        labelId="country-filter-label"
+                        value={countryFilter}
+                        onChange={handleCountryFilterChange}
+                        label="País"
+                        renderValue={(selected) => (
+                            selected ? (
+                                <Box display="flex" alignItems="center" justifyContent="center">
+                                    <img
+                                        src={`/static/flags/${selected}.png`} 
+                                        alt={selected}
+                                        style={{ width: "20px", height: "20px" }} // Small size for selected
+                                    />
+                                </Box>
+                            ) : "Select Country"
+                        )}
+                    >
+                        <MenuItem value="">Todos los países</MenuItem>
+                        {Array.from(new Set(data.map((row) => row.team_country)))
+                            .sort()
+                            .map((country) => (
+                                <MenuItem key={country} value={country} sx={{justifyContent: 'center', backgroundColor: '#f0eeee'}}>
+                                    <img
+                                        src={`/static/flags/${country}.png`} // Load the image based on team_country
+                                        alt={country}
+                                        style={{
+                                            width: "30px", // Adjust the width of the image
+                                            height: "30px", // Adjust the height of the image
+                                        }}
+                                    />
+                                </MenuItem>
+                            ))}
+                    </Select>
+                </FormControl>
+
+                <FormControl sx={{ minWidth: 120 }}>
+                    <InputLabel id="league-filter-label">Liga</InputLabel>
+                    <Select
+                        labelId="league-filter-label"
+                        value={leagueFilter}
+                        onChange={handleLeagueFilterChange}
+                        label="Liga"
+                    >
+                        <MenuItem value="">Todas las ligas</MenuItem>
+                        {Array.from(new Set(data.map((row) => row.team_league)))
+                            .sort()
+                            .map((league) => (
+                                <MenuItem key={league} value={league} sx={{ backgroundColor: '#f0eeee'}}>
+                                    {league}
+                                </MenuItem>
+                            ))}
+                    </Select>
+                </FormControl>
+            
+
             <TablePagination
                 rowsPerPageOptions={[10, 25, 50]}
                 component="div"
@@ -343,7 +355,10 @@ const TeamStatsTable = ({ data }: { data: TeamStats[] }) => {
                 page={page}
                 onPageChange={handleChangePage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
+                sx={{margin: "auto", marginRight: 0}}
             />
+
+            </Box>
         </Box>
     );
 };
