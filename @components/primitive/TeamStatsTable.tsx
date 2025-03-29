@@ -59,6 +59,8 @@ const TeamStatsTable: React.FC<TeamStatsTableProps> = ({ data, game }) => {
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedColumn, setSelectedColumn] = useState<string | null>(null);
+    const [search, setSearch] = useState<string>("");
+
 
     const handleChangePage = (event: unknown, newPage: number) => {
         setPage(newPage);
@@ -152,8 +154,12 @@ const TeamStatsTable: React.FC<TeamStatsTableProps> = ({ data, game }) => {
     // Get columns excluding the ones ending with '_fk'
     const columns = Object.keys(data[0])//.filter((col) => !col.endsWith("_fk"));
 
-    // Paginate the data
-    const paginatedData = sortedData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+    let paginatedData = sortedData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
+    if (search.length > 1){
+        const matchedData = sortedData.filter((item) => item.team_name.toLowerCase().includes(search.toLowerCase()));
+        paginatedData = matchedData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+    }
 
     return (
         <Box sx={modalStyle}>
@@ -351,7 +357,15 @@ const TeamStatsTable: React.FC<TeamStatsTableProps> = ({ data, game }) => {
                             ))}
                     </Select>
                 </FormControl>
-            
+
+                <TextField
+                    label="Buscar equipo por nombre"
+                    variant="outlined"
+                    fullWidth
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    sx={{ marginBottom: 2 }}
+                />
 
             <TablePagination
                 rowsPerPageOptions={[10, 25, 50]}

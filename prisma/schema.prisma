@@ -172,8 +172,6 @@ model teams {
   ID                                        Int                   @id @default(autoincrement())
   team_name                                 String?               @db.VarChar(100)
   game                                      String?               @db.VarChar(50)
-  team_league                               String?               @db.VarChar(50)
-  team_country                              String?               @db.VarChar(50)
   cards                                     cards[]
   goals                                     goals[]
   league_participants                       league_participants[]
