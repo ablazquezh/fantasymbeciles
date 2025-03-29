@@ -109,7 +109,7 @@ import { Height } from '@mui/icons-material';
 
       {/* Modal Popup with an Empty Material UI Card inside */}
       <Modal open={openModal} onClose={handleCloseModal}>
-        <TeamStatsTable data={teams} />
+        <TeamStatsTable data={teams} game={formData.options?.["game"]} />
       </Modal>
         
       </Paper>

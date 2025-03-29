@@ -4,6 +4,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination, Card, Box, IconButton, TextField, MenuItem, Select, InputLabel, FormControl } from "@mui/material";
 import { SelectChangeEvent } from '@mui/material';
 import { ListItemText, ListItemIcon, Checkbox, TableSortLabel } from '@mui/material';
+
 interface TeamStats {
     team_name: string;
     team_avg: number;
@@ -44,7 +45,12 @@ interface TeamStats {
     team_country: "País"
 };
 
-const TeamStatsTable = ({ data }: { data: TeamStats[] }) => {
+interface TeamStatsTableProps {
+    data: TeamStats[]; 
+    game: string; 
+  }
+
+const TeamStatsTable: React.FC<TeamStatsTableProps> = ({ data, game }) => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(20);
     const [countryFilter, setCountryFilter] = useState<string>('');
@@ -223,7 +229,7 @@ const TeamStatsTable = ({ data }: { data: TeamStats[] }) => {
                                         <Box display="flex" alignItems="center" justifyContent='center'>
                                             {/* Render the image based on the team_name */}
                                             <img
-                                                src={`/static/teams/fifa13/${row[col as keyof TeamStats]}.png`} // Load the image based on team_name
+                                                src={`/static/teams/${game}/${row[col as keyof TeamStats]}.png`} // Load the image based on team_name
                                                 alt={row[col as keyof TeamStats] as string}
                                                 style={{ width: "30px", height: "30px", marginRight: "8px" }}
                                             />
