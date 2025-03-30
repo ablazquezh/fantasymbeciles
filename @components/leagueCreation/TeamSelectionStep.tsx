@@ -13,6 +13,8 @@ import AddIcon from '@mui/icons-material/Add';
 import { users } from "@prisma/client";
 import TeamStatsTable from "../primitive/TeamStatsTable";
 import { Height } from '@mui/icons-material';
+import CardMedia from '@mui/material/CardMedia';
+
 
   interface StepFiveProps {
     setStep: (step: number) => void;
@@ -92,21 +94,39 @@ import { Height } from '@mui/icons-material';
                   <Box key={item.ID} sx={{ display: 'flex', justifyContent: 'center', height: '200px' }}>
                       <Card sx={{ position: 'relative', width: '200px' }}>
                           <CardContent>
-                              <Typography variant="h6">{item.user_name}</Typography>
+                              <Typography variant="h6" fontWeight="bold" sx={{textAlign: 'center'}}>{item.user_name}</Typography>
                           </CardContent>
-                          <IconButton
-                              sx={{
-                                  position: 'absolute',
-                                  top: '50%',
-                                  left: '50%',
-                                  transform: 'translate(-50%, -50%)',
-                                  backgroundColor: '#1976d2',
-                                  color: 'white',
-                              }}
-                              onClick={() => handleOpenModal(item.user_name)}
-                          >
-                              <AddIcon />
-                          </IconButton>
+                            {item.user_name === null ? (
+                              <p>The key is null</p> // Handle the case when the key is null
+                            ) : localOptions[item.user_name] === null ? (
+                              <IconButton
+                                  sx={{
+                                      position: 'absolute',
+                                      top: '50%',
+                                      left: '50%',
+                                      transform: 'translate(-50%, -50%)',
+                                      backgroundColor: '#1976d2',
+                                      color: 'white',
+                                  }}
+                                  onClick={() => handleOpenModal(item.user_name)}
+                              >
+                                  <AddIcon />
+                              </IconButton>
+                            ) : (
+                              <>
+                                <img
+                                    src={`/static/teams/${formData.options?.["game"]}/${localOptions[item.user_name]}.png`}
+                                    alt={localOptions[item.user_name] as string}
+                                    style={{ width: "45px", height: "45px", position: 'absolute',
+                                      top: '50%',
+                                      left: '50%',
+                                      transform: 'translate(-50%, -50%)',}}
+                                />
+                                <Typography variant="body1"  sx={{marginTop: '40%', textAlign: 'center'}}>{localOptions[item.user_name]}
+                                </Typography>
+                              </>
+                            )}
+                          
                       </Card>
                   </Box>
               ))
