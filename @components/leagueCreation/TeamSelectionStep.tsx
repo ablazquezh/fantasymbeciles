@@ -10,31 +10,48 @@ import React, { useState, useEffect } from 'react';import {
   } from "@mui/material";
 import { Card, CardContent, IconButton, Modal, Box, Typography, Grid } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { users } from "@prisma/client";
+import { users, leagues } from "@prisma/client";
 import TeamStatsTable from "../primitive/TeamStatsTable";
 import { Height } from '@mui/icons-material';
 import CardMedia from '@mui/material/CardMedia';
 import CloseIcon from '@mui/icons-material/Close';
+import { useRouter } from "next/router";
 
   interface StepFiveProps {
     setStep: (step: number) => void;
     setFormData: React.Dispatch<React.SetStateAction<{ options?: Record<string, any> }>>;
     formData: { options?: Record<string, any> };
     users: users[];
+    leagues: leagues[];
   }
-  
+  const modalStyle = {
+    position: 'absolute' as 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '30%',
+    bgcolor: 'background.paper',
+    boxShadow: 24,
+    p: 4,
+  };
 
-  const TeamSelectStep: React.FC<StepFiveProps> = ({ setStep, setFormData, formData, users }) => {
+  const TeamSelectStep: React.FC<StepFiveProps> = ({ setStep, setFormData, formData, users, leagues }) => {
 
-    const [localOptions, setLocalOptions] = useState<Record<string, any>>(
-      users 
-      ? users.reduce((acc, item) => {
-          if (item.user_name) {
-              acc[item.user_name] = formData.options?.[item.user_name] ?? null;
-          }
-          return acc;
-      }, {} as Record<string, any>) 
-      : {}
+    const router = useRouter();
+
+    const [localOptions, setLocalOptions] = useState<Record<string, (string | number)[] | null>>(
+      users
+        ? users.reduce((acc, item) => {
+            if (item.user_name) {
+              acc[item.user_name] = formData.options?.[item.user_name] 
+                ? Array.isArray(formData.options[item.user_name])
+                  ? formData.options[item.user_name]
+                  : null
+                : null; // Si no existe el valor, asignamos null
+            }
+            return acc;
+          }, {} as Record<string, (string | number)[] | null>) 
+        : {}
     );
 
     const validValuesCount = Object.values(localOptions).filter((value) => value !== null).length;
@@ -84,13 +101,47 @@ import CloseIcon from '@mui/icons-material/Close';
     }
   };
 
-    const handleSetLocalOption = (value: string) => {
+    const handleSetLocalOption = (value: string, valueFK: number) => {
       setLocalOptions((prev) => ({
         ...prev, // Preserve existing keys
-        [currentUser]: value, // Update or add a new key-value pair
+        [currentUser]: [value, valueFK], // Update or add a new key-value pair
       }));
     };
 
+
+    const [openLeagueNameModal, setOpenLeagueNameModal] = useState(false);
+
+    const handleOpenLeagueNameModal = () => {
+      setOpenLeagueNameModal(true); // Opens the modal
+    };
+
+    const handleCloseLeagueNameModal = () => {
+      setOpenLeagueNameModal(false); // Closes the modal
+    };
+
+    const [leagueName, setLeagueName] = useState('');
+
+
+    const handleCreateLeague = async () => {
+      try {
+        const [response1, response2] = await Promise.all([
+          fetch("/api/createleague", { method: "POST" }),
+          fetch("/api/createleagueparticipants", { method: "POST" }),
+        ]);
+    
+        const data1 = await response1.json();
+        const data2 = await response2.json();
+    
+        if (response1.ok && response2.ok) {
+          console.log("Success:", data1, data2);
+          router.push(`/playerSelection?leagueId=${data1.userId}`);
+        } else {
+          console.error("Error:", data1.error || data2.error);
+        }
+      } catch (error) {
+        console.error("Request failed:", error);
+      }
+    };
 
     return (
       <Paper sx={{ paddingTop: 4, paddingBottom: 4, marginTop: 11 }}>
@@ -129,21 +180,28 @@ import CloseIcon from '@mui/icons-material/Close';
                               </IconButton>
                             ) : (
                               <>
-                                <img
-                                    src={`/static/teams/${formData.options?.["game"]}/${localOptions[item.user_name]}.png`}
-                                    alt={localOptions[item.user_name] as string}
-                                    style={{ width: "45px", height: "45px", position: 'absolute',
+                                {localOptions[item.user_name] !== null ? (
+                                  <img
+                                    src={`/static/teams/${formData.options?.["game"]}/${localOptions[item.user_name]![0]}.png`}
+                                    alt={localOptions[item.user_name]![0] as string}
+                                    style={{
+                                      width: "45px", 
+                                      height: "45px", 
+                                      position: 'absolute',
                                       top: '50%',
                                       left: '50%',
                                       transform: 'translate(-50%, -50%)',
-                                        cursor: "pointer",
-                                        transition: "1s",
+                                      cursor: "pointer",
+                                      transition: "1s",
                                     }}
                                     onMouseOver={(e) => (e.currentTarget.style.filter = "grayscale(100%)")}
                                     onMouseOut={(e) => (e.currentTarget.style.filter = "none")}
                                     onClick={() => handleOpenModal(item.user_name)}
-                                />
-                                <Typography variant="body1"  sx={{marginTop: '40%', textAlign: 'center'}}>{localOptions[item.user_name]}
+                                  />
+                                ) : (
+                                  <div>No image available</div> // O cualquier otra alternativa que quieras mostrar
+                                )}
+                                <Typography variant="body1"  sx={{marginTop: '40%', textAlign: 'center'}}>{localOptions[item.user_name]![0]}
                                 </Typography>
 
                                 <IconButton
@@ -172,13 +230,30 @@ import CloseIcon from '@mui/icons-material/Close';
 
         {/* ✅ Navigation Buttons */}
         <Button variant="contained" color="primary" disabled={validValuesCount < 3}
-        onClick={() => setStep(5)} sx={{ width: 100, mt: 5, ml: "calc(100% - 120px)" }}>
+        onClick={() => handleOpenLeagueNameModal()} sx={{ width: 100, mt: 5, ml: "calc(100% - 120px)" }}>
           hecho
         </Button>
 
         {/* Modal Popup with an Empty Material UI Card inside */}
         <Modal open={openModal} onClose={handleCloseModal}>
-          <TeamStatsTable data={teams} game={formData.options?.["game"]} localOptions={localOptions} onSelect={(value) => { handleSetLocalOption(value); setOpenModal(false); }} />
+          <TeamStatsTable data={teams} game={formData.options?.["game"]} localOptions={localOptions} onSelect={(value, valueFK) => { handleSetLocalOption(value, valueFK); setOpenModal(false); }} />
+        </Modal>
+
+        <Modal open={openLeagueNameModal} onClose={handleCloseLeagueNameModal}>
+          <Box sx={modalStyle}>
+            <TextField
+                label="Dale un nombre a la liga"
+                variant="outlined"
+                fullWidth
+                value={leagueName}
+                onChange={(e) => setLeagueName(e.target.value)}
+                sx={{ width: '100%' }}
+            />
+            <Button variant="contained" color="primary"
+              onClick={() => handleCreateLeague()} sx={{ width: 150, mt: 2, ml: "calc(100% - 150px)" }}>
+                crear liga
+            </Button>
+          </Box>
         </Modal>
         
       </Paper>

@@ -25,27 +25,26 @@ import TeamSelectStep from '../@components/leagueCreation/TeamSelectionStep'
 import StepperNav from "../@components/leagueCreation/BreadcrumbsNav";
 import { Fade, Container, Paper } from "@mui/material";
 
-import { PrismaClient, Prisma, users, teams } from "@prisma/client";
+import { PrismaClient, Prisma, users, leagues } from "@prisma/client";
   
 const prisma = new PrismaClient();
 
 export async function getServerSideProps() {
   const users: users[] = await prisma.users.findMany();
-  const teams: teams[] = await prisma.teams.findMany({
-    where: {}
-  });
-  return { props: { users } };
+  const leagues: leagues[] = await prisma.leagues.findMany();
+  return { props: { users, leagues } };
 }
 
 interface HomeProps {
-    users: users[];
-  }
+  users: users[];
+  leagues: leagues[];
+}
 
 type FormData = {
   options?: Record<string, any>;
 };
 
-const FantasyHomePage: NextPage<HomeProps> = ({users}) => {
+const FantasyHomePage: NextPage<HomeProps> = ({users, leagues}) => {
  
   const [step, setStep] = useState<number>(1);
   const [formData, setFormData] = useState<FormData>({ options: {} });
@@ -84,7 +83,7 @@ const FantasyHomePage: NextPage<HomeProps> = ({users}) => {
         </Fade>
 
         <Fade in={step === 5} timeout={500} unmountOnExit>
-          <div>{step === 5 && <TeamSelectStep formData={formData} setStep={handleStepChange} setFormData={setFormData} users={users} />}</div>
+          <div>{step === 5 && <TeamSelectStep formData={formData} setStep={handleStepChange} setFormData={setFormData} users={users} leagues={leagues} />}</div>
         </Fade>
 
       

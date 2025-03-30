@@ -6,6 +6,7 @@ import { SelectChangeEvent } from '@mui/material';
 import { ListItemText, ListItemIcon, Checkbox, TableSortLabel } from '@mui/material';
 
 interface TeamStats {
+    team_id_fk: number;
     team_name: string;
     team_avg: number;
     GK_avg: number | null;
@@ -48,7 +49,7 @@ interface TeamStats {
 interface TeamStatsTableProps {
     data: TeamStats[]; 
     game: string; 
-    onSelect: (value: string) => void;
+    onSelect: (value: string, valueFK: number) => void;
     localOptions: Record<string, any>;
   }
 
@@ -59,8 +60,6 @@ interface TeamStatsTableProps {
     const [leagueFilter, setLeagueFilter] = useState<string>('');
     const [sortColumn, setSortColumn] = useState<string>('team_avg'); // Default sort by team_avg
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [selectedColumn, setSelectedColumn] = useState<string | null>(null);
     const [search, setSearch] = useState<string>("");
 
 
@@ -78,20 +77,6 @@ interface TeamStatsTableProps {
         // Add logic for what happens when the "Add" button is clicked
         console.log("Add button clicked for", row);
     };
-
-
-      // Open filter menu
-    const handleOpenFilter = (event: React.MouseEvent<HTMLElement>, columnId: string) => {
-        setAnchorEl(event.currentTarget);
-        setSelectedColumn(columnId);
-    };
-
-    // Close filter menu
-    const handleCloseFilter = () => {
-        setAnchorEl(null);
-        setSelectedColumn(null);
-    };
-
 
     // Handle filter by country
     const handleCountryFilterChange = (event: SelectChangeEvent<string>, child: ReactNode) => {
@@ -153,14 +138,13 @@ interface TeamStatsTableProps {
 
     if (!data || data.length === 0) return <p>No data available</p>;
 
-    // Get columns excluding the ones ending with '_fk'
-    const columns = Object.keys(data[0])//.filter((col) => !col.endsWith("_fk"));
+    const columns = Object.keys(data[0])
 
     let paginatedData = sortedData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
     for (const key in localOptions) {
         if (localOptions[key] !== null) {
-            paginatedData = paginatedData.filter((item) => item.team_name.toLowerCase() !== localOptions[key].toLowerCase());
+            paginatedData = paginatedData.filter((item) => item.team_name.toLowerCase() !== localOptions[key][0].toLowerCase());
         }
     }
 
@@ -238,7 +222,7 @@ interface TeamStatsTableProps {
                         {paginatedData.map((row, index) => (
                             <TableRow key={index} >
                             {columns.map((col) => (
-                                <TableCell key={col} >
+                                <TableCell key={col}  >
                                     {col === "team_name" ? (
                                         <Box display="flex" alignItems="center" justifyContent='center'>
                                             {/* Render the image based on the team_name */}
@@ -270,7 +254,7 @@ interface TeamStatsTableProps {
                                                     }}
                                                 />
                                             </Box>
-                                    ) : (
+                                    ) : col !== "team_id_fk" ? (
                                         <Box
                                                 display="flex"
                                                 justifyContent="center" // Center the image horizontally
@@ -282,13 +266,13 @@ interface TeamStatsTableProps {
                                             >
                                             {row[col as keyof TeamStats] ?? "-" } 
                                         </Box>
-                                    )}
+                                    ) : (<></>)}
                                 </TableCell>
                                 ))}
                                 {/* Add a cell for the "Add" button */}
                                 <TableCell>
                                     <IconButton
-                                        onClick={() => onSelect(row.team_name)} // Trigger function on click
+                                        onClick={() => onSelect(row.team_name, row.team_id_fk)} // Trigger function on click
                                         color="primary"
                                         sx={{
                                             backgroundColor: "green", // Set the default color to green
