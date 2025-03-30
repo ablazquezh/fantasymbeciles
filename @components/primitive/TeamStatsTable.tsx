@@ -49,9 +49,10 @@ interface TeamStatsTableProps {
     data: TeamStats[]; 
     game: string; 
     onSelect: (value: string) => void;
+    localOptions: Record<string, any>;
   }
 
-  const TeamStatsTable: React.FC<TeamStatsTableProps> = ({ data, game, onSelect}) => {
+  const TeamStatsTable: React.FC<TeamStatsTableProps> = ({ data, game, onSelect, localOptions}) => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(25);
     const [countryFilter, setCountryFilter] = useState<string>('');
@@ -156,6 +157,12 @@ interface TeamStatsTableProps {
     const columns = Object.keys(data[0])//.filter((col) => !col.endsWith("_fk"));
 
     let paginatedData = sortedData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
+    for (const key in localOptions) {
+        if (localOptions[key] !== null) {
+            paginatedData = paginatedData.filter((item) => item.team_name.toLowerCase() !== localOptions[key].toLowerCase());
+        }
+    }
 
     if (search.length > 1){
         const matchedData = sortedData.filter((item) => item.team_name.toLowerCase().includes(search.toLowerCase()));
@@ -365,7 +372,7 @@ interface TeamStatsTableProps {
                     fullWidth
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    sx={{ marginBottom: 2 }}
+                    sx={{ marginBottom: 2, width: '30%' }}
                 />
 
             <TablePagination

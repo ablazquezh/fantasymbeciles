@@ -14,7 +14,7 @@ import { users } from "@prisma/client";
 import TeamStatsTable from "../primitive/TeamStatsTable";
 import { Height } from '@mui/icons-material';
 import CardMedia from '@mui/material/CardMedia';
-
+import CloseIcon from '@mui/icons-material/Close';
 
   interface StepFiveProps {
     setStep: (step: number) => void;
@@ -69,6 +69,17 @@ import CardMedia from '@mui/material/CardMedia';
         setOpenModal(false); // Closes the modal
     };
 
+    const handleRemoveTeam = (userName: string|null) => {
+
+      if (userName !== null) {
+
+        setLocalOptions((prev) => ({
+          ...prev, // Preserve existing keys
+          [userName]: null, // Update or add a new key-value pair
+        }));
+    }
+  };
+
     const handleSetLocalOption = (value: string) => {
       setLocalOptions((prev) => ({
         ...prev, // Preserve existing keys
@@ -120,10 +131,30 @@ import CardMedia from '@mui/material/CardMedia';
                                     style={{ width: "45px", height: "45px", position: 'absolute',
                                       top: '50%',
                                       left: '50%',
-                                      transform: 'translate(-50%, -50%)',}}
+                                      transform: 'translate(-50%, -50%)',
+                                        cursor: "pointer",
+                                        transition: "1s",
+                                    }}
+                                    onMouseOver={(e) => (e.currentTarget.style.filter = "grayscale(100%)")}
+                                    onMouseOut={(e) => (e.currentTarget.style.filter = "none")}
+                                    onClick={() => handleOpenModal(item.user_name)}
                                 />
                                 <Typography variant="body1"  sx={{marginTop: '40%', textAlign: 'center'}}>{localOptions[item.user_name]}
                                 </Typography>
+
+                                <IconButton
+                                  sx={{
+                                      position: "absolute",
+                                      top: 0, // Espaciado desde arriba
+                                      right: 0, // Espaciado desde la derecha
+                                      color: 'white',
+                                  }}
+                                  onClick={() => handleRemoveTeam(item.user_name)}
+                              >
+                                
+                                <CloseIcon fontSize='small' sx={{ color: "red" }} />
+                                
+                              </IconButton>
                               </>
                             )}
                           
@@ -137,7 +168,7 @@ import CardMedia from '@mui/material/CardMedia';
 
       {/* Modal Popup with an Empty Material UI Card inside */}
       <Modal open={openModal} onClose={handleCloseModal}>
-        <TeamStatsTable data={teams} game={formData.options?.["game"]} onSelect={(value) => { handleSetLocalOption(value); setOpenModal(false); }} />
+        <TeamStatsTable data={teams} game={formData.options?.["game"]} localOptions={localOptions} onSelect={(value) => { handleSetLocalOption(value); setOpenModal(false); }} />
       </Modal>
         
       </Paper>
