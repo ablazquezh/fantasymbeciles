@@ -36,6 +36,10 @@ import CloseIcon from '@mui/icons-material/Close';
       }, {} as Record<string, any>) 
       : {}
     );
+
+    const validValuesCount = Object.values(localOptions).filter((value) => value !== null).length;
+
+
     console.log(localOptions)
     const [teams, setTeams] = useState([]);
     const [currentUser, setCurrentUser] = useState<string>('');
@@ -166,10 +170,16 @@ import CloseIcon from '@mui/icons-material/Close';
           )}
         </Box>
 
-      {/* Modal Popup with an Empty Material UI Card inside */}
-      <Modal open={openModal} onClose={handleCloseModal}>
-        <TeamStatsTable data={teams} game={formData.options?.["game"]} localOptions={localOptions} onSelect={(value) => { handleSetLocalOption(value); setOpenModal(false); }} />
-      </Modal>
+        {/* ✅ Navigation Buttons */}
+        <Button variant="contained" color="primary" disabled={validValuesCount < 3}
+        onClick={() => setStep(5)} sx={{ width: 100, mt: 5, ml: "calc(100% - 120px)" }}>
+          hecho
+        </Button>
+
+        {/* Modal Popup with an Empty Material UI Card inside */}
+        <Modal open={openModal} onClose={handleCloseModal}>
+          <TeamStatsTable data={teams} game={formData.options?.["game"]} localOptions={localOptions} onSelect={(value) => { handleSetLocalOption(value); setOpenModal(false); }} />
+        </Modal>
         
       </Paper>
     );
