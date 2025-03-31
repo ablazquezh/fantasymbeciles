@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const game = req.query.game as string;
-
+    
     try {
       // SAFE: Uses parameterized query with ${}
       const teams = await prisma.$queryRaw`

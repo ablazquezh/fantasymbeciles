@@ -9,13 +9,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: "Método no permitido" });
   }
 
+  const { page = 1, pageSize = 15 } = req.query;
+
+  const pageNumber = Number(page);
+  const pageSizeNumber = Number(pageSize);
+
   try {
+    // Fetch paginated records
     const data = await prisma.players.findMany({
-      take: 5, // Solo 5 registros
+        skip: (pageNumber - 1) * pageSizeNumber,
+        take: pageSizeNumber,
     });
 
-    res.status(200).json(data);
-  } catch (error) {
-    res.status(500).json({ message: "Error al obtener los datos", error });
-  }
+    // Get total count
+    const total = await prisma.players.count();
+
+    res.status(200).json({ data, total });
+} catch (error) {
+    res.status(500).json({ error: 'Failed to fetch data' });
+}
 }
