@@ -37,6 +37,9 @@ import { useRouter } from "next/router";
 
   const TeamSelectStep: React.FC<StepFiveProps> = ({ setStep, setFormData, formData, users, leagues }) => {
 
+    const [error, setError] = useState(false); 
+    const [helperText, setHelperText] = useState('');
+
     const router = useRouter();
 
     const [localOptions, setLocalOptions] = useState<Record<string, (string | number)[] | null>>(
@@ -56,8 +59,6 @@ import { useRouter } from "next/router";
 
     const validValuesCount = Object.values(localOptions).filter((value) => value !== null).length;
 
-
-    console.log(localOptions)
     const [teams, setTeams] = useState([]);
     const [currentUser, setCurrentUser] = useState<string>('');
 
@@ -117,16 +118,48 @@ import { useRouter } from "next/router";
 
     const handleCloseLeagueNameModal = () => {
       setOpenLeagueNameModal(false); // Closes the modal
+      setError(false);
+      setHelperText("");
     };
 
     const [leagueName, setLeagueName] = useState('');
 
+    const leagueIdx = leagues.length +1
 
     const handleCreateLeague = async () => {
+
+      const hasMatch = leagues.some((obj) => obj.league_name === leagueName);
+      if (hasMatch) {
+        setLeagueName("")
+        setError(true); // Show error
+        setHelperText('Nombre de liga ya existente. Por favor, asigna uno distinto.');
+        return;
+      }
+
+      const leagueParticipantRecords = users
+      .filter((user): user is { user_name: string; ID: number } => user.user_name !== null)
+      .map((user) => ({
+        user_ID_fk: user.ID,
+        team_ID_fk: localOptions[user.user_name as string]?.[1],
+        league_ID_fk: leagueIdx
+      }));
+
       try {
         const [response1, response2] = await Promise.all([
-          fetch("/api/createleague", { method: "POST" }),
-          fetch("/api/createleagueparticipants", { method: "POST" }),
+          fetch("/api/createleague", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ leagueName: leagueName, leagueType: formData.options?.leaguetype,
+              winterMarket: formData.options?.winterMarket, yellowCards: formData.options?.cardSuspension,
+              playerAvgLimit: formData.options?.averageLimit, budgetCalc: formData.options?.budgetCalculation,
+              game: formData.options?.game
+            }),
+          }),
+          fetch("/api/createleagueparticipants", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ records: leagueParticipantRecords }),
+          }),
         ]);
     
         const data1 = await response1.json();
@@ -134,13 +167,17 @@ import { useRouter } from "next/router";
     
         if (response1.ok && response2.ok) {
           console.log("Success:", data1, data2);
-          router.push(`/playerSelection?leagueId=${data1.userId}`);
+          router.push(`/playerSelection?leagueId=${leagueIdx}`);
         } else {
           console.error("Error:", data1.error || data2.error);
         }
       } catch (error) {
         console.error("Request failed:", error);
       }
+    };
+
+    const handleTextBoxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setLeagueName(e.target.value); setError(false); setHelperText("");
     };
 
     return (
@@ -246,10 +283,12 @@ import { useRouter } from "next/router";
                 variant="outlined"
                 fullWidth
                 value={leagueName}
-                onChange={(e) => setLeagueName(e.target.value)}
+                onChange={handleTextBoxChange}
                 sx={{ width: '100%' }}
+                error={error} // Show error state
+                helperText={helperText} // Show helper text on error
             />
-            <Button variant="contained" color="primary"
+            <Button variant="contained" color="primary" disabled={leagueName.length < 3}
               onClick={() => handleCreateLeague()} sx={{ width: 150, mt: 2, ml: "calc(100% - 150px)" }}>
                 crear liga
             </Button>

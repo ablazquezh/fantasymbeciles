@@ -7,20 +7,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
-
+  
   try {
-    // Example Prisma query: Fetch a user by email (modify as needed)
-    const user = await prisma.user.findFirst({
-      where: { email: "test@example.com" },
-    });
+    const { records } = req.body; // Expecting an array of records
 
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+    if (!Array.isArray(records) || records.length === 0) {
+      return res.status(400).json({ error: "Invalid or empty data array" });
     }
 
-    res.status(200).json({ userId: user.id }); // Send user ID back
+    // Bulk insert using createMany()
+    const result = await prisma.league_participants.createMany({
+      data: records, // Must be an array of objects matching table columns
+      skipDuplicates: true, // Optional: Avoid inserting duplicates
+    });
+
+    return res.status(201).json({ success: true, count: result.count });
   } catch (error) {
-    console.error("Prisma error:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+      console.error("Database insert error:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 }

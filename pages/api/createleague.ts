@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, leagues_type } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -9,18 +9,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Example Prisma query: Fetch a user by email (modify as needed)
-    const user = await prisma.user.findFirst({
-      where: { email: "test@example.com" },
+    const { leagueName, leagueType, winterMarket, yellowCards, playerAvgLimit, budgetCalc, game } = req.body; // Extract parameters from request    
+
+    // Insert into database using Prisma
+    const newRecord = await prisma.leagues.create({
+      data: {
+        league_name: leagueName,
+        type: leagueType,
+        winter_market_enabled: winterMarket,
+        yellow_cards_suspension: yellowCards,
+        player_avg_limit: playerAvgLimit,
+        budget_calculation_type: budgetCalc,
+        game: game
+      },
     });
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    res.status(200).json({ userId: user.id }); // Send user ID back
+    
+    return res.status(201).json(newRecord);
   } catch (error) {
-    console.error("Prisma error:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    console.error("Database insert error:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 }

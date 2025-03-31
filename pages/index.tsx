@@ -31,7 +31,13 @@ const prisma = new PrismaClient();
 
 export async function getServerSideProps() {
   const users: users[] = await prisma.users.findMany();
-  const leagues: leagues[] = await prisma.leagues.findMany();
+  const dbleagues: leagues[] = await prisma.leagues.findMany();
+
+  const leagues = dbleagues.map(league => ({
+    ...league,
+    created_at: league.created_at?.toISOString(), // Convert Date to string
+  }));
+
   return { props: { users, leagues } };
 }
 
