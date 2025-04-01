@@ -227,7 +227,7 @@ interface TeamStatsTableProps {
                                         <Box display="flex" alignItems="center" justifyContent='center'>
                                             {/* Render the image based on the team_name */}
                                             <img
-                                                src={`/static /${game}/${row[col as keyof TeamStats]}.png`} // Load the image based on team_name
+                                                src={`/static/teams/${game}/${row[col as keyof TeamStats]}.png`} // Load the image based on team_name
                                                 alt={row[col as keyof TeamStats] as string}
                                                 style={{ width: "30px", height: "30px", marginRight: "8px" }}
                                             />
