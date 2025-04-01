@@ -7,6 +7,7 @@ import IconButton from '@mui/material/IconButton';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import Collapse from '@mui/material/Collapse';
+import { css } from '@emotion/react';
 
 const globalDetailColnames = {
   age: "Edad",
@@ -298,7 +299,7 @@ const PlayerSelectionPage = () => {
     console.log(shapedData)
 
     return (
-      <VerticalLayoutTextboxSearch sx={{ width: "60%" }}>
+      <VerticalLayoutTextboxSearch>
   
           {/* Table */}
           <TableContainer sx={{ minHeight: "200px", maxHeight: "550px", overflowY: "auto" }}>

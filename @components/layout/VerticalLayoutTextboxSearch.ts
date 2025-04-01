@@ -3,7 +3,7 @@ import { Box } from '@mui/material'
 
 export default styled(Box)`
   margin: auto;
-  width: min(340px, 85vw);
+  width: 60%;
   display: flex;
   flex-direction: column;
 `

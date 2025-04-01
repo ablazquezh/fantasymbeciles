@@ -9,14 +9,15 @@ const client = new QueryClient()
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <ThemeProvider theme={theme}>
-
-      <QueryClientProvider client={client}>
-        <AppBar />
-        <Component {...pageProps} />
-      </QueryClientProvider>
-
-    </ ThemeProvider>
+    <QueryClientProvider client={client}>
+      <ThemeProvider theme={theme}>
+        
+          <AppBar />
+          <Component {...pageProps} />
+        
+      </ ThemeProvider>
+    
+    </QueryClientProvider>
 
 )
 }
