@@ -21,7 +21,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const data = await prisma.players.findMany({
         skip: (pageNumber - 1) * pageSizeNumber,
         take: pageSizeNumber,
-        where: {game: gameQuery}
+        where: {game: gameQuery},
+        include: {
+          teams: true
+        }
     });
 
     // Get total count

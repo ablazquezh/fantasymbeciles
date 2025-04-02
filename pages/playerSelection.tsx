@@ -60,7 +60,8 @@ const globalDetailColnames = {
 const globalColnames = {
   nickname: "Jugador",
   average: "Pt. Global",
-  positions: "Posiciones"
+  positions: "Posiciones",
+  team_name: "Equipo de origen"
 };
 
 type globalColTypes = {
@@ -78,6 +79,7 @@ type RowData = {
   wage: number | null;
   average: number | null;
   global_position: string | null;
+  team_name: string | null;
   detail: {
     age: number | null;
     height: number | null;
@@ -98,7 +100,17 @@ type RowData = {
   };
 };
 
-function mergeData(A: players[], B: any[]) {
+type playersFull = players & {
+  teams: {
+    ID: string | null;
+    game: string | null;
+    team_country: string | null;
+    team_league: string | null;
+    team_name: string | null;
+  }; // Adding a new property
+};
+
+function mergeData(A: playersFull[], B: any[]) {
   // Create a lookup map from B, grouping all `y` values by `x`
   const bMap = B.reduce((acc, item) => {
     if (!acc[item.player_name]) {
@@ -117,9 +129,10 @@ function mergeData(A: players[], B: any[]) {
 
 
 function reshapeData(data: ReturnType<typeof mergeData>) {
+  
   return data.reduce((acc, item) => {
     const existingItem = acc.find((x) => x.ID === item.ID && x.nickname === item.nickname && x.average === item.average && x.positions === item.positions && 
-    x.country_code === item.country_code && x.value === item.value && x.wage === item.wage && x.global_position === item.global_position);
+    x.country_code === item.country_code && x.value === item.value && x.wage === item.wage && x.global_position === item.global_position && x.team_name === item.teams.team_name );
     
     const newXEntry = {
       age: item.age,
@@ -152,6 +165,7 @@ function reshapeData(data: ReturnType<typeof mergeData>) {
         wage: item.wage,
         value: item.value,
         country_code: item.country_code,
+        team_name: item.teams.team_name,
         detail: newXEntry
       });
     }
@@ -174,10 +188,10 @@ const getRowColor = (status: string | null) => {
 
 
 function Row(props: { row: RowData, gamekey: string | null }) {
-
+  
   const { row, gamekey } = props;
   const [open, setOpen] = React.useState(false);
-
+  console.log(row)
   return (
     <React.Fragment>
       <TableRow sx={{ bgcolor: getRowColor(row.global_position) }} >
@@ -219,6 +233,23 @@ function Row(props: { row: RowData, gamekey: string | null }) {
                   ) : (
                     "-"
                 )}
+              </Box>
+            ) : col === "team_name" ?(
+              <Box
+                display="flex"
+                justifyContent="center" // Center the image horizontally
+                alignItems="center" // Center the image vertically
+                sx={{
+                    height: "100%", // Make sure the Box takes the full height of the cell
+                    padding: 0 // Optional: Remove any padding
+                }}
+              >
+                <img
+                  src={`/static/teams/${gamekey}/${row["team_name"]}.png`} // Load the image based on team_name
+                  alt={row[col as keyof typeof globalColnames] as string}
+                  style={{ width: "38px", height: "38px", marginRight: "8px" }}
+                  title={row[col as keyof typeof globalColnames] as string}
+                />
               </Box>
             ) : (
               <Box
@@ -289,7 +320,7 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
     const { leagueId } = router.query;
     const [league, setLeague] = useState<string | null>(null);
 
-    const [players, setPlayers] = useState<players[]>([]);
+    const [players, setPlayers] = useState<playersFull[]>([]);
     const [playerPositions, setPlayerPositions] = useState([]);    
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -330,8 +361,8 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
 
     const completePlayerInfo = mergeData(players, playerPositions)
     const shapedData = reshapeData(completePlayerInfo)
+    console.log(completePlayerInfo)
     console.log(shapedData)
-
     return (
       <VerticalLayoutTextboxSearch>
   
