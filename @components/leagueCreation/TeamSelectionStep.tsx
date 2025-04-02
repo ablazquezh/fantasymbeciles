@@ -124,7 +124,7 @@ import { useRouter } from "next/router";
 
     const [leagueName, setLeagueName] = useState('');
 
-    const leagueIdx = leagues.length +1
+    const leagueIdx = leagues[leagues.length -1].ID +1
 
     const handleCreateLeague = async () => {
 

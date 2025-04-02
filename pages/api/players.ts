@@ -9,16 +9,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: "Método no permitido" });
   }
 
-  const { page = 1, pageSize = 15 } = req.query;
+  const { page = 1, pageSize = 15, game } = req.query;
 
   const pageNumber = Number(page);
   const pageSizeNumber = Number(pageSize);
 
+  const gameQuery = Array.isArray(game) ? game[0] : game;
+  
   try {
     // Fetch paginated records
     const data = await prisma.players.findMany({
         skip: (pageNumber - 1) * pageSizeNumber,
         take: pageSizeNumber,
+        where: {game: gameQuery}
     });
 
     // Get total count

@@ -7,7 +7,34 @@ import IconButton from '@mui/material/IconButton';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import Collapse from '@mui/material/Collapse';
-import { css } from '@emotion/react';
+import { GetServerSidePropsContext, NextPage } from 'next';
+
+import { PrismaClient, Prisma, users, leagues } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+
+  const {leagueId} = context.query as {leagueId?: string};
+
+  const dbleague: leagues | null = await prisma.leagues.findUnique({
+    where: {ID: Number(leagueId)}
+  }
+  );
+
+  const participants = await prisma.$queryRaw`
+          SELECT user_name, team_name FROM league_participants_view WHERE game = ${dbleague?.game} AND league_ID_fk = ${dbleague?.ID}
+      `;
+
+  return { props: {
+    dbleague: {
+      ...dbleague,
+      created_at: dbleague?.created_at ? dbleague.created_at.toISOString() : null,
+    },
+    participants: participants
+  } };
+}
+
 
 const globalDetailColnames = {
   age: "Edad",
@@ -146,9 +173,9 @@ const getRowColor = (status: string | null) => {
 };
 
 
-function Row(props: { row: RowData }) {
+function Row(props: { row: RowData, gamekey: string | null }) {
 
-  const { row } = props;
+  const { row, gamekey } = props;
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -176,7 +203,7 @@ function Row(props: { row: RowData }) {
                 }}
               >
                 <img
-                  src={`/static/players/fifa13/${row["ID"]-1}.png`} // Load the image based on team_name
+                  src={`/static/players/${gamekey}/${row["ID"]-1}.png`} // Load the image based on team_name
                   alt={row[col as keyof typeof globalColnames] as string}
                   style={{ width: "45px", height: "45px", marginRight: "8px" }}
                 />
@@ -248,9 +275,16 @@ function Row(props: { row: RowData }) {
   );
 }
 
+interface PlayerSelectProps {
+  dbleague: leagues;
+  participants: any[];
+}
 
-const PlayerSelectionPage = () => {
 
+const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participants}) => {
+
+    console.log(participants)
+    console.log(dbleague)
     const router = useRouter();
     const { leagueId } = router.query;
     const [league, setLeague] = useState<string | null>(null);
@@ -270,7 +304,7 @@ const PlayerSelectionPage = () => {
 
     useEffect(() => {
       const fetchPlayers= async () => {
-          const res = await fetch(`/api/players?page=${page + 1}&pageSize=${rowsPerPage}`);
+          const res = await fetch(`/api/players?page=${page + 1}&pageSize=${rowsPerPage}&game=${dbleague.game}`);
           const data = await res.json();
           
           setPlayers(data.data);
@@ -285,7 +319,7 @@ const PlayerSelectionPage = () => {
 
           const idList = players.map(player => player.ID);
 
-          const res = await fetch(`/api/playerpositions?game=fifa13&idList=${idList}`);
+          const res = await fetch(`/api/playerpositions?game=${dbleague.game}&idList=${idList}`);
           const data = await res.json();
           
           setPlayerPositions(data.positions);
@@ -326,7 +360,7 @@ const PlayerSelectionPage = () => {
 
               <TableBody sx={{backgroundColor: '#fafafa'}}>
                   {shapedData.map((row, index) => (
-                    <Row key={row.nickname} row={row} />
+                    <Row key={row.nickname} row={row} gamekey={dbleague.game} />
                   ))}
               </TableBody>
             </Table>
