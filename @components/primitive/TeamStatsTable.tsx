@@ -72,12 +72,6 @@ interface TeamStatsTableProps {
         setPage(0); // Reset to the first page
     };
 
-       // Add an event handler for the Add button
-    const handleAddButtonClick = (row: TeamStats) => {
-        // Add logic for what happens when the "Add" button is clicked
-        console.log("Add button clicked for", row);
-    };
-
     // Handle filter by country
     const handleCountryFilterChange = (event: SelectChangeEvent<string>, child: ReactNode) => {
         const selectedValue = event.target.value;

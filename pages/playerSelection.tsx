@@ -8,6 +8,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import Collapse from '@mui/material/Collapse';
 import { GetServerSidePropsContext, NextPage } from 'next';
+import CollapsableCard from "../@components/primitive/MovableCard"; // Ruta del componente
 
 import { PrismaClient, Prisma, users, leagues } from "@prisma/client";
 
@@ -423,6 +424,7 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
                 }}
             />
         </Paper>
+        <CollapsableCard participants={participants} gamekey={dbleague.game} />
     </ VerticalLayoutTextboxSearch>
     )
   }
