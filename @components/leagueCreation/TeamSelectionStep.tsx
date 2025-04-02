@@ -124,7 +124,7 @@ import { useRouter } from "next/router";
 
     const [leagueName, setLeagueName] = useState('');
 
-    const leagueIdx = leagues[leagues.length -1].ID +1
+    const leagueIdx = leagues.length > 0 ? leagues[leagues.length - 1].ID +1 : 1;
 
     const handleCreateLeague = async () => {
 
@@ -218,8 +218,9 @@ import { useRouter } from "next/router";
                             ) : (
                               <>
                                 {localOptions[item.user_name] !== null ? (
-                                  <img
-                                    src={`/static/teams/${formData.options?.["game"]}/${localOptions[item.user_name]![0]}.png`}
+                                  
+                                  <img 
+                                    src={`/static/teams/${formData.options?.["game"]}/${String(localOptions[item.user_name]![0]).replace("/", "_")}.png`}
                                     alt={localOptions[item.user_name]![0] as string}
                                     style={{
                                       width: "45px", 

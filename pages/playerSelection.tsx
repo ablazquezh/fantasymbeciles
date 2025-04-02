@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import VerticalLayoutTextboxSearch from '../@components/layout/VerticalLayoutTextboxSearch'
 import { useRouter } from "next/router";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, TablePagination } from "@mui/material";
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, TablePagination, Paper } from "@mui/material";
 import { players } from "@prisma/client";
 import IconButton from '@mui/material/IconButton';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -10,6 +10,18 @@ import Collapse from '@mui/material/Collapse';
 import { GetServerSidePropsContext, NextPage } from 'next';
 
 import { PrismaClient, Prisma, users, leagues } from "@prisma/client";
+
+
+const tableBoxStyle = {
+  position: 'absolute' as 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: '65%',
+  bgcolor: 'background.paper',
+  boxShadow: 24,
+  p: 4,
+};
 
 const prisma = new PrismaClient();
 
@@ -244,8 +256,8 @@ function Row(props: { row: RowData, gamekey: string | null }) {
                     padding: 0 // Optional: Remove any padding
                 }}
               >
-                <img
-                  src={`/static/teams/${gamekey}/${row["team_name"]}.png`} // Load the image based on team_name
+                <img 
+                  src={`/static/teams/${gamekey}/${String(row["team_name"]).replace("/", "_")}.png`} // Load the image based on team_name
                   alt={row[col as keyof typeof globalColnames] as string}
                   style={{ width: "38px", height: "38px", marginRight: "8px" }}
                   title={row[col as keyof typeof globalColnames] as string}
@@ -361,11 +373,10 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
 
     const completePlayerInfo = mergeData(players, playerPositions)
     const shapedData = reshapeData(completePlayerInfo)
-    console.log(completePlayerInfo)
-    console.log(shapedData)
+    
     return (
       <VerticalLayoutTextboxSearch>
-  
+        <Paper sx={{ padding: 4, marginTop: 10 }}>
           {/* Table */}
           <TableContainer sx={{ minHeight: "200px", maxHeight: "550px", overflowY: "auto" }}>
             <Table stickyHeader>
@@ -396,7 +407,11 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
               </TableBody>
             </Table>
 
-            <TablePagination
+            
+
+          </TableContainer>
+
+          <TablePagination
                 component="div"
                 count={total}
                 page={page}
@@ -407,9 +422,7 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
                     setPage(0); // Reset to first page
                 }}
             />
-
-          </TableContainer>
-
+        </Paper>
     </ VerticalLayoutTextboxSearch>
     )
   }
