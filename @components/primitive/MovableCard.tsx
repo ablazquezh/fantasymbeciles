@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, IconButton } from "@mui/material";
 import { KeyboardArrowUp, KeyboardArrowDown } from "@mui/icons-material";
 import { DragDropContext, Droppable, Draggable, DropResult} from "@hello-pangea/dnd";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, TablePagination, Paper } from "@mui/material";
 import { players } from "@prisma/client";
+import React from "react";
 import ReactDOM from 'react-dom';
 import type {
   DraggableProvided,
@@ -108,6 +109,15 @@ interface Participants {
   players: RowData[];
 }
 
+interface ParticipantsFull {
+  groupedPlayers: {
+    [key: string]: RowData[];
+  };
+  user_name: string;
+  team_name: string;
+  players: RowData[];
+}
+
 interface MovableCardProps {
   participants: Participants[]; 
   gamekey: string| null; 
@@ -121,32 +131,40 @@ const globalColnames = {
 };
 
 
+const positionList = ["Delantero", "Centrocampista", "Defensa", "Portero"];
 
 const groupPlayerData = (playerData: RowData[]) => {
   
-  const groupedData: { [key: string]: RowData[] } = playerData.reduce((acc, player) => {
-    const { global_position } = player;
-    if (!acc[global_position!]) acc[global_position!] = [];
-    acc[global_position!].push(player);
+  const groupedData: { [key: string]: RowData[] } = positionList.reduce((acc, pos) => {
+    acc[pos] = [];
     return acc;
   }, {} as { [key: string]: RowData[] });
-  console.log("******")
-  console.log(groupedData)
+
+  playerData.forEach((player) => {
+    const key = player.global_position;
+    if (key) {
+      if (!groupedData[key]) groupedData[key] = []; // If key not predefined
+      groupedData[key].push(player);
+    }
+  });
+
   return groupedData;
 };
 
 const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants}) => {
   const [expanded, setExpanded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [participantData, setParticipantData] = useState<ParticipantsFull[]>([])
 
-  const [participantData, setParticipantData] = useState(participants.map((participant) => ({
-      ...participant,
-      groupedPlayers: groupPlayerData(participant.players), 
-    }))
-  )
-
-  console.log(participantData)
-
+  useEffect(() => {
+    if (participants.length > 0) {
+      const transformed = participants.map((participant) => ({
+        ...participant,
+        groupedPlayers: groupPlayerData(participant.players),
+      }));
+      setParticipantData(transformed);
+    }
+  }, [participants]);
   return (
     <Box
       sx={{
@@ -191,7 +209,7 @@ const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants}) => {
               padding: 2
             }}
           >
-            {participants.map((participant, index) => (
+            {participantData.map((participant, index) => (
               <Droppable droppableId={participant.team_name} key={participant.team_name}>
                 {(provided, snapshot) => ( 
                 <HoverBox key={index} ref={provided.innerRef}
@@ -215,11 +233,11 @@ const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants}) => {
                     }}
                   />
 
-                        <TableContainer sx={{ minHeight: "200px", maxHeight: "550px", overflowY: "auto" }} >
+                        <TableContainer sx={{ minHeight: "200px", maxHeight: "550px", maxWidth: "310px", minWidth: "310px", overflowY: "auto" }} >
 
                           <Table stickyHeader>
 
-                            <TableHead>
+                            {/*<TableHead>
                               <TableRow>
                                 {Object.keys(globalColnames).map((col) => (
                                   <TableCell
@@ -233,12 +251,23 @@ const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants}) => {
                                   </TableCell>
                                 ))}
                               </TableRow>
-                            </TableHead>
+                            </TableHead>*/}
 
 
                             <TableBody sx={{backgroundColor: '#fafafa'}}>
-                                {participant.players.map((row, index) => (
-                                  <Draggable key={row.ID} draggableId={"moved"+String(row.ID)} index={index}>
+
+                              {Object.keys(participant.groupedPlayers).map((category) => (
+                                <React.Fragment key={category}>
+                                  {/* Render category header */}
+                                  <TableRow>
+                                    <TableCell colSpan={3} style={{ fontWeight: "bold", backgroundColor: "#f1f1f1" }}>
+                                      {category}
+                                    </TableCell>
+                                  </TableRow>
+                    
+                                  {/* Render rows for this category */}
+                                  {participant.groupedPlayers[category].map((row, index) => (
+                                    <Draggable key={row.ID} draggableId={"moved"+String(row.ID)} index={index}>
                                     {(provided, snapshot) => {
                                 
                                       return(
@@ -266,7 +295,9 @@ const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants}) => {
 
                                       )}}
                                   </Draggable>
-                                ))}
+                                  ))}
+                                </React.Fragment>
+                              ))}
                                 
                             </TableBody>
                             

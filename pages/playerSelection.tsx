@@ -129,7 +129,7 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
         
         let inputPlayer = null
         if(source.droppableId == "mainTable"){
-          inputPlayer = players[source.index]
+          inputPlayer = completePlayerInfo[source.index]
         }else{
           const foundItem = participantData.find(item => item.team_name === source.droppableId)
           inputPlayer = foundItem.players[source.index]
@@ -172,7 +172,7 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
         
         
     };
-
+    console.log(participantData)
     return (
       <Box sx={{
         margin: "auto",
