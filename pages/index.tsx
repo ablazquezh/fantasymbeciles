@@ -1,19 +1,6 @@
-import React, { useState } from 'react'
-import type { GetServerSidePropsContext, GetServerSidePropsResult, NextPage } from 'next'
+import React from 'react'
+import type { NextPage } from 'next'
 
-import { TextField} from '@mui/material'
-// import VerticalLayout from '../@components/layout/VerticalLayout'
-// import Row from '../@components/layout/Row'
-import Button from '@mui/material/Button'
-import SendIcon from '@mui/icons-material/Send'
-import DeleteIcon from '@mui/icons-material/Delete';
-import Link from 'next/link'
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CardMedia from '@mui/material/CardMedia';
-import Typography from '@mui/material/Typography';
-import CardActionArea from '@mui/material/CardActionArea'
 import VerticalLayoutTextboxSearch from '../@components/layout/VerticalLayoutTextboxSearch'
 
 import HomeSelection from "../@components/leagueCreation/HomeSelection"
@@ -24,22 +11,10 @@ import TeamSelectStep from '../@components/leagueCreation/TeamSelectionStep'
 
 import StepperNav from "../@components/leagueCreation/BreadcrumbsNav";
 import { Fade, Container, Paper } from "@mui/material";
-
+import { useEffect, useState } from "react";
 import { PrismaClient, Prisma, users, leagues } from "@prisma/client";
   
 const prisma = new PrismaClient();
-
-export async function getServerSideProps() {
-  const users: users[] = await prisma.users.findMany();
-  const dbleagues: leagues[] = await prisma.leagues.findMany();
-
-  const leagues = dbleagues.map(league => ({
-    ...league,
-    created_at: league.created_at?.toISOString(), // Convert Date to string
-  }));
-
-  return { props: { users, leagues } };
-}
 
 interface HomeProps {
   users: users[];
@@ -50,17 +25,43 @@ type FormData = {
   options?: Record<string, any>;
 };
 
-const FantasyHomePage: NextPage<HomeProps> = ({users, leagues}) => {
+const FantasyHomePage: NextPage = () => {
  
   const [step, setStep] = useState<number>(1);
   const [formData, setFormData] = useState<FormData>({ options: {} });
   const [showBreadcrumbs, setShowBreadcrumbs] = useState<boolean>(false);
+
+  const [users, setUsers] = useState<users[]>([]);
+  const [leagues, setLeagues] = useState<leagues[]>([]);
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+        const res = await fetch(`/api/leagueusers`);
+        const data = await res.json();
+        setUsers(data.users);
+    };
+    const fetchLeagues = async () => {
+      const res = await fetch(`/api/leagues`);
+      const data = await res.json();
+      setLeagues(data.leagues);
+  };
+
+    fetchUsers();
+    fetchLeagues();
+    setMounted(true)
+  }, []);
+
+  if (!mounted) return null
 
   const handleStepChange = (newStep: number) => {
     if (newStep > 1) setShowBreadcrumbs(true); // Show breadcrumbs after Step 1
     setStep(newStep);
   };
   console.log(formData)
+  console.log(users)
+  console.log(leagues)
   return (
 
     <VerticalLayoutTextboxSearch sx={{ width: "60%" }}>

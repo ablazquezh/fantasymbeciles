@@ -24,7 +24,13 @@ type Props = {
 };
 
 const AboutUs: NextPage<Props> = ({users}: Props) => {
+   const [mounted, setMounted] = useState(false);
    
+     useEffect(() => {
+       setMounted(true); // Only render client-side
+     }, []);
+   
+     if (!mounted) return null; // Avoid hydration mismatch
   console.log(users)
     
   return (
