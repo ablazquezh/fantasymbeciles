@@ -52,7 +52,8 @@ const HoverBox = styled.div<{ isHovered: boolean, isDragging: boolean }>`
     background: rgba(128, 128, 128, 0.4);
     opacity: ${(props) => (props.isHovered && props.isDragging ? 1 : 0)};
     transition: opacity 0.2s ease;
-    pointer-events: none;    transition: opacity 0.2s ease;
+    pointer-events: none;    
+    transition: opacity 0.2s ease;
     pointer-events: none;
     transition: opacity 0.2s ease;
     pointer-events: none;
@@ -119,10 +120,33 @@ const globalColnames = {
   positions: "Posiciones",
 };
 
+
+
+const groupPlayerData = (playerData: RowData[]) => {
+  
+  const groupedData: { [key: string]: RowData[] } = playerData.reduce((acc, player) => {
+    const { global_position } = player;
+    if (!acc[global_position!]) acc[global_position!] = [];
+    acc[global_position!].push(player);
+    return acc;
+  }, {} as { [key: string]: RowData[] });
+  console.log("******")
+  console.log(groupedData)
+  return groupedData;
+};
+
 const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants}) => {
   const [expanded, setExpanded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  console.log(participants)
+
+  const [participantData, setParticipantData] = useState(participants.map((participant) => ({
+      ...participant,
+      groupedPlayers: groupPlayerData(participant.players), 
+    }))
+  )
+
+  console.log(participantData)
+
   return (
     <Box
       sx={{
@@ -161,10 +185,10 @@ const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants}) => {
               display: "grid",
               gridTemplateColumns: `repeat(${participants.length}, 1fr)`, // Distribuye uniformemente
               justifyItems: "center",
-              alignItems: "center",
+              alignItems: "stretch",
               gap: 2, // Espaciado entre imágenes
               width: "100%", // Usa todo el ancho disponible
-              padding: 2,
+              padding: 2
             }}
           >
             {participants.map((participant, index) => (
@@ -197,7 +221,6 @@ const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants}) => {
 
                             <TableHead>
                               <TableRow>
-                                <TableCell />
                                 {Object.keys(globalColnames).map((col) => (
                                   <TableCell
                                     key={col}
@@ -209,7 +232,6 @@ const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants}) => {
                                     {globalColnames[col as keyof typeof globalColnames]}
                                   </TableCell>
                                 ))}
-                                <TableCell></TableCell>
                               </TableRow>
                             </TableHead>
 
