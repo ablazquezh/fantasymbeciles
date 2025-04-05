@@ -78,7 +78,7 @@ const getRowColor = (status: string | null) => {
   }
 };
 
-const Item = styled.div<{ isDragging?: boolean }>`
+const Item = styled.div<{ isdragging?: boolean }>`
   display: flex;
   user-select: none;
   padding: 0.5rem;
@@ -88,8 +88,8 @@ const Item = styled.div<{ isDragging?: boolean }>`
   line-height: 1.5;
   border-radius: 3px;
   background: #fff;
-  border: 1px ${(props) => (props.isDragging ? "dashed #000" : "solid #ddd")};
-  opacity: ${(props) => (props.isDragging ? "0" : "1")};
+  border: 1px ${(props) => (props.isdragging ? "dashed #000" : "solid #ddd")};
+  opacity: ${(props) => (props.isdragging ? "0" : "1")};
 `;
 
 const Clone = styled(Item)`
@@ -197,7 +197,7 @@ export default function Row(props: { row: RowData, gamekey: string | null, provi
                 ref={provided.innerRef}
                 {...provided.draggableProps}
                 {...provided.dragHandleProps}
-                isDragging={snapshot.isDragging}
+                isdragging={snapshot.isDragging}
                 style={provided.draggableProps.style}
             >
                 <DragIndicatorIcon />

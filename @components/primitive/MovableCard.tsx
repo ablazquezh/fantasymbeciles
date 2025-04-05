@@ -1,16 +1,104 @@
 import { useState } from "react";
-import { Card, CardContent, IconButton, Box, Typography } from "@mui/material";
+import { Card, CardContent, IconButton } from "@mui/material";
 import { KeyboardArrowUp, KeyboardArrowDown } from "@mui/icons-material";
+import { DragDropContext, Droppable, Draggable, DropResult} from "@hello-pangea/dnd";
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, TablePagination, Paper } from "@mui/material";
+import { players } from "@prisma/client";
+import ReactDOM from 'react-dom';
+import type {
+  DraggableProvided,
+  DraggableStateSnapshot,
+} from '@hello-pangea/dnd';
+
+type PortalAwareItemProps = {
+  provided: DraggableProvided;
+  snapshot: DraggableStateSnapshot;
+  children: React.ReactNode;
+  row: RowData
+};
+const PortalAwareItem: React.FC<PortalAwareItemProps> = ({
+  provided,
+  snapshot,
+  children,
+  row
+}) =>  {
+  const child = (
+    <TableRow sx={{ bgcolor: getRowColor(row.global_position) }} ref={provided.innerRef}
+      {...provided.draggableProps}
+      {...provided.dragHandleProps}
+      style={provided.draggableProps.style}>
+
+      {children}
+        
+    </TableRow>
+  );
+
+  // If dragging, render in portal
+  return snapshot.isDragging
+    ? ReactDOM.createPortal(child, document.body)
+    : child;
+};
+
+
+
+const getRowColor = (status: string | null) => {
+  switch (status) {
+    case "Delantero": return "#80ccff"; 
+    case "Centrocampista": return "#83ff80"; 
+    case "Defensa": return  "#ffee80" ; 
+    case "Portero": return "#ff9380 "; 
+    default: return "#fafafa";
+  }
+};
+
+type RowData = {
+  ID: number;
+  nickname: string | null;
+  positions: string[] | null;
+  country_code: string | null;
+  value: number | null;
+  wage: number | null;
+  average: number | null;
+  global_position: string | null;
+  team_name: string | null;
+  detail: {
+    age: number | null;
+    height: number | null;
+    best_foot: string | null;
+    weak_foot_5stars: number | null;
+    heading: number | null;
+    jump: number | null;
+    long_pass: number | null;
+    short_pass: number | null;
+    dribbling: number | null;
+    acceleration: number | null;
+    speed: number | null;
+    shot_power: number | null;
+    long_shot: number | null;
+    stamina: number | null;
+    defense: number | null;
+    interception: number | null;
+  };
+};
+
 
 interface Participants {
   user_name: string;
   team_name: string;
+  players: RowData[];
 }
 
 interface MovableCardProps {
   participants: Participants[]; 
   gamekey: string| null; 
 }
+
+// Custom column names
+const globalColnames = {
+  nickname: "Jugador",
+  average: "Pt. Global",
+  positions: "Posiciones",
+};
 
 const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants}) => {
   const [expanded, setExpanded] = useState(false);
@@ -60,14 +148,17 @@ const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants}) => {
             }}
           >
             {participants.map((participant, index) => (
-              <Box>
+              <Droppable droppableId={participant.team_name} key={participant.team_name}>
+                {(provided, snapshot) => (
+              <Box key={index} ref={provided.innerRef}
+              {...provided.droppableProps}>
                 <img
                   key={index}
                   src={`/static/teams/${gamekey}/${String(participant["team_name"]).replace("/", "_")}.png`} // Ruta basada en team_name
                   alt={participant.team_name}
                   style={{
                     width: "100%", // Ocupa todo el espacio disponible en su celda
-                    maxWidth: "120px", // Evita que sean demasiado grandes
+                    maxWidth: "45px", // Evita que sean demasiado grandes
                     height: "auto",
                     objectFit: "contain",
                     borderRadius: "8px",
@@ -75,7 +166,74 @@ const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants}) => {
                     boxShadow: "2px 2px 10px rgba(0,0,0,0.2)",
                   }}
                 />
+
+                      <TableContainer sx={{ minHeight: "200px", maxHeight: "550px", overflowY: "auto" }} >
+
+                        <Table stickyHeader>
+
+                          <TableHead>
+                            <TableRow>
+                              <TableCell />
+                              {Object.keys(globalColnames).map((col) => (
+                                <TableCell
+                                  key={col}
+                                  sx={{
+                                    fontWeight: "bold",
+                                    textAlign: "center"
+                                  }}
+                                >
+                                  {globalColnames[col as keyof typeof globalColnames]}
+                                </TableCell>
+                              ))}
+                              <TableCell></TableCell>
+                            </TableRow>
+                          </TableHead>
+
+
+                          <TableBody sx={{backgroundColor: '#fafafa'}}>
+                              {participant.players.map((row, index) => (
+                                <Draggable key={row.ID} draggableId={"moved"+String(row.ID)} index={index}>
+                                  {(provided, snapshot) => {
+                              
+                                    return(
+
+                                      <PortalAwareItem provided={provided} snapshot={snapshot} row={row} >
+                                        { Object.keys(globalColnames).map((col) => (
+
+                                          <TableCell key={col} >
+                                            {row[col as keyof typeof globalColnames] !== null &&
+                                              row[col as keyof typeof globalColnames] !== undefined ? (
+                                                Array.isArray(row[col as keyof typeof globalColnames]) ? (
+                                                  (row[col as keyof typeof globalColnames] as string[]).map((item, index) => (
+                                                    <Chip key={index} label={item} sx={{ margin: "2px" }} />
+                                                  ))
+                                                ) : (
+                                                  row[col as keyof typeof globalColnames]
+                                                )
+                                              ) : (
+                                                "-"
+                                            )}
+                                          </ TableCell>
+                                
+                                        ))}
+                                      </PortalAwareItem>
+
+                                    )}}
+                                </Draggable>
+                              ))}
+                              
+                          </TableBody>
+                          
+                        </Table>
+
+                      </TableContainer>
+                  
+                   
+                      {provided.placeholder}
               </Box>
+               )}
+                            
+               </Droppable>
             ))}
           </Box>
         </CardContent>

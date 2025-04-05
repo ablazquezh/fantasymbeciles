@@ -25,6 +25,8 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
           SELECT participant_id, user_name, team_name FROM league_participants_view WHERE game = ${dbleague?.game} AND league_ID_fk = ${dbleague?.ID}
       `;
 
+  
+
   return { props: {
     dbleague: {
       ...dbleague,
@@ -108,26 +110,66 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
     const completePlayerInfo = mergeData(players, playerPositions)
     const shapedData = reshapeData(completePlayerInfo)
     
+    const [participantData, setParticipantData] = useState(participants.map(item => ({
+      ...item,
+      players: [] as playersFull[] // Empty array for 'items'
+    })))
 
     const handleOnDragEnd = (result: DropResult) => {
         const { source, destination } = result;
-        console.log("*******")
+
         console.log(source)
         console.log(destination)
-        console.log("*******")
-
-        /*if (!destination) return; // If dropped outside
+       
+        if (!destination) return; // If dropped outside
     
         if (source.droppableId === destination.droppableId && source.index === destination.index) {
           return; // If dropped in the same place
         }
-    
-        let sourceData = source.droppableId === "mainTable" ? mainTableData : childTableData;
-        let destinationData = destination.droppableId === "mainTable" ? mainTableData : childTableData;
-    
-        const [movedRow] = sourceData.splice(source.index, 1); // Remove the row from the source table
-        destinationData.splice(destination.index, 0, movedRow); // Add the row to the destination table
-        */
+        
+        let inputPlayer = null
+        if(source.droppableId == "mainTable"){
+          inputPlayer = players[source.index]
+        }else{
+          const foundItem = participantData.find(item => item.team_name === source.droppableId)
+          inputPlayer = foundItem.players[source.index]
+        }
+
+        console.log(inputPlayer)
+
+        setParticipantData(prevData =>
+          prevData.map(participant => {
+            if (participant.team_name === destination.droppableId) {
+              // If the participant matches, add the new player to the 'players' array
+
+              if (participant.players.some((item:playersFull) => item.nickname === inputPlayer?.nickname)){
+                // If that participant already contains the player, do nothing
+                return participant
+              }
+
+              return {
+                ...participant,
+                players: [...participant.players, inputPlayer] // Add the new player
+              };
+            }else{
+
+              if (participant.players.some((item:playersFull) => item.nickname === inputPlayer.nickname)){
+                // If that player was assigned to other participant, it should be dropped from the previous one
+                
+                return {
+                  ...participant,
+                  players: participant.players.filter(
+                    (item:playersFull) => item.nickname?.toLowerCase() !== inputPlayer.nickname?.toLowerCase()
+                  ) // Add the new player
+                };
+              }
+            }
+
+            // Otherwise, return the participant unchanged
+            return participant;
+          })
+        );
+        
         
     };
 
@@ -204,7 +246,7 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
               />
           </Paper>
           
-          <CollapsableCard participants={participants} gamekey={dbleague.game} />
+          <CollapsableCard participants={participantData} gamekey={dbleague.game} />
           
         </DragDropContext>
       </ Box>
