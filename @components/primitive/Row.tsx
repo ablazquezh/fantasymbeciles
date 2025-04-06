@@ -151,6 +151,10 @@ export default function Row(props: { row: RowData, gamekey: string | null, provi
                   <img
                     src={`/static/players/${gamekey}/${row["ID"]-1}.png`} // Load the image based on team_name
                     alt={row[col as keyof typeof globalColnames] as string}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null; // Prevent infinite loop
+                      e.currentTarget.src = `/static/players/${gamekey}/nophoto.png`; // Fallback path
+                    }}
                     style={{ width: "45px", height: "45px", marginRight: "8px" }}
                   />
                   {row[col as keyof typeof globalColnames] !== null &&

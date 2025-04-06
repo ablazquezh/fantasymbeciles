@@ -28,7 +28,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     // Get total count
-    const total = await prisma.players.count();
+    const total = await prisma.players.count({
+      where: {game: gameQuery}
+  });
 
     res.status(200).json({ data, total });
 } catch (error) {

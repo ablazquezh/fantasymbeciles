@@ -68,7 +68,7 @@ type RowData = {
           wage: item.wage,
           value: item.value,
           country_code: item.country_code,
-          team_name: item.teams.team_name,
+          team_name: item.teams?.team_name ?? "freeagent",
           detail: newXEntry
         });
       }
