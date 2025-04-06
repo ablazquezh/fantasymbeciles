@@ -34,6 +34,13 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   } };
 }
 
+const positionCheckboxes = {
+  "Delantero": ["DC","SD","EI","ED"],
+  "Centrocampista": ["MC","MCD","MCO","MD","MI"],
+  "Defensa": ["DFC", "LD", "LI", "CAR"],
+  "Portero": ["POR"],
+}
+
 // Custom column names
 const globalColnames = {
   nickname: "Jugador",
