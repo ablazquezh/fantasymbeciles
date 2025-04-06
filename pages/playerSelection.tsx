@@ -25,8 +25,6 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
           SELECT participant_id, user_name, team_name FROM league_participants_view WHERE game = ${dbleague?.game} AND league_ID_fk = ${dbleague?.ID}
       `;
 
-  
-
   return { props: {
     dbleague: {
       ...dbleague,
@@ -173,6 +171,30 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
         
     };
     console.log(participantData)
+
+
+    
+    const handleRemovePlayer = (participantIndex: number, playername: string) => {
+
+      setParticipantData(prevData => {
+        const newData = [...prevData];
+        const participant = newData[participantIndex];
+    
+        if (!participant) return prevData;
+    
+        const updatedPlayers = participant.players.filter(
+          (player: playersFull) => player.nickname !== playername
+        );
+    
+        newData[participantIndex] = {
+          ...participant,
+          players: updatedPlayers,
+        };
+    
+        return newData;
+      });
+  };
+
     return (
       <Box sx={{
         margin: "auto",
@@ -246,7 +268,7 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
               />
           </Paper>
           
-          <CollapsableCard participants={participantData} gamekey={dbleague.game} />
+          <CollapsableCard participants={participantData} gamekey={dbleague.game} handleRemovePlayer={handleRemovePlayer} />
           
         </DragDropContext>
       </ Box>

@@ -5,6 +5,7 @@ import { DragDropContext, Droppable, Draggable, DropResult} from "@hello-pangea/
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, TablePagination, Paper } from "@mui/material";
 import { players } from "@prisma/client";
 import React from "react";
+import CloseIcon from '@mui/icons-material/Close';
 import ReactDOM from 'react-dom';
 import type {
   DraggableProvided,
@@ -25,7 +26,7 @@ const PortalAwareItem: React.FC<PortalAwareItemProps> = ({
   row
 }) =>  {
   const child = (
-    <TableRow sx={{ bgcolor: getRowColor(row.global_position) }} ref={provided.innerRef}
+    <TableRow sx={{ bgcolor: getRowColor(row.global_position), position:"relative"}} ref={provided.innerRef}
       {...provided.draggableProps}
       {...provided.dragHandleProps}
       style={provided.draggableProps.style}>
@@ -121,6 +122,10 @@ interface ParticipantsFull {
 interface MovableCardProps {
   participants: Participants[]; 
   gamekey: string| null; 
+  handleRemovePlayer: (
+    participantIndex: number,
+    playername: string,
+  ) => void;
 }
 
 // Custom column names
@@ -151,7 +156,7 @@ const groupPlayerData = (playerData: RowData[]) => {
   return groupedData;
 };
 
-const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants}) => {
+const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants, handleRemovePlayer}) => {
   const [expanded, setExpanded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [participantData, setParticipantData] = useState<ParticipantsFull[]>([])
@@ -165,6 +170,11 @@ const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants}) => {
       setParticipantData(transformed);
     }
   }, [participants]);
+
+  const handleClickRemove = (participantIndex: number, playername: string,) => {
+    handleRemovePlayer(participantIndex, playername);
+  };
+
   return (
     <Box
       sx={{
@@ -209,17 +219,17 @@ const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants}) => {
               padding: 2
             }}
           >
-            {participantData.map((participant, index) => (
+            {participantData.map((participant, pindex) => (
               <Droppable droppableId={participant.team_name} key={participant.team_name}>
                 {(provided, snapshot) => ( 
-                <HoverBox key={index} ref={provided.innerRef}
+                <HoverBox key={pindex} ref={provided.innerRef}
                   {...provided.droppableProps}
                   onMouseEnter={() => setIsHovered(true)}
                   onMouseLeave={() => setIsHovered(false)}
                   isHovered={isHovered} isDragging={snapshot.isDraggingOver}>
 
                   <img
-                    key={index}
+                    key={pindex}
                     src={`/static/teams/${gamekey}/${String(participant["team_name"]).replace("/", "_")}.png`} // Ruta basada en team_name
                     alt={participant.team_name}
                     style={{
@@ -291,6 +301,19 @@ const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants}) => {
                                             </ TableCell>
                                   
                                           ))}
+
+                                          <IconButton
+                                            sx={{
+                                                position: "absolute",
+                                                top: 0, // Espaciado desde arriba
+                                                right: 0, // Espaciado desde la derecha
+                                                color: 'white',
+                                            }}
+                                            onClick={() => handleClickRemove(pindex, row.nickname!)}
+                                          >
+                                            <CloseIcon fontSize='small' sx={{ color: "red" }} />
+                                          </IconButton>
+
                                         </PortalAwareItem>
 
                                       )}}
