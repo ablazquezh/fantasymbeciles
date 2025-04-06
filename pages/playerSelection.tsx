@@ -57,6 +57,35 @@ interface PlayerSelectProps {
   participants: any[];
 }
 
+type RowData = {
+  ID: number;
+  nickname: string | null;
+  positions: string[] | null;
+  country_code: string | null;
+  value: number | null;
+  wage: number | null;
+  average: number | null;
+  global_position: string | null;
+  team_name: string | null;
+  detail: {
+    age: number | null;
+    height: number | null;
+    best_foot: string | null;
+    weak_foot_5stars: number | null;
+    heading: number | null;
+    jump: number | null;
+    long_pass: number | null;
+    short_pass: number | null;
+    dribbling: number | null;
+    acceleration: number | null;
+    speed: number | null;
+    shot_power: number | null;
+    long_shot: number | null;
+    stamina: number | null;
+    defense: number | null;
+    interception: number | null;
+  };
+};
 
 const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participants}) => {
 
@@ -115,9 +144,6 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
 
     const handleOnDragEnd = (result: DropResult) => {
         const { source, destination } = result;
-
-        console.log(source)
-        console.log(destination)
        
         if (!destination) return; // If dropped outside
     
@@ -132,8 +158,6 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
           const foundItem = participantData.find(item => item.team_name === source.droppableId)
           inputPlayer = foundItem.players[source.index]
         }
-
-        console.log(inputPlayer)
 
         setParticipantData(prevData =>
           prevData.map(participant => {
@@ -170,6 +194,40 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
         
         
     };
+
+    const handleOnSelect = (team_name: string, player: RowData) => {
+
+      setParticipantData(prevData =>
+        prevData.map(participant => {
+          if (participant.team_name === team_name) {
+            // If the participant matches, add the new player to the 'players' array
+
+            return {
+              ...participant,
+              players: [...participant.players, player] // Add the new player
+            };
+          }else{
+            
+            if (participant.players.some((item:playersFull) => item.nickname === player.nickname)){
+              // If that player was assigned to other participant, it should be dropped from the previous one
+              
+              return {
+                ...participant,
+                players: participant.players.filter(
+                  (item:playersFull) => item.nickname?.toLowerCase() !== player.nickname?.toLowerCase()
+                ) // Add the new player
+              };
+            }
+          }
+
+          // Otherwise, return the participant unchanged
+          return participant;
+        })
+      );
+      
+      
+  };
+
     console.log(participantData)
 
 
@@ -229,7 +287,9 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
                             {globalColnames[col as keyof typeof globalColnames]}
                           </TableCell>
                         ))}
-                        <TableCell></TableCell>
+                        <TableCell sx={{fontWeight: "bold", textAlign: "center", borderLeft: '1px solid rgba(0, 0, 0, 0.12)' }} colSpan={2}>
+                          Traspaso
+                        </TableCell>
                       </TableRow>
                     </TableHead>
 
@@ -240,7 +300,11 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
                             {(provided, snapshot) => {
                         
                               return(
-                                <Row key={row.nickname} row={row} gamekey={dbleague.game} provided={provided} snapshot={snapshot}/>
+                                <Row key={row.nickname} row={row} gamekey={dbleague.game} provided={provided} 
+                                  snapshot={snapshot} teams={participants.map(part => part.team_name)} onSelect={handleOnSelect} 
+                                  selectedTeam={participantData.find(x =>
+                                    x.players.some((aItem: RowData) => aItem.nickname === row.nickname)
+                                  )?.team_name || 'Sin traspaso'} />
                             )}}
                           </Draggable>
                         ))}

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, TablePagination, Paper } from "@mui/material";
 import IconButton from '@mui/material/IconButton';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -7,6 +7,8 @@ import Collapse from '@mui/material/Collapse';
 import { DragDropContext, Droppable, Draggable, DropResult, DraggableProvided, DraggableStateSnapshot} from "@hello-pangea/dnd";
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import styled from "styled-components";
+import { Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { SelectChangeEvent } from '@mui/material'; // 👈 Import this from MUI
 
 const globalDetailColnames = {
     age: "Edad",
@@ -98,18 +100,30 @@ const Clone = styled(Item)`
   }
 `;
 
-export default function Row(props: { row: RowData, gamekey: string | null, provided: DraggableProvided, snapshot: DraggableStateSnapshot}) {
-  
-    const { row, gamekey, provided, snapshot } = props;
+export default function Row(props: { row: RowData, gamekey: string | null, provided: DraggableProvided, snapshot: DraggableStateSnapshot, 
+  teams: string[], onSelect: (team_name: string, player: RowData) => void, selectedTeam: string }) {
+    
+    const { row, gamekey, provided, snapshot, teams, onSelect, selectedTeam } = props;
+
     const [open, setOpen] = React.useState(false);
-    //console.log(row)
+
+    const [selectedValue, setSelectedValue] = React.useState(selectedTeam);
+    
+    useEffect(() => {
+      setSelectedValue(selectedTeam);
+    }, [selectedTeam]);
+
+    const handleChange = (event: SelectChangeEvent) => {
+      setSelectedValue(event.target.value as string);
+      onSelect(event.target.value, row)
+    };
     return (
       <React.Fragment>
   
         <TableRow sx={{ bgcolor: getRowColor(row.global_position) }}
         >
                                 
-          <TableCell sx={{width: 0}}>
+          <TableCell sx={{width: 0, paddingRight:0}}>
             <IconButton
               aria-label="expand row"
               size="small"
@@ -119,7 +133,11 @@ export default function Row(props: { row: RowData, gamekey: string | null, provi
             </IconButton>
           </TableCell>
           { Object.keys(globalColnames).map((col) => (
-            <TableCell key={col} >
+            <TableCell key={col} 
+            sx={{
+              width: col === 'average' ? '100px' : col === 'team_name' ? '150px' : 'auto',
+              paddingLeft: 0
+            }}>
               {col === "nickname" ? (
                 <Box
                   display="flex"
@@ -192,6 +210,34 @@ export default function Row(props: { row: RowData, gamekey: string | null, provi
               )}
             </TableCell>
           ))}
+          <TableCell sx={{ borderLeft: '1px solid rgba(0, 0, 0, 0.12)'}}>
+           <FormControl fullWidth sx={{ alignItems: 'center' }}>
+              <Select
+                labelId="select-label"
+                value={selectedValue}
+                onChange={handleChange}
+                label="Selecciona una opción"
+                sx={{backgroundColor: "white",width: 150,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  height:30,
+                  fontSize:12,
+                  padding: 0
+                }}
+              >
+                <MenuItem key={"None"} value={"Sin traspaso"} sx={{ fontSize: '10px' }}>
+                    {"Sin traspaso"}
+                  </MenuItem>
+                {teams.map((option) => (
+                  <MenuItem key={option} value={option} sx={{ fontSize: '10px' }}>
+                    {option}
+                  </MenuItem>
+                ))}
+                
+              </Select>
+            </FormControl>
+          </TableCell>
           <TableCell sx={{width: 0}}>
             <Item
                 ref={provided.innerRef}
