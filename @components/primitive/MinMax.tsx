@@ -1,9 +1,14 @@
 import React, { useState, ChangeEvent, FocusEvent } from 'react';
 import { TextField, Button, Box } from '@mui/material';
 
-export default function NumberRangeFields() {
-  const [minValue, setMinValue] = useState('0');
-  const [maxValue, setMaxValue] = useState('99');
+interface NumberRangeFieldsProps {
+    minValue: string;
+    maxValue: string;
+    setMinValue: React.Dispatch<React.SetStateAction<string>>;
+    setMaxValue: React.Dispatch<React.SetStateAction<string>>;
+  }
+
+export default function MinMax ({ minValue, maxValue, setMinValue, setMaxValue }: NumberRangeFieldsProps) {
 
   const clampValue = (val: string): string => {
     const num = parseInt(val, 10);
@@ -40,13 +45,9 @@ export default function NumberRangeFields() {
     maxValue === '' ||
     +minValue > +maxValue;
 
-  const handleSend = () => {
-    alert(`Sent! Min: ${minValue}, Max: ${maxValue}`);
-  };
 
   return (
-    <Box display="flex" flexDirection="column" gap={2} width="300px">
-      <Box display="flex" gap={2}>
+      <>
         <TextField
           label="Min"
           variant="outlined"
@@ -54,12 +55,12 @@ export default function NumberRangeFields() {
           onChange={handleMinChange}
           onBlur={handleMinBlur}
           error={isInvalidRange}
-          helperText={isInvalidRange ? 'Mínimo ≤ Máximo' : ''}
           inputProps={{
             inputMode: 'numeric',
             pattern: '[0-9]*',
             maxLength: 2, // also helpful
           }}
+          sx={{width: "6%", '& .MuiInputBase-root': { height: '40px', fontSize: 14  } }}
         />
         <TextField
           label="Max"
@@ -68,22 +69,15 @@ export default function NumberRangeFields() {
           onChange={handleMaxChange}
           onBlur={handleMaxBlur}
           error={isInvalidRange}
-          helperText={isInvalidRange ? 'Máximo ≥ Mínimo' : ''}
           inputProps={{
             inputMode: 'numeric',
             pattern: '[0-9]*',
             maxLength: 2,
           }}
+          sx={{width: "6%", '& .MuiInputBase-root': { height: '40px', fontSize: 14 }, marginRight: 5 }}
         />
-      </Box>
-      <Button
-        variant="contained"
-        color="primary"
-        disabled={isInvalidRange}
-        onClick={handleSend}
-      >
-        Send
-      </Button>
-    </Box>
+      </>
+      
   );
 }
+
