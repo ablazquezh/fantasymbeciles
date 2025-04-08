@@ -228,6 +228,7 @@ const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants, handleR
                   onMouseLeave={() => setIsHovered(false)}
                   isHovered={isHovered} isDragging={snapshot.isDraggingOver}>
 
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center',}}>
                   <img
                     key={pindex}
                     src={`/static/teams/${gamekey}/${String(participant["team_name"]).replace("/", "_")}.png`} // Ruta basada en team_name
@@ -240,97 +241,101 @@ const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants, handleR
                       borderRadius: "8px",
                       padding: "5px",
                       boxShadow: "2px 2px 10px rgba(0,0,0,0.2)",
+                      marginRight: "auto"
                     }}
                   />
+                  <Typography gutterBottom variant="body1" component="div" sx={{margin: "auto"}}>
+                      N. jugadores: {participant.players.length}
+                  </Typography>
+                  </div>
 
-                        <TableContainer sx={{ minHeight: "200px", maxHeight: "550px", maxWidth: "310px", minWidth: "310px", overflowY: "auto" }} >
+                    <TableContainer sx={{ minHeight: "200px", maxHeight: "550px", maxWidth: "310px", minWidth: "310px", overflowY: "auto" }} >
 
-                          <Table stickyHeader>
+                      <Table stickyHeader>
 
-                            {/*<TableHead>
+                        {/*<TableHead>
+                          <TableRow>
+                            {Object.keys(globalColnames).map((col) => (
+                              <TableCell
+                                key={col}
+                                sx={{
+                                  fontWeight: "bold",
+                                  textAlign: "center"
+                                }}
+                              >
+                                {globalColnames[col as keyof typeof globalColnames]}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        </TableHead>*/}
+
+
+                        <TableBody sx={{backgroundColor: '#fafafa'}}>
+
+                          {Object.keys(participant.groupedPlayers).map((category) => (
+                            <React.Fragment key={category}>
+                              {/* Render category header */}
                               <TableRow>
-                                {Object.keys(globalColnames).map((col) => (
-                                  <TableCell
-                                    key={col}
-                                    sx={{
-                                      fontWeight: "bold",
-                                      textAlign: "center"
-                                    }}
-                                  >
-                                    {globalColnames[col as keyof typeof globalColnames]}
-                                  </TableCell>
-                                ))}
+                                <TableCell colSpan={3} style={{ fontWeight: "bold", backgroundColor: "#f1f1f1" }}>
+                                  {category}
+                                </TableCell>
                               </TableRow>
-                            </TableHead>*/}
-
-
-                            <TableBody sx={{backgroundColor: '#fafafa'}}>
-
-                              {Object.keys(participant.groupedPlayers).map((category) => (
-                                <React.Fragment key={category}>
-                                  {/* Render category header */}
-                                  <TableRow>
-                                    <TableCell colSpan={3} style={{ fontWeight: "bold", backgroundColor: "#f1f1f1" }}>
-                                      {category}
-                                    </TableCell>
-                                  </TableRow>
-                    
-                                  {/* Render rows for this category */}
-                                  {participant.groupedPlayers[category].map((row, index) => (
-                                    <Draggable key={row.ID} draggableId={"moved"+String(row.ID)} index={index}>
-                                    {(provided, snapshot) => {
-                                
-                                      return(
-
-                                        <PortalAwareItem provided={provided} snapshot={snapshot} row={row} >
-                                          { Object.keys(globalColnames).map((col) => (
-
-                                            <TableCell key={col} >
-                                              {row[col as keyof typeof globalColnames] !== null &&
-                                                row[col as keyof typeof globalColnames] !== undefined ? (
-                                                  Array.isArray(row[col as keyof typeof globalColnames]) ? (
-                                                    (row[col as keyof typeof globalColnames] as string[]).map((item, index) => (
-                                                      <Chip key={index} label={item} sx={{ margin: "2px" }} />
-                                                    ))
-                                                  ) : (
-                                                    row[col as keyof typeof globalColnames]
-                                                  )
-                                                ) : (
-                                                  "-"
-                                              )}
-                                            </ TableCell>
-                                  
-                                          ))}
-
-                                          <IconButton
-                                            sx={{
-                                                position: "absolute",
-                                                top: 0, // Espaciado desde arriba
-                                                right: 0, // Espaciado desde la derecha
-                                                color: 'white',
-                                            }}
-                                            onClick={() => handleClickRemove(pindex, row.nickname!)}
-                                          >
-                                            <CloseIcon fontSize='small' sx={{ color: "red" }} />
-                                          </IconButton>
-
-                                        </PortalAwareItem>
-
-                                      )}}
-                                  </Draggable>
-                                  ))}
-                                </React.Fragment>
-                              ))}
-                                
-                            </TableBody>
+                
+                              {/* Render rows for this category */}
+                              {participant.groupedPlayers[category].map((row, index) => (
+                                <Draggable key={row.ID} draggableId={"moved"+String(row.ID)} index={index}>
+                                {(provided, snapshot) => {
                             
-                          </Table>
+                                  return(
 
-                        </TableContainer>
+                                    <PortalAwareItem provided={provided} snapshot={snapshot} row={row} >
+                                      { Object.keys(globalColnames).map((col) => (
+
+                                        <TableCell key={col} >
+                                          {row[col as keyof typeof globalColnames] !== null &&
+                                            row[col as keyof typeof globalColnames] !== undefined ? (
+                                              Array.isArray(row[col as keyof typeof globalColnames]) ? (
+                                                (row[col as keyof typeof globalColnames] as string[]).map((item, index) => (
+                                                  <Chip key={index} label={item} sx={{ margin: "2px" }} />
+                                                ))
+                                              ) : (
+                                                row[col as keyof typeof globalColnames]
+                                              )
+                                            ) : (
+                                              "-"
+                                          )}
+                                        </ TableCell>
+                              
+                                      ))}
+
+                                      <IconButton
+                                        sx={{
+                                            position: "absolute",
+                                            top: 0, // Espaciado desde arriba
+                                            right: 0, // Espaciado desde la derecha
+                                            color: 'white',
+                                        }}
+                                        onClick={() => handleClickRemove(pindex, row.nickname!)}
+                                      >
+                                        <CloseIcon fontSize='small' sx={{ color: "red" }} />
+                                      </IconButton>
+
+                                    </PortalAwareItem>
+
+                                  )}}
+                              </Draggable>
+                              ))}
+                            </React.Fragment>
+                          ))}
+                            
+                        </TableBody>
+                        
+                      </Table>
+
+                    </TableContainer>
                     
-                    
-                        {provided.placeholder}
-                </HoverBox>
+                    {provided.placeholder}
+                  </HoverBox>
                 )}
                             
                </Droppable>

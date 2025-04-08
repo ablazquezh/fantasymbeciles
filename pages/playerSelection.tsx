@@ -24,7 +24,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   );
 
   const participants = await prisma.$queryRaw`
-          SELECT participant_id, user_name, team_name FROM league_participants_view WHERE game = ${dbleague?.game} AND league_ID_fk = ${dbleague?.ID}
+          SELECT participant_id, user_name, team_name, team_id FROM league_participants_view WHERE game = ${dbleague?.game} AND league_ID_fk = ${dbleague?.ID}
       `;
 
   return { props: {
@@ -281,13 +281,53 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
     });
   };
 
+  const handleBeginLeague = async () => {
+
+    const transferRecords = participantData.flatMap(pData =>
+      pData.players.map((player: playersFull) => ({
+        player_id_fk: Number(player.ID),
+        team_id_fk: Number(pData.team_id),
+        league_id_fk: Number(leagueId)
+      }))
+    );
+
+    try {
+      const response = await fetch("/api/createtransfers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ records: transferRecords }),
+        });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        console.log("Success:", data);
+        router.push(`/league?leagueId=${leagueId}`);
+      } else {
+        console.error("Error:", data.error);
+      }
+    } catch (error) {
+      console.error("Request failed:", error);
+    }
+  };
+
+
+
     return (
       <Box sx={{
         margin: "auto",
         width: "60%",
         display: "flex",
         flexDirection: "column",
+        position: "relative"
       }}>
+
+        <Button variant="contained" color="primary" disabled={false}
+          sx={{ width: 150, ml: "calc(100% - 150px)", position: 'absolute', top: '20px', right: '8px', }}
+          onClick={() => handleBeginLeague()}>
+            empezar liga
+        </Button>
+
         <DragDropContext onDragEnd={handleOnDragEnd}>
 
           <Paper sx={{ padding: 4, marginTop: 10 }}>
@@ -386,4 +426,3 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
   }
   
   export default PlayerSelectionPage
-  
