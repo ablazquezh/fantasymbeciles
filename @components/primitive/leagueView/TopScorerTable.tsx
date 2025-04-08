@@ -63,7 +63,7 @@ interface TopScorerTableProps {
     let paginatedData = sortedData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
     return (
-        <Box sx={{ width: "20%" }}>
+        <Box sx={{ width: "20%", backgroundColor: "lightgray", height: "fit-content"}}>
             <TableContainer sx={{ minHeight: "550px", maxHeight: "550px", overflowY: "auto"}}>
                 <Table stickyHeader>
                     <TableHead>
@@ -79,8 +79,6 @@ interface TopScorerTableProps {
                                     { columnNames[col as keyof typeof columnNames] }
                                 </TableCell>
                             ))}
-                            {/* Add a column for the "Add" button */}
-                            <TableCell></TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody sx={{backgroundColor: '#fafafa'}}>
@@ -98,9 +96,7 @@ interface TopScorerTableProps {
                                             />
                                         </Box>
                                     ) : (
-                                        <TableCell>
-                                            { row[col as keyof TopScorer] }
-                                        </ TableCell>
+                                        <>{ row[col as keyof TopScorer] }</>
                                     )}
                                 </TableCell>
                                 ))}

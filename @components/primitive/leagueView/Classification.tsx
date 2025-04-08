@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper
 
 interface LeagueTable {
     team_name: string;
-    n_played_matches: string;
+    n_played_matches: number;
     victories: number;
     draws: number;
     loses: number;
@@ -66,8 +66,8 @@ interface LeagueTableTableProps {
     const columns = Object.keys(columnNames)
 
     return (
-        <Box sx={{ width: "70%", ml: 15 }}>
-            <TableContainer sx={{ minHeight: "550px", maxHeight: "550px", overflowY: "auto"}}>
+        <Box sx={{ width: "100%", ml: 15, height: "fit-content"}}>
+            <TableContainer sx={{ overflowY: "auto"}}>
                 <Table stickyHeader>
                     <TableHead>
                         <TableRow>
@@ -82,15 +82,13 @@ interface LeagueTableTableProps {
                                     { columnNames[col as keyof typeof columnNames] }
                                 </TableCell>
                             ))}
-                            {/* Add a column for the "Add" button */}
-                            <TableCell></TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody sx={{backgroundColor: '#fafafa'}}>
                         {sortedData.map((row, index) => (
-                            <TableRow key={index} >
+                            <TableRow key={index}>
                             {columns.map((col) => (
-                                <TableCell key={col}  >
+                                <TableCell key={col} align="center" sx={{ backgroundColor: col === "points" ? 'lightgray' : 'transparent' }} >
                                     {col === "team_name" ? (
                                         <Box display="flex" alignItems="center" justifyContent='center'>
                                             {/* Render the image based on the team_name */}
@@ -101,9 +99,9 @@ interface LeagueTableTableProps {
                                             />
                                         </Box>
                                     ) : (
-                                        <TableCell>
+                                        <>
                                             { row[col as keyof LeagueTable] }
-                                        </ TableCell>
+                                        </>
                                     )}
                                 </TableCell>
                                 ))}
