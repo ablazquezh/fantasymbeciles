@@ -59,6 +59,7 @@ interface MatchDetails {
 interface matchInfo {
   local: MatchDetails;
   visitor: MatchDetails;
+  played: boolean;
 }
 
 
@@ -94,6 +95,10 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
 
   const router = useRouter();
   const { leagueId } = router.query;
+
+  const handleMatchClick = (matchInfo: matchInfo) => {
+    console.log(matchInfo)
+  };
 
   return (
     <Box sx={{
@@ -145,7 +150,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
                     <Box sx={{ gap: 3, padding: 1, justifyContent: 'center', alignItems: 'center', display: "flex", flexDirection: "column" }}>
 
                       {matchday.matches.map((match: matchInfo, matchIdx: number) =>
-                        <MatchCard key={matchIdx} matchInfo={match} game={dbleague.game!}></ MatchCard>
+                        <MatchCard key={matchIdx} matchInfo={match} game={dbleague.game!} handleMatchClick={handleMatchClick} ></ MatchCard>
                       )}
                     </Box>
                     <Divider sx={{ margin: '16px 0' }} />
@@ -165,7 +170,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
                     <Box sx={{ gap: 3, padding: 1, justifyContent: 'center', alignItems: 'center', display: "flex", flexDirection: "column" }}>
 
                       {matchday.matches.map((match: matchInfo, matchIdx: number) =>
-                        <MatchCard key={matchIdx} matchInfo={match} game={dbleague.game!}></ MatchCard>
+                        <MatchCard key={matchIdx} matchInfo={match} game={dbleague.game!} handleMatchClick={handleMatchClick} ></ MatchCard>
                       )}
 
                     </Box>

@@ -30,17 +30,20 @@ export default function generateRoundRobinSchedule(teamsInput: (string | null)[]
           const idaMatch = Math.random() < 0.5
             ? { 
                 local: { team: home, goals: [], cards: [] }, 
-                visitor: { team: away, goals: [], cards: [] }
+                visitor: { team: away, goals: [], cards: [] },
+                played: false
               }
             : { 
                 local: { team: away, goals: [], cards: [] }, 
-                visitor: { team: home, goals: [], cards: [] }
+                visitor: { team: home, goals: [], cards: [] },
+                played: false
               };
   
           // Vuelta is the reverse fixture
           const vueltaMatch = {
             local: { team: idaMatch.visitor.team, goals: [], cards: [] },
-            visitor: { team: idaMatch.local.team, goals: [], cards: [] }
+            visitor: { team: idaMatch.local.team, goals: [], cards: [] },
+            played: false
           };
   
           idaMatches.push(idaMatch);

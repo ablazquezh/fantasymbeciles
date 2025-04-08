@@ -11,17 +11,26 @@ interface MatchDetails {
 interface matchInfo {
     local: MatchDetails;
     visitor: MatchDetails;
+    played: boolean;
   }
 
 interface MatchProps {
     matchInfo: matchInfo;
     game: string;
+    handleMatchClick: (
+        matchInfo: matchInfo
+      ) => void;
   }
 
-  const MatchCard: React.FC<MatchProps> = ({ matchInfo, game }) => {
+  const MatchCard: React.FC<MatchProps> = ({ matchInfo, game, handleMatchClick }) => {
+
+
+    const handleClick = () => {
+        handleMatchClick(matchInfo);
+    };
 
     return (
-        <Box sx={{ display: "flex", width: "100%", mt: 2, height: "60px"}}>
+        <Box sx={{ display: "flex", width: "100%", mt: 2, height: "60px", cursor: 'pointer' }} onClick={handleClick} >
             
             <Paper sx={{  display: "flex", alignItems: "center", padding: 1, backgroundColor: "lightgray", width: "100%"}}>
                 <Box sx={{  display: "flex", mr: "auto", alignItems: "center", width:"30%" }}>
@@ -37,7 +46,7 @@ interface MatchProps {
                 
                 <Paper sx={{ ml: 1, mr: 1, display: "flex", height: "100%", justifyContent: "center", alignItems: "center", backgroundColor: "black"}}>
                     <Typography sx={{pl: 1.5, pr: 1.5, fontWeight: 'bold', color: "white"}}>
-                        0
+                        {matchInfo.played ? matchInfo.local.goals.reduce((sum, goal) => sum + goal.n, 0) : "-"}
                     </Typography>
                 </Paper>
                     <Typography sx={{fontWeight: 'bold', fontSize: 20}}>
@@ -45,7 +54,7 @@ interface MatchProps {
                     </Typography>
                 <Paper sx={{ ml: 1, mr: 1, display: "flex", height: "100%", justifyContent: "center", alignItems: "center", backgroundColor: "black"}}>
                     <Typography sx={{pl: 1.5, pr: 1.5, fontWeight: 'bold', color: "white"}}>
-                        0
+                        {matchInfo.played ? matchInfo.visitor.goals.reduce((sum, goal) => sum + goal.n, 0) : "-"}
                     </Typography>
                 </Paper>
 
