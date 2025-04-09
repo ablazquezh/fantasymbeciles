@@ -9,6 +9,8 @@ import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import styled from "styled-components";
 import { Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material'; // 👈 Import this from MUI
+import { RowData } from '../types/RowData';
+import getRowColor from '../utils/getRowColor';
 
 const globalDetailColnames = {
     age: "Edad",
@@ -38,47 +40,6 @@ const globalDetailColnames = {
     team_name: "Equipo de origen"
   };
   
-  
-  type RowData = {
-    ID: number;
-    nickname: string | null;
-    positions: string[] | null;
-    country_code: string | null;
-    value: number | null;
-    wage: number | null;
-    average: number | null;
-    global_position: string | null;
-    team_name: string | null;
-    detail: {
-      age: number | null;
-      height: number | null;
-      best_foot: string | null;
-      weak_foot_5stars: number | null;
-      heading: number | null;
-      jump: number | null;
-      long_pass: number | null;
-      short_pass: number | null;
-      dribbling: number | null;
-      acceleration: number | null;
-      speed: number | null;
-      shot_power: number | null;
-      long_shot: number | null;
-      stamina: number | null;
-      defense: number | null;
-      interception: number | null;
-    };
-  };
-
-
-const getRowColor = (status: string | null) => {
-  switch (status) {
-    case "Delantero": return "#80ccff"; 
-    case "Centrocampista": return "#83ff80"; 
-    case "Defensa": return  "#ffee80" ; 
-    case "Portero": return "#ff9380 "; 
-    default: return "#fafafa";
-  }
-};
 
 const Item = styled.div<{ isdragging?: boolean }>`
   display: flex;

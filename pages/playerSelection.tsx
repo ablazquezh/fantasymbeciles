@@ -11,6 +11,7 @@ import mergeData from '@/@components/utils/mergeData';
 import reshapeData from '@/@components/utils/reshapeData';
 import CustomDropdownSelect from '@/@components/primitive/CustomDropdown';
 import MinMax from '@/@components/primitive/MinMax';
+import { RowData } from '@/@components/types/RowData';
 
 const prisma = new PrismaClient();
 
@@ -66,38 +67,9 @@ interface PlayerSelectProps {
   participants: any[];
 }
 
-type RowData = {
-  ID: number;
-  nickname: string | null;
-  positions: string[] | null;
-  country_code: string | null;
-  value: number | null;
-  wage: number | null;
-  average: number | null;
-  global_position: string | null;
-  team_name: string | null;
-  detail: {
-    age: number | null;
-    height: number | null;
-    best_foot: string | null;
-    weak_foot_5stars: number | null;
-    heading: number | null;
-    jump: number | null;
-    long_pass: number | null;
-    short_pass: number | null;
-    dribbling: number | null;
-    acceleration: number | null;
-    speed: number | null;
-    shot_power: number | null;
-    long_shot: number | null;
-    stamina: number | null;
-    defense: number | null;
-    interception: number | null;
-  };
-};
-
 const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participants}) => {
 
+  console.log(participants)
   const router = useRouter();
   const { leagueId } = router.query;
   const [league, setLeague] = useState<string | null>(null);
@@ -116,6 +88,7 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
   // MIN-MAX CONTROL
   const [minValue, setMinValue] = useState('0');
   const [maxValue, setMaxValue] = useState('99');
+  // MIN-MAX CONTROL
 
   const isInvalidRange = minValue === '' || maxValue === '' || +minValue > +maxValue;
 
@@ -132,7 +105,6 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
     setPlayers(data.data);
     setTotal(data.total);
   };
-  // MIN-MAX CONTROL
 
   useEffect(() => {
     if (leagueId) {
@@ -311,7 +283,7 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
     }
   };
 
-
+console.log(participantData)
 
     return (
       <Box sx={{

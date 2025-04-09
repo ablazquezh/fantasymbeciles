@@ -12,6 +12,9 @@ import type {
   DraggableStateSnapshot,
 } from '@hello-pangea/dnd';
 import styled from "styled-components";
+import { RowData } from '../types/RowData';
+import groupPlayerData from "../utils/groupPlayerData";
+import getRowColor from "../utils/getRowColor";
 
 type PortalAwareItemProps = {
   provided: DraggableProvided;
@@ -63,46 +66,6 @@ const HoverBox = styled.div<{ isHovered: boolean, isDragging: boolean }>`
 
 `;
 
-const getRowColor = (status: string | null) => {
-  switch (status) {
-    case "Delantero": return "#80ccff"; 
-    case "Centrocampista": return "#83ff80"; 
-    case "Defensa": return  "#ffee80" ; 
-    case "Portero": return "#ff9380 "; 
-    default: return "#fafafa";
-  }
-};
-
-type RowData = {
-  ID: number;
-  nickname: string | null;
-  positions: string[] | null;
-  country_code: string | null;
-  value: number | null;
-  wage: number | null;
-  average: number | null;
-  global_position: string | null;
-  team_name: string | null;
-  detail: {
-    age: number | null;
-    height: number | null;
-    best_foot: string | null;
-    weak_foot_5stars: number | null;
-    heading: number | null;
-    jump: number | null;
-    long_pass: number | null;
-    short_pass: number | null;
-    dribbling: number | null;
-    acceleration: number | null;
-    speed: number | null;
-    shot_power: number | null;
-    long_shot: number | null;
-    stamina: number | null;
-    defense: number | null;
-    interception: number | null;
-  };
-};
-
 
 interface Participants {
   user_name: string;
@@ -136,26 +99,6 @@ const globalColnames = {
 };
 
 
-const positionList = ["Delantero", "Centrocampista", "Defensa", "Portero"];
-
-const groupPlayerData = (playerData: RowData[]) => {
-  
-  const groupedData: { [key: string]: RowData[] } = positionList.reduce((acc, pos) => {
-    acc[pos] = [];
-    return acc;
-  }, {} as { [key: string]: RowData[] });
-
-  playerData.forEach((player) => {
-    const key = player.global_position;
-    if (key) {
-      if (!groupedData[key]) groupedData[key] = []; // If key not predefined
-      groupedData[key].push(player);
-    }
-  });
-
-  return groupedData;
-};
-
 const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants, handleRemovePlayer}) => {
   const [expanded, setExpanded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -175,6 +118,7 @@ const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants, handleR
     handleRemovePlayer(participantIndex, playername);
   };
 
+  console.log(participants)
   return (
     <Box
       sx={{
@@ -183,10 +127,10 @@ const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants, handleR
         left: "50%",
         transform: "translateX(-50%)",
         transition: "bottom 0.5s ease-in-out",
-        width: "75%",
+        width: "85%",
         display: "flex",
         alignItems: "center",
-        zIndex: 100 // Asegura que el botón y la tarjeta se alineen
+        zIndex: 100
       }}
     >
       {/* Tarjeta expandible */}
@@ -207,14 +151,13 @@ const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants, handleR
             flexDirection: "column",
           }}
         >
-          {/* Sección de imágenes de los equipos */}
           <Box
             sx={{
               display: "grid",
               gridTemplateColumns: `repeat(${participants.length}, 1fr)`, // Distribuye uniformemente
               justifyItems: "center",
               alignItems: "stretch",
-              gap: 2, // Espaciado entre imágenes
+              gap: 7, // Espaciado entre imágenes
               width: "100%", // Usa todo el ancho disponible
               padding: 2
             }}

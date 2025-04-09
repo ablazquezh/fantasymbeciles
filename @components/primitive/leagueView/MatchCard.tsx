@@ -17,16 +17,15 @@ interface matchInfo {
 interface MatchProps {
     matchInfo: matchInfo;
     game: string;
-    handleMatchClick: (
+    handleMatchClick: ((
         matchInfo: matchInfo
-      ) => void;
+      ) => void) | null;
   }
 
   const MatchCard: React.FC<MatchProps> = ({ matchInfo, game, handleMatchClick }) => {
 
-
     const handleClick = () => {
-        handleMatchClick(matchInfo);
+        handleMatchClick!(matchInfo);
     };
 
     return (
