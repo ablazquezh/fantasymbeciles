@@ -144,16 +144,32 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, compl
                 <TableContainer sx={{ minHeight: "200px", maxHeight: "550px", maxWidth: "100%", minWidth: "100%", overflowY: "auto" }} >
     
                     <Table stickyHeader>
+                    <TableHead>
+                        <TableRow>
+                            {["Jugador", "Goles", "T.Am.", "T.R."].map((col) => (
+                                <TableCell
+                                    key={col}
+                                    sx={{
+                                        fontWeight: "bold",
+                                        textAlign: "center" // Center text in the header
+                                    }}
+                                >
+                                    {col}
+                                </TableCell>
+                            ))}
+                        </TableRow>
+                    </TableHead>
+
                     <TableBody sx={{backgroundColor: '#fafafa'}}>
     
                     {participantData && matchStats && Object.keys(participantData.local.groupedPlayers).map((category) => (
                         <React.Fragment key={category}>
-                            {/* Render category header */}
+                            {/* Render category header 
                             <TableRow>
                             <TableCell colSpan={4} style={{ fontWeight: "bold", backgroundColor: "#f1f1f1" }}>
                                 {category}
                             </TableCell>
-                            </TableRow>
+                            </TableRow>*/}
             
                             {/* Render rows for this category */}
                             {participantData?.local.groupedPlayers[category].map((row, index) => (
@@ -241,16 +257,32 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, compl
                 <TableContainer sx={{ minHeight: "200px", maxHeight: "550px", maxWidth: "100%", minWidth: "100%", overflowY: "auto", }} >
     
                     <Table stickyHeader>
+                    <TableHead>
+                        <TableRow>
+                            {["Jugador", "Goles", "T.Am.", "T.R."].map((col) => (
+                                <TableCell
+                                    key={col}
+                                    sx={{
+                                        fontWeight: "bold",
+                                        textAlign: "center" // Center text in the header
+                                    }}
+                                >
+                                    {col}
+                                </TableCell>
+                            ))}
+                        </TableRow>
+                    </TableHead>
+
                     <TableBody sx={{backgroundColor: '#fafafa'}}>
     
                     {participantData && matchStats && Object.keys(participantData.visitor.groupedPlayers).map((category) => (
                         <React.Fragment key={category}>
-                            {/* Render category header */}
+                            {/* Render category header 
                             <TableRow>
                             <TableCell colSpan={4} style={{ fontWeight: "bold", backgroundColor: "#f1f1f1" }}>
                                 {category}
                             </TableCell>
-                            </TableRow>
+                            </TableRow>*/}
             
                             {/* Render rows for this category */}
                             {participantData?.visitor.groupedPlayers[category].map((row, index) => (
