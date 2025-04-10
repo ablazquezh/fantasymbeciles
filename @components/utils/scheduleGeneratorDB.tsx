@@ -24,7 +24,7 @@ export default function generateScheduleFromDB(matches: MatchRecords[], leagueTa
           ycards: [],
           rcards: [],
         },
-        played: false,
+        played: match.played!,
         match_id: match.ID
       };
   

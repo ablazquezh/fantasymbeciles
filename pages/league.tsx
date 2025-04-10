@@ -160,7 +160,8 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
             visitor_team_id_fk: leagueTable.find(item => item.team_name === match.visitor.team)?.team_id,
             league_id_fk: Number(leagueId as string),
             matchday: day.matchday,
-            ID: match.match_id!
+            ID: match.match_id!,
+            played: match.played
           });
         });
       });
@@ -172,7 +173,8 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
             visitor_team_id_fk: leagueTable.find(item => item.team_name === match.visitor.team)?.team_id,
             league_id_fk: Number(leagueId as string),
             matchday: day.matchday,
-            ID: match.match_id!
+            ID: match.match_id!,
+            played: match.played
           });
         });
       });

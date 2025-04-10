@@ -84,6 +84,7 @@ model matches {
   visitor_team_id_fk                      Int?
   league_id_fk                            Int?
   matchday                                Int?
+  played                                  Boolean?
   cards                                   cards[]
   goals                                   goals[]
   teams_matches_local_team_id_fkToteams   teams?   @relation("matches_local_team_id_fkToteams", fields: [local_team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "matches_ibfk_1")
