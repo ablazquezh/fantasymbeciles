@@ -7,12 +7,9 @@ import { PrismaClient, Prisma, users, leagues, matches } from "@prisma/client";
 import LeagueTable from '@/@components/primitive/leagueView/Classification';
 import generateRoundRobinSchedule from '@/@components/utils/scheduleGenerator';
 import MatchCard from '@/@components/primitive/leagueView/MatchCard';
+import { MatchDetails } from '../types/MatchDetails';
 
-interface MatchDetails {
-  team: string;
-  goals: any[]; // You can replace 'any' with a more specific type if needed, like 'number[]' for goals.
-  cards: any[]; // Same as goals, replace 'any' with a more specific type if necessary.
-}
+
 interface matchInfo {
   local: MatchDetails;
   visitor: MatchDetails;
@@ -45,7 +42,10 @@ interface LeagueDashboardProps {
     leagueTable: LeagueTableProps[];
     dbmatches: matches[];
     handleMatchClick: (
-        matchInfo: matchInfo
+        matchInfo: matchInfo,
+        matchIndex: number,
+        matchRound: boolean,
+        matchDay: number
       ) => void;
     leagueTeams: any[];
     schedule: { ida: any[]; vuelta: any[]; };
@@ -79,7 +79,7 @@ const LeagueDashboard: React.FC<LeagueDashboardProps> = ({dbleague, topScorers, 
   const { leagueId } = router.query;
   console.log(schedule)
   return (
-    <Paper className="parent" sx={{ padding: 4, marginTop: 10, display: "flex", flexDirection: "row", flexWrap: "wrap", mb: 10}}>
+    <Paper className="parent" sx={{ padding: 4, marginTop: 10, display: "flex", flexDirection: "row", flexWrap: "wrap", mb: 10 }}>
 
         <TopScorerTable data={topScorers} game={dbleague.game!}></TopScorerTable>
         
@@ -110,7 +110,8 @@ const LeagueDashboard: React.FC<LeagueDashboardProps> = ({dbleague, topScorers, 
                     <Box sx={{ gap: 3, padding: 1, justifyContent: 'center', alignItems: 'center', display: "flex", flexDirection: "column" }}>
 
                         {matchday.matches.map((match: matchInfo, matchIdx: number) =>
-                        <MatchCard key={matchIdx} matchInfo={match} game={dbleague.game!} handleMatchClick={handleMatchClick} ></ MatchCard>
+                        <MatchCard key={matchIdx} matchInfo={match} game={dbleague.game!} handleMatchClick={handleMatchClick} 
+                          handleMatchInfoClick={undefined} matchIndex={matchIdx} matchRound={true} matchDay={matchday.matchday} />
                         )}
                     </Box>
                     <Divider sx={{ margin: '16px 0' }} />
@@ -130,7 +131,8 @@ const LeagueDashboard: React.FC<LeagueDashboardProps> = ({dbleague, topScorers, 
                     <Box sx={{ gap: 3, padding: 1, justifyContent: 'center', alignItems: 'center', display: "flex", flexDirection: "column" }}>
 
                         {matchday.matches.map((match: matchInfo, matchIdx: number) =>
-                        <MatchCard key={matchIdx} matchInfo={match} game={dbleague.game!} handleMatchClick={handleMatchClick} ></ MatchCard>
+                        <MatchCard key={matchIdx} matchInfo={match} game={dbleague.game!} handleMatchClick={handleMatchClick} 
+                          handleMatchInfoClick={undefined} matchIndex={matchIdx} matchRound={false} matchDay={matchday.matchday} />
                         )}
 
                     </Box>

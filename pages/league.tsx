@@ -14,6 +14,7 @@ import { TeamWithPlayers } from '@/@components/types/TeamWithPlayers';
 import MatchInfoDashboard from '@/@components/leagueView/matchInfo';
 import groupPlayerData from '@/@components/utils/groupPlayerData';
 import { ParticipantsFull } from '@/@components/types/ParticipantsFull';
+import { Schedule } from '@/@components/types/Schedule';
 
 const prisma = new PrismaClient();
 
@@ -97,9 +98,13 @@ const reshapeLeagueTeams = (leagueTeams: leagueTeams[], players: RowData[]) => {
 
 const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, dbmatches, leagueTeams}) => {
 
-  const [schedule, setSchedule] = useState<{ ida: any[]; vuelta: any[]; } | null>(null)
+  const [schedule, setSchedule] = useState<Schedule | null>(null)
   const [view, setView] = useState<string>("home")
+
   const [matchInfo, setMatchInfo] = useState<MatchInfo|null>(null)
+  const [matchIndex, setMatchIndex] = useState<number|null>(null)
+  const [matchRound, setMatchRound] = useState<boolean|null>(null)
+  const [matchDay, setMatchDay] = useState<number|null>(null)
 
   const [players, setPlayers] = useState<RowData[]>([]);
 
@@ -166,19 +171,24 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
   const router = useRouter();
   const { leagueId } = router.query;
 
-  const handleMatchClick = (matchInfo: MatchInfo) => {
+  const handleMatchClick = (matchInfo: MatchInfo, matchIndex: number, matchRound: boolean, matchDay: number) => {
     setMatchInfo(matchInfo);
+    setMatchIndex(matchIndex);
+    setMatchRound(matchRound);
+    setMatchDay(matchDay)
     setView("match");
   };
 
   const handleBackClick = () => {
-    setMatchInfo(null);
+    //setMatchInfo(null);
     setView("home"); // may possibly need to update the matchinfo
   };
 
   const handleTeamsClick = () => {
     setView("teams"); // may possibly need to update the matchinfo
   };
+
+  console.log(schedule)
 
   return (
     <Box sx={{
@@ -214,7 +224,8 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
         <LeagueDashboard dbleague={dbleague} topScorers={topScorers} leagueTable={leagueTable} dbmatches={dbmatches} 
           leagueTeams={leagueTeams} handleMatchClick={handleMatchClick} schedule={schedule} />
       ) : view === "match" ? (
-        <MatchInfoDashboard matchInfo={matchInfo!} completeLeagueTeams={completeLeagueTeams} game={dbleague.game!} />
+        <MatchInfoDashboard matchInfo={matchInfo!} matchIndex={matchIndex!} matchRound={matchRound!} matchDay={matchDay!} 
+          completeLeagueTeams={completeLeagueTeams} game={dbleague.game!} setSchedule={setSchedule} />
       ) : view === "teams" ? (
         <TeamsView participantData={completeLeagueTeams} game={dbleague.game}/>
       ) : view === "market" ? (
