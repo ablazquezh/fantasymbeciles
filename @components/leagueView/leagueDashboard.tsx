@@ -48,22 +48,15 @@ interface LeagueDashboardProps {
         matchInfo: matchInfo
       ) => void;
     leagueTeams: any[];
+    schedule: { ida: any[]; vuelta: any[]; };
   }
 
 
-const LeagueDashboard: React.FC<LeagueDashboardProps> = ({dbleague, topScorers, leagueTable, dbmatches, handleMatchClick, leagueTeams}) => {
+const LeagueDashboard: React.FC<LeagueDashboardProps> = ({dbleague, topScorers, leagueTable, dbmatches, handleMatchClick, leagueTeams, schedule}) => {
 
-  const [schedule, setSchedule] = useState<{ ida: any[]; vuelta: any[]; } | null>(null)
+  //const [schedule, setSchedule] = useState<{ ida: any[]; vuelta: any[]; } | null>(null)
   const [matchView, setMatchView] = useState<boolean>(false)
   const [matchInfo, setMatchInfo] = useState<matchInfo|null>(null)
-
-  useEffect(() => {
-    if(dbmatches.length === 0){
-      setSchedule( generateRoundRobinSchedule(leagueTable.map(team => team.team_name)) )
-    }else{
-      // ToDo: Means that there were results stored in the DB and here we must reshape them
-    }
-  }, [dbmatches]);
 
   useEffect(() => {
     // Select the parent and child elements
@@ -84,7 +77,7 @@ const LeagueDashboard: React.FC<LeagueDashboardProps> = ({dbleague, topScorers, 
 
   const router = useRouter();
   const { leagueId } = router.query;
-
+  console.log(schedule)
   return (
     <Paper className="parent" sx={{ padding: 4, marginTop: 10, display: "flex", flexDirection: "row", flexWrap: "wrap", mb: 10}}>
 

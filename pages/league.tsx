@@ -210,9 +210,9 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
         mercado
       </Button>
 
-      {view === "home" ? (
+      {schedule && view === "home" ? (
         <LeagueDashboard dbleague={dbleague} topScorers={topScorers} leagueTable={leagueTable} dbmatches={dbmatches} 
-          leagueTeams={leagueTeams} handleMatchClick={handleMatchClick} />
+          leagueTeams={leagueTeams} handleMatchClick={handleMatchClick} schedule={schedule} />
       ) : view === "match" ? (
         <MatchInfoDashboard matchInfo={matchInfo!} completeLeagueTeams={completeLeagueTeams} game={dbleague.game!} />
       ) : view === "teams" ? (
