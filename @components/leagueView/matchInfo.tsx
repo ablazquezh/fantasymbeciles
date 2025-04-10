@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, Divider, Paper, Button } from "@mui/material";
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField,  ListItem,  ListItemText,  Box, Typography, Chip, Divider, Paper, Button } from "@mui/material";
 import MatchCard from '@/@components/primitive/leagueView/MatchCard';
 import { MatchInfo } from '../types/MatchInfo';
 import { TeamWithPlayers } from '../types/TeamWithPlayers';
@@ -7,6 +7,7 @@ import { ParticipantsFull } from '../types/ParticipantsFull';
 import groupPlayerData from '../utils/groupPlayerData';
 import getRowColor from '../utils/getRowColor';
 import { RowData } from '../types/RowData';
+import Checkbox from '@mui/material/Checkbox';
 
 interface MatchInfoDashboardProps {
     matchInfo: MatchInfo; 
@@ -18,36 +19,49 @@ const globalColnames = {
     nickname: "Jugador",
   };
 
-export interface MatchDetailsUpdated {
+interface MatchDetailsUpdated {
     team: string;
     goals: any[]; // You can replace 'any' with a more specific type if needed, like 'number[]' for goals.
     cards: any[]; // Same as goals, replace 'any' with a more specific type if necessary.
     groupedPlayers: {
         [key: string]: RowData[];
     };
+    players: RowData[]
 }
 
-export interface MatchInfoUpdated {
+interface MatchInfoUpdated {
     local: MatchDetailsUpdated;
     visitor: MatchDetailsUpdated;
     played: boolean;
 }
 
- 
+interface PlayerStats {
+    goals: number;
+    ycard: boolean;
+    rcard: boolean;
+  }
+  
+  interface MatchStats {
+    [nickname: string]: PlayerStats;
+  }
+
 const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, completeLeagueTeams, game}) => {
 
     const [participantData, setParticipantData] = useState<MatchInfoUpdated>()
-    
+    const [matchStats, setMatchStats] = useState<MatchStats>()
+
     useEffect(() => {
         
         const updated: MatchInfoUpdated = {
             local: {
               ...matchInfo.local,
-              groupedPlayers: completeLeagueTeams.find(item => item.team_name === matchInfo.local.team)?.groupedPlayers ?? {} 
+              groupedPlayers: completeLeagueTeams.find(item => item.team_name === matchInfo.local.team)?.groupedPlayers ?? {},
+              players: completeLeagueTeams.find(item => item.team_name === matchInfo.local.team)?.players ?? []
             },
             visitor: {
               ...matchInfo.visitor,
-              groupedPlayers: completeLeagueTeams.find(item => item.team_name === matchInfo.visitor.team)?.groupedPlayers ?? {}
+              groupedPlayers: completeLeagueTeams.find(item => item.team_name === matchInfo.visitor.team)?.groupedPlayers ?? {},
+              players: completeLeagueTeams.find(item => item.team_name === matchInfo.visitor.team)?.players ?? []
             },
             played: matchInfo.played
           };
@@ -57,23 +71,86 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, compl
     }, [completeLeagueTeams, matchInfo]);
 
 
+    useEffect(() => {
+
+        if(!participantData) return;
+        
+        const transformTeam = (teamData: MatchDetailsUpdated) => {
+            return teamData.players.reduce((acc, player) => {
+                acc[player.nickname!] = {
+                  goals: 0,
+                  ycard: false,
+                  rcard: false,
+                };
+                return acc;
+              }, {} as Record<string, { goals: number; ycard: boolean; rcard: boolean }>);
+        }
+
+        const item = {...transformTeam(participantData!.local), ...transformTeam(participantData!.visitor)}
+
+        setMatchStats(item)
+    }, [participantData]);
+    
+
+    const handleGoalsChange = (value: string, playerName: string) => {
+    
+      // Check if the value is a valid number and greater than or equal to 0
+      if (value === '' || Number(value) >= 0) {
+        setMatchStats((prev) => ({
+            ...prev,
+            [playerName]: {
+              ...prev![playerName],
+              goals: Number(value),
+            },
+          })
+        );
+      }
+    };
+
+    const handleYCardChange = (value: boolean, playerName: string) => {
+        
+        setMatchStats((prev) => ({
+            ...prev,
+            [playerName]: {
+                ...prev![playerName],
+                ycard: value,
+            },
+            })
+        );
+             
+    };
+
+    const handleRCardChange = (value: boolean, playerName: string) => {
+        
+        setMatchStats((prev) => ({
+            ...prev,
+            [playerName]: {
+                ...prev![playerName],
+                rcard: value,
+            },
+            })
+        );
+             
+    };
+
+
   return (
     <Paper className="parent" sx={{ padding: 4, marginTop: 10, display: "flex", flexDirection: "row", flexWrap: "wrap", mb: 10}}>
 
         <MatchCard matchInfo={matchInfo} game={game!} handleMatchClick={null} ></ MatchCard>
         <Box sx={{width: "100%", display: "flex", alignContent: "center", justifyContent: "center"}}>
 
-            <Box sx={{mr: "40%", mt: "2%"}}>
-                <TableContainer sx={{ minHeight: "200px", maxHeight: "550px", maxWidth: "310px", minWidth: "310px", overflowY: "auto" }} >
+            <Box sx={{mr: "30%", mt: "2%", width: "30%"}}>
+                <TableContainer sx={{ minHeight: "200px", maxHeight: "550px", maxWidth: "100%", minWidth: "100%", overflowY: "auto" }} >
     
                     <Table stickyHeader>
                     <TableBody sx={{backgroundColor: '#fafafa'}}>
     
-                    {participantData && Object.keys(participantData.local.groupedPlayers).map((category) => (
+                    {participantData && matchStats && Object.keys(participantData.local.groupedPlayers).map((category) => (
                         <React.Fragment key={category}>
                             {/* Render category header */}
                             <TableRow>
-                            <TableCell colSpan={3} style={{ fontWeight: "bold", backgroundColor: "#f1f1f1" }}>
+                            <TableCell colSpan={4} style={{ fontWeight: "bold", backgroundColor: "#f1f1f1" }}>
                                 {category}
                             </TableCell>
                             </TableRow>
@@ -95,7 +172,58 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, compl
                                         </ TableCell>
     
                                     ))}
-                                            
+
+                                    <TableCell sx={{ textAlign: "center"}} >
+                                        
+                                        <TextField
+                                            type="number"
+                                            value={matchStats[row.nickname!].goals}
+                                            onChange={(e) => handleGoalsChange(e.target.value, row.nickname!)}
+                                            inputProps={{ min: 0 }}
+                                            variant="outlined"
+                                            InputProps={{
+                                                sx: {
+                                                    backgroundColor: 'white', 
+                                                    height: 40,
+                                                    width: 80
+                                                }
+                                            }}
+                                        />
+
+                                    </TableCell>
+
+                                    <TableCell >
+
+                                        <Checkbox
+                                            checked={matchStats[row.nickname!].ycard}
+                                            onChange={(e) => handleYCardChange(e.target.checked, row.nickname!)}
+                                            name="checkedA"
+                                            color="primary"
+                                            sx={{
+                                                '&.Mui-checked': {
+                                                  color: "black",  // Change color when checked (e.g., green)
+                                                },  // Change color when unchecked (e.g., blue)
+                                              }}
+                                        />
+
+                                    </TableCell>
+
+                                    <TableCell >
+
+                                        <Checkbox
+                                            checked={matchStats[row.nickname!].rcard}
+                                            onChange={(e) => handleRCardChange(e.target.checked, row.nickname!)}
+                                            name="checkedA"
+                                            color="primary"
+                                            sx={{
+                                                '&.Mui-checked': {
+                                                  color: "black",  // Change color when checked (e.g., green)
+                                                },  // Change color when unchecked (e.g., blue)
+                                              }}
+                                        />
+
+                                    </TableCell>
+
                                 </TableRow>
                                         
                             ))}
@@ -109,17 +237,17 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, compl
                 </TableContainer>
             </Box>
 
-            <Box sx={{mt: "2%"}}>
-                <TableContainer sx={{ minHeight: "200px", maxHeight: "550px", maxWidth: "310px", minWidth: "310px", overflowY: "auto", }} >
+            <Box sx={{ mt: "2%", width: "30%"}}>
+                <TableContainer sx={{ minHeight: "200px", maxHeight: "550px", maxWidth: "100%", minWidth: "100%", overflowY: "auto", }} >
     
                     <Table stickyHeader>
                     <TableBody sx={{backgroundColor: '#fafafa'}}>
     
-                    {participantData && Object.keys(participantData.visitor.groupedPlayers).map((category) => (
+                    {participantData && matchStats && Object.keys(participantData.visitor.groupedPlayers).map((category) => (
                         <React.Fragment key={category}>
                             {/* Render category header */}
                             <TableRow>
-                            <TableCell colSpan={3} style={{ fontWeight: "bold", backgroundColor: "#f1f1f1" }}>
+                            <TableCell colSpan={4} style={{ fontWeight: "bold", backgroundColor: "#f1f1f1" }}>
                                 {category}
                             </TableCell>
                             </TableRow>
@@ -141,6 +269,59 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, compl
                                         </ TableCell>
     
                                     ))}
+
+                                    <TableCell sx={{ textAlign: "center"}} >
+                                        
+                                        <TextField
+                                            type="number"
+                                            value={matchStats[row.nickname!].goals}
+                                            onChange={(e) => handleGoalsChange(e.target.value, row.nickname!)}
+                                            inputProps={{ min: 0 }}
+                                            variant="outlined"
+                                            InputProps={{
+                                                sx: {
+                                                    backgroundColor: 'white', 
+                                                    height: 40,
+                                                    width: 80
+                                                }
+                                            }}
+                                        />
+
+                                    </TableCell>
+
+                                    <TableCell >
+
+                                        <Checkbox
+                                            checked={matchStats[row.nickname!].ycard}
+                                            onChange={(e) => handleYCardChange(e.target.checked, row.nickname!)}
+                                            name="checkedA"
+                                            color="primary"
+                                            sx={{
+                                                '&.Mui-checked': {
+                                                  color: "black",  // Change color when checked (e.g., green)
+                                                },  // Change color when unchecked (e.g., blue)
+                                              }}
+                                        />
+
+                                    </TableCell>
+
+                                    <TableCell >
+
+                                        <Checkbox
+                                            checked={matchStats[row.nickname!].rcard}
+                                            onChange={(e) => handleRCardChange(e.target.checked, row.nickname!)}
+                                            name="checkedA"
+                                            color="primary"
+                                            sx={{
+                                                '&.Mui-checked': {
+                                                  color: "black",  // Change color when checked (e.g., green)
+                                                },  // Change color when unchecked (e.g., blue)
+                                              }}
+                                        />
+
+                                    </TableCell>
+
+                                    
                                             
                                 </TableRow>
                                         
