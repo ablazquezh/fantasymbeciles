@@ -9,7 +9,7 @@ datasource db {
 
 model cards {
   ID           Int         @id @default(autoincrement())
-  match_id_fk  Int?
+  match_id_fk  String?     @db.Char(36)
   player_id_fk Int?
   team_id_fk   Int?
   type         cards_type?
@@ -24,7 +24,7 @@ model cards {
 
 model goals {
   ID           Int      @id @default(autoincrement())
-  match_id_fk  Int?
+  match_id_fk  String?  @db.Char(36)
   player_id_fk Int?
   team_id_fk   Int?
   matches      matches? @relation(fields: [match_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "goals_ibfk_1")
@@ -52,7 +52,7 @@ model league_participants {
 
 model leagues {
   ID                      Int                              @id @default(autoincrement())
-  league_name             String?                          @db.VarChar(255)
+  league_name             String?                          @unique(map: "league_name") @db.VarChar(255)
   type                    leagues_type?
   winter_market_enabled   Boolean?                         @default(false)
   yellow_cards_suspension Int?                             @default(0)
@@ -79,7 +79,7 @@ model market {
 }
 
 model matches {
-  ID                                      Int      @id @default(autoincrement())
+  ID                                      String   @id @db.Char(36)
   local_team_id_fk                        Int?
   visitor_team_id_fk                      Int?
   league_id_fk                            Int?
@@ -96,16 +96,14 @@ model matches {
 }
 
 model player_transfers {
-  ID             Int                             @id @default(autoincrement())
+  ID             Int       @id @default(autoincrement())
   player_id_fk   Int?
   team_id_fk     Int?
   league_id_fk   Int?
-  player_status  player_transfers_player_status?
-  transfer_type  player_transfers_transfer_type?
-  transferred_at DateTime?                       @default(now()) @db.Timestamp(0)
-  players        players?                        @relation(fields: [player_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "player_transfers_ibfk_1")
-  leagues        leagues?                        @relation(fields: [league_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "player_transfers_ibfk_2")
-  teams          teams?                          @relation(fields: [team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "player_transfers_ibfk_3")
+  transferred_at DateTime? @default(now()) @db.Timestamp(0)
+  players        players?  @relation(fields: [player_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "player_transfers_ibfk_1")
+  leagues        leagues?  @relation(fields: [league_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "player_transfers_ibfk_2")
+  teams          teams?    @relation(fields: [team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "player_transfers_ibfk_3")
 
   @@index([league_id_fk], map: "league_id_fk")
   @@index([player_id_fk], map: "player_id_fk")
@@ -172,6 +170,8 @@ model teams {
   ID                                        Int                   @id @default(autoincrement())
   team_name                                 String?               @db.VarChar(100)
   game                                      String?               @db.VarChar(50)
+  team_league                               String?               @db.VarChar(50)
+  team_country                              String?               @db.VarChar(50)
   cards                                     cards[]
   goals                                     goals[]
   league_participants                       league_participants[]
@@ -200,17 +200,6 @@ enum market_player_market_status {
 enum cards_type {
   yellow
   red
-}
-
-enum player_transfers_player_status {
-  ok
-  suspended
-  injured
-}
-
-enum player_transfers_transfer_type {
-  base
-  transfer_window
 }
 
 enum leagues_budget_calculation_type {

@@ -15,6 +15,8 @@ import MatchInfoDashboard from '@/@components/leagueView/matchInfo';
 import groupPlayerData from '@/@components/utils/groupPlayerData';
 import { ParticipantsFull } from '@/@components/types/ParticipantsFull';
 import { Schedule } from '@/@components/types/Schedule';
+import { MatchRecords } from '@/@components/types/MatchRecords';
+import generateScheduleFromDB from '@/@components/utils/scheduleGeneratorDB';
 
 const prisma = new PrismaClient();
 
@@ -145,8 +147,63 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
 
   useEffect(() => {
     if(dbmatches.length === 0){
-      setSchedule( generateRoundRobinSchedule(leagueTable.map(team => team.team_name)) )
+      const generatedSchedule = generateRoundRobinSchedule(leagueTable.map(team => team.team_name))
+      setSchedule( generatedSchedule )
+
+      // PUSH MATCHES
+      const matchRecords: MatchRecords[] = [];
+
+      generatedSchedule.ida.forEach(day => {
+        day.matches.forEach((match: MatchInfo) => {
+          matchRecords.push({
+            local_team_id_fk: leagueTable.find(item => item.team_name === match.local.team)?.team_id,
+            visitor_team_id_fk: leagueTable.find(item => item.team_name === match.visitor.team)?.team_id,
+            league_id_fk: Number(leagueId as string),
+            matchday: day.matchday,
+            ID: match.match_id!
+          });
+        });
+      });
+
+      generatedSchedule.vuelta.forEach(day => {
+        day.matches.forEach((match: MatchInfo) => {
+          matchRecords.push({
+            local_team_id_fk: leagueTable.find(item => item.team_name === match.local.team)?.team_id,
+            visitor_team_id_fk: leagueTable.find(item => item.team_name === match.visitor.team)?.team_id,
+            league_id_fk: Number(leagueId as string),
+            matchday: day.matchday,
+            ID: match.match_id!
+          });
+        });
+      });
+
+      const postMatches = async () => {
+        try {
+          const response = await fetch("/api/creatematches", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ records: matchRecords }),
+            });
+      
+          const data = await response.json();
+      
+          if (response.ok) {
+            console.log("Success:", data);
+          } else {
+            console.error("Error:", data.error);
+          }
+        } catch (error) {
+          console.error("Request failed:", error);
+        }
+    }
+    console.log(matchRecords)
+    postMatches()
+
     }else{
+      console.log("Loaded matches")
+      const generatedSchedule = generateScheduleFromDB(dbmatches, leagueTable)
+      console.log(generateScheduleFromDB(dbmatches, leagueTable))
+      setSchedule( generatedSchedule )
       // ToDo: Means that there were results stored in the DB and here we must reshape them
     }
   }, [dbmatches]);
@@ -179,8 +236,17 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
     setView("match");
   };
 
-  const handleBackClick = () => {
+  const handleBackClick = (view: string) => {
     //setMatchInfo(null);
+    if(view === "match"){
+      // POST GOALS
+
+      // POST CARDS
+
+      // RELOAD LEAGUE TABLE 
+
+      // RELOAD TOP SCORER TABLE
+    }
     setView("home"); // may possibly need to update the matchinfo
   };
 
@@ -202,7 +268,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
       {view !== "home" && 
         <Button 
           variant="contained"
-          onClick={handleBackClick} 
+          onClick={() => handleBackClick(view)} 
           sx={{ cursor: 'pointer', color: 'primary', width: 150, position: 'absolute', top: '20px', }}
         >
           Atrás

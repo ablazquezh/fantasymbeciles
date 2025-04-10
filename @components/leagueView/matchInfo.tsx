@@ -63,7 +63,6 @@ for (const participant of participants) {
     }
 }
 
-// If no match is found, return undefined
 return undefined;
 };
 

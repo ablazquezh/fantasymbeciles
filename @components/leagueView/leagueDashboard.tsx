@@ -8,13 +8,7 @@ import LeagueTable from '@/@components/primitive/leagueView/Classification';
 import generateRoundRobinSchedule from '@/@components/utils/scheduleGenerator';
 import MatchCard from '@/@components/primitive/leagueView/MatchCard';
 import { MatchDetails } from '../types/MatchDetails';
-
-
-interface matchInfo {
-  local: MatchDetails;
-  visitor: MatchDetails;
-  played: boolean;
-}
+import { MatchInfo } from '../types/MatchInfo';
 
 interface LeagueTableProps {
     team_name: string;
@@ -42,7 +36,7 @@ interface LeagueDashboardProps {
     leagueTable: LeagueTableProps[];
     dbmatches: matches[];
     handleMatchClick: (
-        matchInfo: matchInfo,
+        matchInfo: MatchInfo,
         matchIndex: number,
         matchRound: boolean,
         matchDay: number
@@ -56,7 +50,7 @@ const LeagueDashboard: React.FC<LeagueDashboardProps> = ({dbleague, topScorers, 
 
   //const [schedule, setSchedule] = useState<{ ida: any[]; vuelta: any[]; } | null>(null)
   const [matchView, setMatchView] = useState<boolean>(false)
-  const [matchInfo, setMatchInfo] = useState<matchInfo|null>(null)
+  const [matchInfo, setMatchInfo] = useState<MatchInfo|null>(null)
 
   useEffect(() => {
     // Select the parent and child elements
@@ -109,7 +103,7 @@ const LeagueDashboard: React.FC<LeagueDashboardProps> = ({dbleague, topScorers, 
 
                     <Box sx={{ gap: 3, padding: 1, justifyContent: 'center', alignItems: 'center', display: "flex", flexDirection: "column" }}>
 
-                        {matchday.matches.map((match: matchInfo, matchIdx: number) =>
+                        {matchday.matches.map((match: MatchInfo, matchIdx: number) =>
                         <MatchCard key={matchIdx} matchInfo={match} game={dbleague.game!} handleMatchClick={handleMatchClick} 
                           handleMatchInfoClick={undefined} matchIndex={matchIdx} matchRound={true} matchDay={matchday.matchday} />
                         )}
@@ -130,7 +124,7 @@ const LeagueDashboard: React.FC<LeagueDashboardProps> = ({dbleague, topScorers, 
 
                     <Box sx={{ gap: 3, padding: 1, justifyContent: 'center', alignItems: 'center', display: "flex", flexDirection: "column" }}>
 
-                        {matchday.matches.map((match: matchInfo, matchIdx: number) =>
+                        {matchday.matches.map((match: MatchInfo, matchIdx: number) =>
                         <MatchCard key={matchIdx} matchInfo={match} game={dbleague.game!} handleMatchClick={handleMatchClick} 
                           handleMatchInfoClick={undefined} matchIndex={matchIdx} matchRound={false} matchDay={matchday.matchday} />
                         )}

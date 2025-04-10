@@ -1,18 +1,12 @@
 import React, { useState, useMemo, ReactNode  } from "react";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination, Card, Box, IconButton, TextField, MenuItem, Select, InputLabel, FormControl, Typography } from "@mui/material";
-import { MatchDetails } from "@/@components/types/MatchDetails";
-
-interface matchInfo {
-    local: MatchDetails;
-    visitor: MatchDetails;
-    played: boolean;
-  }
+import { MatchInfo } from "@/@components/types/MatchInfo";
 
 interface MatchProps {
-    matchInfo: matchInfo;
+    matchInfo: MatchInfo;
     game: string;
     handleMatchClick: ((
-        matchInfo: matchInfo,
+        matchInfo: MatchInfo,
         matchIndex: number,
         matchRound: boolean,
         matchDay: number  

@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid';
+
 export default function generateRoundRobinSchedule(teamsInput: (string | null)[]): { ida: any[], vuelta: any[] } {
     const teams = [...teamsInput];
     const isOdd = teams.length % 2 !== 0;
@@ -31,19 +33,22 @@ export default function generateRoundRobinSchedule(teamsInput: (string | null)[]
             ? { 
                 local: { team: home, goals: [], ycards: [], rcards: [] }, 
                 visitor: { team: away, goals: [], ycards: [], rcards: [] },
-                played: false
+                played: false,
+                match_id: uuidv4()
               }
             : { 
                 local: { team: away, goals: [], ycards: [], rcards: [] }, 
                 visitor: { team: home, goals: [], ycards: [], rcards: [] },
-                played: false
+                played: false,
+                match_id: uuidv4()
               };
   
           // Vuelta is the reverse fixture
           const vueltaMatch = {
             local: { team: idaMatch.visitor.team, goals: [], ycards: [], rcards: [] },
             visitor: { team: idaMatch.local.team, goals: [], ycards: [], rcards: [] },
-            played: false
+            played: false,
+            match_id: uuidv4()
           };
   
           idaMatches.push(idaMatch);
