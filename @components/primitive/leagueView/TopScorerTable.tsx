@@ -44,10 +44,10 @@ interface TopScorerTableProps {
             if (bValue == null) return -1;
 
             // Now we can safely compare values
-            if (aValue < bValue) {
+            if (Number(aValue) < Number(bValue)) {
                 return 1;
             }
-            if (aValue > bValue) {
+            if (Number(aValue) > Number(bValue)) {
                 return -1;
             }
             return 0;

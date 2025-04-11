@@ -49,8 +49,8 @@ interface LeagueDashboardProps {
 const LeagueDashboard: React.FC<LeagueDashboardProps> = ({dbleague, topScorers, leagueTable, dbmatches, handleMatchClick, leagueTeams, schedule}) => {
 
   //const [schedule, setSchedule] = useState<{ ida: any[]; vuelta: any[]; } | null>(null)
-  const [matchView, setMatchView] = useState<boolean>(false)
-  const [matchInfo, setMatchInfo] = useState<MatchInfo|null>(null)
+  //const [matchView, setMatchView] = useState<boolean>(false)
+  //const [matchInfo, setMatchInfo] = useState<MatchInfo|null>(null)
 
   useEffect(() => {
     // Select the parent and child elements
@@ -71,7 +71,6 @@ const LeagueDashboard: React.FC<LeagueDashboardProps> = ({dbleague, topScorers, 
 
   const router = useRouter();
   const { leagueId } = router.query;
-  console.log(schedule)
   return (
     <Paper className="parent" sx={{ padding: 4, marginTop: 10, display: "flex", flexDirection: "row", flexWrap: "wrap", mb: 10 }}>
 
