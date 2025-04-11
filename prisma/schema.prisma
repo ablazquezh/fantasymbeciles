@@ -17,7 +17,7 @@ model cards {
   players      players?    @relation(fields: [player_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "cards_ibfk_2")
   teams        teams?      @relation(fields: [team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "cards_ibfk_3")
 
-  @@index([match_id_fk], map: "match_id_fk")
+  @@unique([match_id_fk, player_id_fk], map: "match_id_fk")
   @@index([player_id_fk], map: "player_id_fk")
   @@index([team_id_fk], map: "team_id_fk")
 }

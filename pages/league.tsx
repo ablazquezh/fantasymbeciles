@@ -18,6 +18,10 @@ import { Schedule } from '@/@components/types/Schedule';
 import { MatchRecords } from '@/@components/types/MatchRecords';
 import generateScheduleFromDB from '@/@components/utils/scheduleGeneratorDB';
 import { GoalRecords } from '@/@components/types/GoalRecords';
+import matchRecordGenerator from '@/@components/utils/matchRecordGenerator';
+import goalRecordGenerator from '@/@components/utils/goalRecordGenerator';
+import { CardRecords } from '@/@components/types/CardRecords';
+import cardRecordGenerator from '@/@components/utils/cardRecordGenerator';
 
 const prisma = new PrismaClient();
 
@@ -68,6 +72,23 @@ interface TopScorers {
   goals: number;
 }
 
+interface LeagueTable {
+  league_id: number ;
+  league_name: string ;
+  team_id: number ;
+  team_name: string ;
+  n_played_matches: number;
+  victories: number ;
+  draws: number ;
+  loses: number;
+  points: number;
+  goals_favor: number ;
+  goals_against: number ;
+  goal_diff: number;
+  yellow_cards: number;
+  red_cards: number;
+}
+
 interface LeagueProps {
   dbleague: leagues;
   topScorers: TopScorers[];
@@ -111,6 +132,8 @@ const reshapeLeagueTeams = (leagueTeams: leagueTeams[], players: RowData[]) => {
 const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, dbmatches, leagueTeams}) => {
 
   const [topScorersInfo, setTopScorers] = useState<TopScorers[]>(topScorers)
+  const [leagueTableInfo, setLeagueTable] = useState<LeagueTable[]>(leagueTable)
+
   const [schedule, setSchedule] = useState<Schedule | null>(null)
   const [view, setView] = useState<string>("home")
 
@@ -124,6 +147,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
   const [completeLeagueTeams, setCompleteLeagueTeams] = useState<ParticipantsFull[]>([]);
   
   const [updatedGoals, setUpdatedGoals] = useState<boolean>(false);
+  const [updatedMatches, setUpdatedMatches] = useState<boolean>(false);
 
   useEffect(() => {
 
@@ -160,38 +184,12 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
 
   useEffect(() => {
     if(dbmatches.length === 0){
-      const generatedSchedule = generateRoundRobinSchedule(leagueTable.map(team => team.team_name))
+      const generatedSchedule = generateRoundRobinSchedule(leagueTableInfo.map(team => team.team_name))
       setSchedule( generatedSchedule )
 
       // PUSH MATCHES
-      const matchRecords: MatchRecords[] = [];
-
-      generatedSchedule.ida.forEach(day => {
-        day.matches.forEach((match: MatchInfo) => {
-          matchRecords.push({
-            local_team_id_fk: leagueTable.find(item => item.team_name === match.local.team)?.team_id,
-            visitor_team_id_fk: leagueTable.find(item => item.team_name === match.visitor.team)?.team_id,
-            league_id_fk: Number(leagueId as string),
-            matchday: day.matchday,
-            ID: match.match_id!,
-            played: match.played
-          });
-        });
-      });
-
-      generatedSchedule.vuelta.forEach(day => {
-        day.matches.forEach((match: MatchInfo) => {
-          matchRecords.push({
-            local_team_id_fk: leagueTable.find(item => item.team_name === match.local.team)?.team_id,
-            visitor_team_id_fk: leagueTable.find(item => item.team_name === match.visitor.team)?.team_id,
-            league_id_fk: Number(leagueId as string),
-            matchday: day.matchday,
-            ID: match.match_id!,
-            played: match.played
-          });
-        });
-      });
-
+      const matchRecords: MatchRecords[] = matchRecordGenerator(generatedSchedule, leagueTableInfo, leagueId as string);
+      
       const postMatches = async () => {
         try {
           const response = await fetch("/api/creatematches", {
@@ -215,7 +213,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
 
     }else{
       console.log("Loaded matches")
-      const generatedSchedule = generateScheduleFromDB(dbmatches, leagueTable)
+      const generatedSchedule = generateScheduleFromDB(dbmatches, leagueTableInfo)
       setSchedule( generatedSchedule )
       // ToDo: Means that there were results stored in the DB and here we must reshape them
     }
@@ -254,50 +252,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
     //setMatchInfo(null);
     if(view === "match"){
       // POST GOALS
-      const goalRecords: GoalRecords[] = [];
-
-      schedule!.ida.forEach(day => {
-        day.matches.forEach((match: MatchInfo) => {
-          match.local.goals.forEach((goal: any) => {
-            goalRecords.push({
-              team_id_fk: leagueTable.find(item => item.team_name === match.local.team)?.team_id,
-              player_id_fk: leagueTeams.find(item => item.player_name === goal.player)?.player_id,
-              match_id_fk: match.match_id,
-              quantity: goal.n
-            });
-          });
-          match.visitor.goals.forEach((goal: any) => {
-            goalRecords.push({
-              team_id_fk: leagueTable.find(item => item.team_name === match.visitor.team)?.team_id,
-              player_id_fk: leagueTeams.find(item => item.player_name === goal.player)?.player_id,
-              match_id_fk: match.match_id,
-              quantity: goal.n
-            });
-          });
-        });
-      });
-
-      schedule!.vuelta.forEach(day => {
-        day.matches.forEach((match: MatchInfo) => {
-          match.local.goals.forEach((goal: any) => {
-            goalRecords.push({
-              team_id_fk: leagueTable.find(item => item.team_name === match.local.team)?.team_id,
-              player_id_fk: leagueTeams.find(item => item.player_name === goal.player)?.player_id,
-              match_id_fk: match.match_id,
-              quantity: goal.n
-            });
-          });
-          match.visitor.goals.forEach((goal: any) => {
-            goalRecords.push({
-              team_id_fk: leagueTable.find(item => item.team_name === match.visitor.team)?.team_id,
-              player_id_fk: leagueTeams.find(item => item.player_name === goal.player)?.player_id,
-              match_id_fk: match.match_id,
-              quantity: goal.n
-            });
-          });
-        });
-      });
-
+      const goalRecords: GoalRecords[] = goalRecordGenerator(schedule!, leagueTableInfo, leagueTeams);
       const postGoals = async () => {
         try {
           const response = await fetch("/api/creategoals", {
@@ -319,9 +274,30 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
         }
       }
       postGoals()
-      // POST CARDS
 
-      // RELOAD LEAGUE TABLE 
+      // POST CARDS
+      const cardRecords: CardRecords[] = cardRecordGenerator(schedule!, leagueTableInfo, leagueTeams);
+      const postCards = async () => {
+        try {
+          const response = await fetch("/api/createcards", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ records: cardRecords }),
+            });
+      
+          const data = await response.json();
+      
+          if (response.ok) {
+            console.log("Success:", data);
+          } else {
+            console.error("Error:", data.error);
+          }
+        } catch (error) {
+          console.error("Request failed:", error);
+        }
+      }
+      postCards()
+
     }
     setView("home"); // may possibly need to update the matchinfo
   };
@@ -332,6 +308,55 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
 
 
   useEffect(() => {
+
+    if(schedule){
+      const matchRecords: MatchRecords[] = matchRecordGenerator(schedule, leagueTableInfo, leagueId as string);
+      const postMatches = async () => {
+        try {
+          const response = await fetch("/api/upsertmatches", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ records: matchRecords }),
+            });
+      
+          const data = await response.json();
+      
+          if (response.ok) {
+            console.log("Success:", data);
+            setUpdatedMatches(true)
+          } else {
+            console.error("Error:", data.error);
+          }
+        } catch (error) {
+          console.error("Request failed:", error);
+        }
+    }
+    postMatches()
+  }
+  
+  setUpdatedGoals(false)
+
+  }, [updatedGoals]);
+
+
+  useEffect(() => {
+
+    const fetchClassification= async () => {
+      try {
+        const response = await fetch(`/api/leaguetable?leagueId=${dbleague.ID}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch top scorers');
+        }
+    
+        const leagueTable: LeagueTable[] = await response.json();
+
+        setLeagueTable(leagueTable);
+      } catch (error) {
+        console.error(error);
+        // Handle error (e.g., show a message to the user)
+      }
+    };
+    fetchClassification();
 
     const fetchTopScorers= async () => {
       try {
@@ -349,10 +374,11 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
       }
     };
     fetchTopScorers();
-    setUpdatedGoals(false)
-  }, [updatedGoals]);
 
-  //console.log(schedule)
+    
+    setUpdatedMatches(false)
+
+  }, [updatedMatches]);
 
   return (
     <Box sx={{
@@ -385,7 +411,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
       </Button>
 
       {schedule && view === "home" ? (
-        <LeagueDashboard dbleague={dbleague} topScorers={topScorersInfo} leagueTable={leagueTable} dbmatches={dbmatches} 
+        <LeagueDashboard dbleague={dbleague} topScorers={topScorersInfo} leagueTable={leagueTableInfo} dbmatches={dbmatches} 
           leagueTeams={leagueTeams} handleMatchClick={handleMatchClick} schedule={schedule} />
       ) : view === "match" ? (
         <MatchInfoDashboard matchInfo={matchInfo!} matchIndex={matchIndex!} matchRound={matchRound!} matchDay={matchDay!} 
