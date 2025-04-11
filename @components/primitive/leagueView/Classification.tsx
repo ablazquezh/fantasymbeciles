@@ -66,7 +66,7 @@ interface LeagueTableTableProps {
     const columns = Object.keys(columnNames)
 
     return (
-        <Box sx={{ width: "100%", ml: 15, height: "fit-content"}}>
+        <Box sx={{ width: "100%", ml: 10, height: "fit-content"}}>
             <TableContainer sx={{ overflowY: "auto"}}>
                 <Table stickyHeader>
                     <TableHead>

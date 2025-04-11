@@ -64,7 +64,7 @@ interface TopScorerTableProps {
     console.log("********---------------")
     console.log(data)
     return (
-        <Box sx={{ width: "20%", backgroundColor: "lightgray", height: "fit-content"}}>
+        <Box sx={{ width: "25%", backgroundColor: "lightgray", height: "fit-content"}}>
             <TableContainer sx={{ minHeight: "550px", maxHeight: "550px", overflowY: "auto"}}>
                 <Table stickyHeader>
                     <TableHead>
