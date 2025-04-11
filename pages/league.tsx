@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from "next/router";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, Divider, Paper, Button } from "@mui/material";
 import { GetServerSidePropsContext, NextPage } from 'next';
-import { PrismaClient, Prisma, users, leagues, matches, players } from "@prisma/client";
+import { PrismaClient, Prisma, users, leagues, matches, players, goals, cards } from "@prisma/client";
 import generateRoundRobinSchedule from '@/@components/utils/scheduleGenerator';
 import LeagueDashboard from '@/@components/leagueView/leagueDashboard';
 import mergeData from '@/@components/utils/mergeData';
@@ -39,6 +39,22 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   }
   );
 
+  const dbgoals: goals[] | null = await prisma.goals.findMany({
+    where: {matches: {league_id_fk: Number(leagueId)}} ,
+    include: {
+      matches: true
+    }
+  }
+  );
+
+  const dbcards: cards[] | null = await prisma.cards.findMany({
+    where: {matches: {league_id_fk: Number(leagueId)}} ,
+    include: {
+      matches: true
+    }
+  }
+  );
+
   const leagueTable = await prisma.$queryRaw`
     SELECT * FROM league_table WHERE league_id = ${dbleague?.ID}
   `;
@@ -59,7 +75,9 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     topScorers: topScorers,
     leagueTable: leagueTable,
     dbmatches: dbmatches,
-    leagueTeams: leagueTeams
+    leagueTeams: leagueTeams,
+    dbcards: dbcards,
+    dbgoals: dbgoals
   } };
 }
 
@@ -95,6 +113,8 @@ interface LeagueProps {
   leagueTable: any[];
   dbmatches: matches[];
   leagueTeams: any[];
+  dbcards: cards[];
+  dbgoals: goals[];
 }
 
 
@@ -129,7 +149,7 @@ const reshapeLeagueTeams = (leagueTeams: leagueTeams[], players: RowData[]) => {
   return groupedByTeam;
 };
 
-const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, dbmatches, leagueTeams}) => {
+const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, dbmatches, leagueTeams, dbcards, dbgoals}) => {
 
   const [topScorersInfo, setTopScorers] = useState<TopScorers[]>(topScorers)
   const [leagueTableInfo, setLeagueTable] = useState<LeagueTable[]>(leagueTable)
@@ -213,7 +233,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
 
     }else{
       console.log("Loaded matches")
-      const generatedSchedule = generateScheduleFromDB(dbmatches, leagueTableInfo)
+      const generatedSchedule = generateScheduleFromDB(dbmatches, dbcards, dbgoals, leagueTableInfo)
       setSchedule( generatedSchedule )
       // ToDo: Means that there were results stored in the DB and here we must reshape them
     }

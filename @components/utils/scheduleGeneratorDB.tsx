@@ -1,7 +1,8 @@
+import { cards, goals } from "@prisma/client";
 import { MatchRecords } from "../types/MatchRecords";
 import { Schedule } from "../types/Schedule";
 
-export default function generateScheduleFromDB(matches: MatchRecords[], leagueTable: any[]) {
+export default function generateScheduleFromDB(matches: MatchRecords[], dbcards: cards[], dbgoals: goals[], leagueTable: any[]) {
     const schedule: Schedule = {
       ida: [],
       vuelta: []
@@ -14,7 +15,7 @@ export default function generateScheduleFromDB(matches: MatchRecords[], leagueTa
       const matchObject = {
         local: {
           team: leagueTable.find(item => item.team_id === match.local_team_id_fk)?.team_name,
-          goals: [],
+          goals: dbgoals.filter(item => item.match_id_fk === match.ID),
           ycards: [],
           rcards: [],
         },
