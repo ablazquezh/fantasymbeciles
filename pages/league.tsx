@@ -17,6 +17,7 @@ import { ParticipantsFull } from '@/@components/types/ParticipantsFull';
 import { Schedule } from '@/@components/types/Schedule';
 import { MatchRecords } from '@/@components/types/MatchRecords';
 import generateScheduleFromDB from '@/@components/utils/scheduleGeneratorDB';
+import { GoalRecords } from '@/@components/types/GoalRecords';
 
 const prisma = new PrismaClient();
 
@@ -58,9 +59,18 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   } };
 }
 
+interface TopScorers {
+  league_id: number ;
+  league_name: string ;
+  player_id: number ;
+  player_name: string;
+  team_name: string ;
+  goals: number;
+}
+
 interface LeagueProps {
   dbleague: leagues;
-  topScorers: any[];
+  topScorers: TopScorers[];
   leagueTable: any[];
   dbmatches: matches[];
   leagueTeams: any[];
@@ -100,6 +110,7 @@ const reshapeLeagueTeams = (leagueTeams: leagueTeams[], players: RowData[]) => {
 
 const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, dbmatches, leagueTeams}) => {
 
+  const [topScorersInfo, setTopScorers] = useState<TopScorers[]>(topScorers)
   const [schedule, setSchedule] = useState<Schedule | null>(null)
   const [view, setView] = useState<string>("home")
 
@@ -111,6 +122,8 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
   const [players, setPlayers] = useState<RowData[]>([]);
 
   const [completeLeagueTeams, setCompleteLeagueTeams] = useState<ParticipantsFull[]>([]);
+  
+  const [updatedGoals, setUpdatedGoals] = useState<boolean>(false);
 
   useEffect(() => {
 
@@ -198,13 +211,11 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
           console.error("Request failed:", error);
         }
     }
-    console.log(matchRecords)
     postMatches()
 
     }else{
       console.log("Loaded matches")
       const generatedSchedule = generateScheduleFromDB(dbmatches, leagueTable)
-      console.log(generateScheduleFromDB(dbmatches, leagueTable))
       setSchedule( generatedSchedule )
       // ToDo: Means that there were results stored in the DB and here we must reshape them
     }
@@ -225,6 +236,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
       // Update the parent height based on the content and child heights
       parent.style.height = `${contentHeight + childHeight + 70}px`;
     }
+      
   }, [schedule]);
 
   const router = useRouter();
@@ -242,12 +254,74 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
     //setMatchInfo(null);
     if(view === "match"){
       // POST GOALS
+      const goalRecords: GoalRecords[] = [];
 
+      schedule!.ida.forEach(day => {
+        day.matches.forEach((match: MatchInfo) => {
+          match.local.goals.forEach((goal: any) => {
+            goalRecords.push({
+              team_id_fk: leagueTable.find(item => item.team_name === match.local.team)?.team_id,
+              player_id_fk: leagueTeams.find(item => item.player_name === goal.player)?.player_id,
+              match_id_fk: match.match_id,
+              quantity: goal.n
+            });
+          });
+          match.visitor.goals.forEach((goal: any) => {
+            goalRecords.push({
+              team_id_fk: leagueTable.find(item => item.team_name === match.visitor.team)?.team_id,
+              player_id_fk: leagueTeams.find(item => item.player_name === goal.player)?.player_id,
+              match_id_fk: match.match_id,
+              quantity: goal.n
+            });
+          });
+        });
+      });
+
+      schedule!.vuelta.forEach(day => {
+        day.matches.forEach((match: MatchInfo) => {
+          match.local.goals.forEach((goal: any) => {
+            goalRecords.push({
+              team_id_fk: leagueTable.find(item => item.team_name === match.local.team)?.team_id,
+              player_id_fk: leagueTeams.find(item => item.player_name === goal.player)?.player_id,
+              match_id_fk: match.match_id,
+              quantity: goal.n
+            });
+          });
+          match.visitor.goals.forEach((goal: any) => {
+            goalRecords.push({
+              team_id_fk: leagueTable.find(item => item.team_name === match.visitor.team)?.team_id,
+              player_id_fk: leagueTeams.find(item => item.player_name === goal.player)?.player_id,
+              match_id_fk: match.match_id,
+              quantity: goal.n
+            });
+          });
+        });
+      });
+
+      const postGoals = async () => {
+        try {
+          const response = await fetch("/api/creategoals", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ records: goalRecords }),
+            });
+      
+          const data = await response.json();
+      
+          if (response.ok) {
+            console.log("Success:", data);
+            setUpdatedGoals(true)
+          } else {
+            console.error("Error:", data.error);
+          }
+        } catch (error) {
+          console.error("Request failed:", error);
+        }
+      }
+      postGoals()
       // POST CARDS
 
       // RELOAD LEAGUE TABLE 
-
-      // RELOAD TOP SCORER TABLE
     }
     setView("home"); // may possibly need to update the matchinfo
   };
@@ -256,7 +330,29 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
     setView("teams"); // may possibly need to update the matchinfo
   };
 
-  console.log(schedule)
+
+  useEffect(() => {
+
+    const fetchTopScorers= async () => {
+      try {
+        const response = await fetch(`/api/topscorers?leagueId=${dbleague.ID}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch top scorers');
+        }
+    
+        const topScorers: TopScorers[] = await response.json();
+
+        setTopScorers(topScorers);
+      } catch (error) {
+        console.error(error);
+        // Handle error (e.g., show a message to the user)
+      }
+    };
+    fetchTopScorers();
+    setUpdatedGoals(false)
+  }, [updatedGoals]);
+
+  //console.log(schedule)
 
   return (
     <Box sx={{
@@ -289,7 +385,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
       </Button>
 
       {schedule && view === "home" ? (
-        <LeagueDashboard dbleague={dbleague} topScorers={topScorers} leagueTable={leagueTable} dbmatches={dbmatches} 
+        <LeagueDashboard dbleague={dbleague} topScorers={topScorersInfo} leagueTable={leagueTable} dbmatches={dbmatches} 
           leagueTeams={leagueTeams} handleMatchClick={handleMatchClick} schedule={schedule} />
       ) : view === "match" ? (
         <MatchInfoDashboard matchInfo={matchInfo!} matchIndex={matchIndex!} matchRound={matchRound!} matchDay={matchDay!} 
@@ -306,4 +402,4 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
   )
 }
   
-  export default LeaguePage
+  export default LeaguePage;

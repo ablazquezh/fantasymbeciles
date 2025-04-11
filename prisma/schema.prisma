@@ -27,11 +27,12 @@ model goals {
   match_id_fk  String?  @db.Char(36)
   player_id_fk Int?
   team_id_fk   Int?
+  quantity     Int?
   matches      matches? @relation(fields: [match_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "goals_ibfk_1")
   players      players? @relation(fields: [player_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "goals_ibfk_2")
   teams        teams?   @relation(fields: [team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "goals_ibfk_3")
 
-  @@index([match_id_fk], map: "match_id_fk")
+  @@unique([match_id_fk, player_id_fk], map: "match_id_fk")
   @@index([player_id_fk], map: "player_id_fk")
   @@index([team_id_fk], map: "team_id_fk")
 }
