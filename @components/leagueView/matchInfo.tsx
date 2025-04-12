@@ -176,6 +176,7 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, match
 
     };
 
+    
     const handleYCardChange = (value: boolean, playerName: string) => {
         
         setMatchStats((prev) => ({
@@ -183,11 +184,14 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, match
             [playerName]: {
                 ...prev![playerName],
                 ycard: value,
+                rcard: value ? false : false,
             },
             })
         );
-
+        console.log("Heello")
         setSchedule((prevData) => {
+           
+            console.log("Heello2")
             // Clone the previous ida and vuelta to avoid direct mutation
             const updateItem = matchRound ? [...prevData!.ida] : [...prevData!.vuelta]
       
@@ -195,38 +199,42 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, match
             const match = updateItem.find((m) => m.matchday === matchDay)?.matches[matchIndex];
       
             const updateTeam = findTeamNameByPlayerName(completeLeagueTeams, playerName)
-            
+            console.log(match)
             if (match) {
-              if(match.local.team === updateTeam){
-    
-                const existingPlayer = match.local.ycards.find(item => item === playerName);
-                if(existingPlayer){
-                    match.local.ycards.filter(item => item !== existingPlayer);
+                if(match.local.team === updateTeam){
+      
+                    const existingPlayer = match.local.ycards.find(item => item === playerName);
+
+                if(existingPlayer && !value){
+                    match.local.ycards = match.local.ycards.filter(item => item !== existingPlayer);
+                  }else if(!existingPlayer && value){
+                    match.local.ycards.push(playerName);  
+                    match.local.rcards = match.local.rcards.filter(item => item !== playerName);
+                  }
+                  
                 }else{
-                    match.local.ycards.push(playerName);  // Customize the goal object as needed
-                }
-                
-              }else{
-    
-                const existingPlayer = match.visitor.ycards.find(item => item === playerName);
-                if(existingPlayer){
-                    match.visitor.ycards.filter(item => item !== existingPlayer);
-                }else{
+      
+                  const existingPlayer = match.visitor.ycards.find(item => item === playerName);
+                  if(existingPlayer && !value){
+                    match.visitor.ycards = match.visitor.ycards.filter(item => item !== existingPlayer);
+                  }else if(!existingPlayer && value){
                     match.visitor.ycards.push(playerName);  // Customize the goal object as needed
+                    match.visitor.rcards = match.visitor.rcards.filter(item => item !== playerName);
+                  }
+      
                 }
-    
-              }
-    
-              match.played = true
+      
+                match.played = true
             }
-    
+            
             if(matchRound){
+
                 return { ...prevData, ida: updateItem, vuelta: [...prevData!.vuelta] };
             }else{
+
                 return { ...prevData, ida: [...prevData!.ida], vuelta: updateItem };
             }
           });
-             
     };
 
     const handleRCardChange = (value: boolean, playerName: string) => {
@@ -236,6 +244,7 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, match
             [playerName]: {
                 ...prev![playerName],
                 rcard: value,
+                ycard: value ? false : false
             },
             })
         );
@@ -253,19 +262,21 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, match
               if(match.local.team === updateTeam){
     
                 const existingPlayer = match.local.rcards.find(item => item === playerName);
-                if(existingPlayer){
-                    match.local.rcards.filter(item => item !== existingPlayer);
-                }else{
+                if(existingPlayer && !value){
+                    match.local.rcards = match.local.rcards.filter(item => item !== existingPlayer);
+                }else if(!existingPlayer && value){
                     match.local.rcards.push(playerName);  // Customize the goal object as needed
+                    match.local.ycards = match.local.ycards.filter(item => item !== playerName);
                 }
                 
               }else{
     
                 const existingPlayer = match.visitor.rcards.find(item => item === playerName);
-                if(existingPlayer){
-                    match.visitor.rcards.filter(item => item !== existingPlayer);
-                }else{
+                if(existingPlayer && !value){
+                    match.visitor.rcards = match.visitor.rcards.filter(item => item !== existingPlayer);
+                }else if(!existingPlayer && value){
                     match.visitor.rcards.push(playerName);  // Customize the goal object as needed
+                    match.visitor.ycards = match.visitor.ycards.filter(item => item !== playerName);
                 }
     
               }
@@ -398,7 +409,7 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, match
                                     <TableCell >
 
                                         <Checkbox
-                                            checked={matchStats[row.nickname!].rcard}
+                                            checked={matchStats[row.nickname!].rcard }
                                             onChange={(e) => handleRCardChange(e.target.checked, row.nickname!)}
                                             name="checkedA"
                                             color="primary"

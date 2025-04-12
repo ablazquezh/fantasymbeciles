@@ -60,7 +60,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   `;
   
   const topScorers = await prisma.$queryRaw`
-    SELECT player_name, team_name, goals FROM top_scorers_by_league WHERE league_id = ${dbleague?.ID}
+    SELECT player_name, team_name, goals FROM top_scorers_by_league WHERE league_id = ${dbleague?.ID} AND goals > 0
   `;
 
   const leagueTeams = await prisma.$queryRaw`
@@ -300,6 +300,31 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
 
       // POST CARDS
       const cardRecords: CardRecords[] = cardRecordGenerator(schedule!, leagueTableInfo, leagueTeams);
+
+      const removeRecords = dbcards.filter(aObj => 
+        !cardRecords.some(bObj => bObj.match_id_fk === aObj.match_id_fk && bObj.player_id_fk === aObj.player_id_fk)
+      ).map(item => item.ID);
+
+      const removeCards = async () => {
+        try {
+          const response = await fetch("/api/removecards", {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ idList: removeRecords }),
+            });
+      
+          const data = await response.json();
+      
+          if (response.ok) {
+            console.log("Success:", data);
+          } else {
+            console.error("Error:", data.error);
+          }
+        } catch (error) {
+          console.error("Request failed:", error);
+        }
+      }
+
       const postCards = async () => {
         try {
           const response = await fetch("/api/createcards", {
@@ -320,6 +345,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
         }
       }
       postCards()
+      removeCards()
 
     }
     setView("home"); // may possibly need to update the matchinfo

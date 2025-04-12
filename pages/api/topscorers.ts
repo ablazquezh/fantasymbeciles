@@ -12,7 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const teams = await prisma.$queryRaw`
            SELECT player_name, team_name, goals
         FROM top_scorers_by_league
-        WHERE league_id = ${leagueId}`;
+        WHERE league_id = ${leagueId} AND goals > 0`;
 
       res.status(200).json( teams );
   } catch (error) {
