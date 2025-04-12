@@ -234,10 +234,12 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
     }else{
       console.log("Loaded matches")
       const generatedSchedule = generateScheduleFromDB(dbmatches, dbcards, dbgoals, leagueTableInfo, completeLeagueTeams)
+      console.log(generatedSchedule)
       setSchedule( generatedSchedule )
       // ToDo: Means that there were results stored in the DB and here we must reshape them
     }
-  }, [dbmatches]);
+  }, [dbmatches, completeLeagueTeams]);
+
 
   useEffect(() => {
     // Select the parent and child elements
@@ -273,6 +275,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
     if(view === "match"){
       // POST GOALS
       const goalRecords: GoalRecords[] = goalRecordGenerator(schedule!, leagueTableInfo, leagueTeams);
+      
       const postGoals = async () => {
         try {
           const response = await fetch("/api/creategoals", {

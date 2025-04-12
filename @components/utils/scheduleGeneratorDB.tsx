@@ -11,7 +11,7 @@ const findPlayerNameByPlayerID = (participants: ParticipantsFull[], playerId: nu
 
       if (player) {
       // If a match is found, return the team_name of the participant
-      return participant.team_name;
+        return player;
       }
   }
 
@@ -80,6 +80,9 @@ export default function generateScheduleFromDB(matches: MatchRecords[], dbcards:
         });
       }
     });
+
+    schedule.ida.sort((a, b) => a.matchday - b.matchday);
+    schedule.vuelta.sort((a, b) => a.matchday - b.matchday);
   
     return schedule;
   }

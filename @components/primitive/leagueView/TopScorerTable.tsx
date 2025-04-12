@@ -61,8 +61,7 @@ interface TopScorerTableProps {
     const columns = Object.keys(columnNames)
 
     let paginatedData = sortedData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-    console.log("********---------------")
-    console.log(data)
+    
     return (
         <Box sx={{ width: "25%", backgroundColor: "lightgray", height: "fit-content"}}>
             <TableContainer sx={{ minHeight: "550px", maxHeight: "550px", overflowY: "auto"}}>
