@@ -9,6 +9,10 @@ import getRowColor from '../utils/getRowColor';
 import { RowData } from '../types/RowData';
 import Checkbox from '@mui/material/Checkbox';
 import { Schedule } from '../types/Schedule';
+import { leagues } from '@prisma/client';
+import getRedCardPlayersWithTeamFromPreviousMatchday from '../utils/getRedCardPlayersWithTeamFromPreviousMatchday';
+import getPlayersWithXYellowCardsWithReset from '../utils/getPlayersWithXYellowCardsWithReset';
+import getInjuredPlayers from '../utils/getInjuredPlayers';
 
 interface MatchInfoDashboardProps {
     matchInfo: MatchInfo; 
@@ -18,6 +22,8 @@ interface MatchInfoDashboardProps {
     completeLeagueTeams: ParticipantsFull[];
     game: string;
     setSchedule: React.Dispatch<React.SetStateAction<Schedule | null>>;
+    schedule: Schedule;
+    leagueInfo: leagues;
 }
 
 const globalColnames = {
@@ -29,6 +35,7 @@ interface MatchDetailsUpdated {
     goals: any[]; // You can replace 'any' with a more specific type if needed, like 'number[]' for goals.
     ycards: any[]; // Same as goals, replace 'any' with a more specific type if necessary.
     rcards: any[]; // Same as goals, replace 'any' with a more specific type if necessary.
+    injuries: any[];
     groupedPlayers: {
         [key: string]: RowData[];
     };
@@ -45,6 +52,7 @@ interface PlayerStats {
     goals: number;
     ycard: boolean;
     rcard: boolean;
+    injury: boolean;
   }
   
   interface MatchStats {
@@ -69,13 +77,17 @@ return undefined;
 const getPlayerGoals = (arr: any[], playerName: string): number => {
     const player = arr.find(item => item.player === playerName);
     return player ? player.n : 0;  
-  };
+};  
 
-const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, matchIndex, matchRound, matchDay, completeLeagueTeams, game, setSchedule }) => {
+
+const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, matchIndex, matchRound, matchDay, completeLeagueTeams, game, setSchedule, schedule, leagueInfo }) => {
 
     const [participantData, setParticipantData] = useState<MatchInfoUpdated>()
     const [matchStats, setMatchStats] = useState<MatchStats>()
 
+    const [redCardPlayers, setRedCardPlayers] = useState<string[]>(getRedCardPlayersWithTeamFromPreviousMatchday(schedule, matchDay));
+    const [yellowCardPlayers, setYellowCardPlayers] = useState<string[]>(getPlayersWithXYellowCardsWithReset(schedule, matchDay, leagueInfo.yellow_cards_suspension!, 2));
+    const [injuredPlayers, setInjuredPlayers] = useState<string[]>(getInjuredPlayers(schedule, matchDay));
     useEffect(() => {
         
         const updated: MatchInfoUpdated = {
@@ -108,9 +120,10 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, match
                   goals: type === "local" ? getPlayerGoals(matchInfo.local.goals, player.nickname!) : getPlayerGoals(matchInfo.visitor.goals, player.nickname!),
                   ycard: type === "local" ? matchInfo.local.ycards.includes(player.nickname!) : matchInfo.visitor.ycards.includes(player.nickname!),
                   rcard: type === "local" ? matchInfo.local.rcards.includes(player.nickname!) : matchInfo.visitor.rcards.includes(player.nickname!),
+                  injury: type === "local" ? matchInfo.local.injuries.includes(player.nickname!) : matchInfo.visitor.injuries.includes(player.nickname!),
                 };
                 return acc;
-              }, {} as Record<string, { goals: number; ycard: boolean; rcard: boolean }>);
+              }, {} as Record<string, { goals: number; ycard: boolean; rcard: boolean, injury: boolean }>);
         }
 
         const item = {...transformTeam(participantData!.local, "local"), ...transformTeam(participantData!.visitor, "visitor")}
@@ -293,6 +306,59 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, match
              
     };
 
+    const handleInjuryChange = (value: boolean, playerName: string) => {
+        
+        setMatchStats((prev) => ({
+            ...prev,
+            [playerName]: {
+                ...prev![playerName],
+                injury: value
+            },
+            })
+        );
+
+        setSchedule((prevData) => {
+            // Clone the previous ida and vuelta to avoid direct mutation
+            const updateItem = matchRound ? [...prevData!.ida] : [...prevData!.vuelta]
+      
+            // Find the match based on matchday and matchIndex
+            const match = updateItem.find((m) => m.matchday === matchDay)?.matches[matchIndex];
+      
+            const updateTeam = findTeamNameByPlayerName(completeLeagueTeams, playerName)
+            
+            if (match) {
+              if(match.local.team === updateTeam){
+    
+                const existingPlayer = match.local.injuries.find(item => item === playerName);
+                if(existingPlayer && !value){
+                    match.local.injuries = match.local.injuries.filter(item => item !== existingPlayer);
+                }else if(!existingPlayer && value){
+                    match.local.injuries.push(playerName);  // Customize the goal object as needed
+                }
+                
+              }else{
+    
+                const existingPlayer = match.visitor.injuries.find(item => item === playerName);
+                if(existingPlayer && !value){
+                    match.visitor.injuries = match.visitor.injuries.filter(item => item !== existingPlayer);
+                }else if(!existingPlayer && value){
+                    match.visitor.injuries.push(playerName);  // Customize the goal object as needed
+                }
+    
+              }
+    
+              match.played = true
+            }
+    
+            if(matchRound){
+                return { ...prevData, ida: updateItem, vuelta: [...prevData!.vuelta] };
+            }else{
+                return { ...prevData, ida: [...prevData!.ida], vuelta: updateItem };
+            }
+          });
+             
+    };
+
     const handleMatchInfoClick = () => {
         
         setSchedule((prevData) => {
@@ -314,7 +380,7 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, match
           });
              
     };
-    
+    console.log(injuredPlayers)
 
     return (
     <Paper className="parent" sx={{ padding: 4, marginTop: 10, display: "flex", flexDirection: "row", flexWrap: "wrap", mb: 10}}>
@@ -328,12 +394,13 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, match
                     <Table stickyHeader>
                     <TableHead>
                         <TableRow>
-                            {["Jugador", "Goles", "T.Am.", "T.R."].map((col) => (
+                            {["Jugador", "Goles", "T.Am.", "T.R.", "Lesión"].map((col) => (
                                 <TableCell
                                     key={col}
                                     sx={{
                                         fontWeight: "bold",
-                                        textAlign: "center" // Center text in the header
+                                        textAlign: "center",
+                                        borderLeft: col === "Lesión" || col === "T.Am." ? '1px solid rgba(0, 0, 0, 0.12)' : ''  // Center text in the header
                                     }}
                                 >
                                     {col}
@@ -390,7 +457,7 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, match
 
                                     </TableCell>
 
-                                    <TableCell >
+                                    <TableCell sx={{ borderLeft: '1px solid rgba(0, 0, 0, 0.12)' }}>
 
                                         <Checkbox
                                             checked={matchStats[row.nickname!].ycard}
@@ -422,6 +489,101 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, match
 
                                     </TableCell>
 
+                                    <TableCell sx={{ borderLeft: '1px solid rgba(0, 0, 0, 0.12)' }}>
+
+                                        <Checkbox
+                                            checked={matchStats[row.nickname!].injury}
+                                            onChange={(e) => handleInjuryChange(e.target.checked, row.nickname!)}
+                                            name="checkedL"
+                                            color="primary"
+                                            sx={{
+                                                '&.Mui-checked': {
+                                                  color: "black",  // Change color when checked (e.g., green)
+                                                },  // Change color when unchecked (e.g., blue)
+                                              }}
+                                        />
+
+                                    </TableCell>
+
+                                    {redCardPlayers.includes(row.nickname!) && (
+                                    <div
+                                        style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        width: '100%',
+                                        height: '100%',
+                                        backgroundColor: 'rgba(94, 92, 92, 0.5)', // Gray with 50% opacity
+                                        zIndex: 1,
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        }}
+                                    >
+                                        <Typography variant="body1"
+                                            sx={{
+                                                fontWeight: 'bold',      // or 700
+                                                color: 'white',          // font color
+                                                backgroundColor: 'darkred', // background
+                                                padding: '4px 35px',      // optional padding
+                                                borderRadius: '4px',     // optional rounded corners
+                                                textAlign: 'center'
+                                        }}>SANCIONADO <br/> por guarro (ROJA)</Typography>
+                                    </div>
+                                    )}
+                                    {yellowCardPlayers.includes(row.nickname!) && (
+                                    <div
+                                        style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        width: '100%',
+                                        height: '100%',
+                                        backgroundColor: 'rgba(94, 92, 92, 0.5)', // Gray with 50% opacity
+                                        zIndex: 1,
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        }}
+                                    >
+                                        <Typography variant="body1"
+                                            sx={{
+                                                fontWeight: 'bold',      // or 700
+                                                color: 'white',          // font color
+                                                backgroundColor: 'darkred', // background
+                                                padding: '4px 35px',      // optional padding
+                                                borderRadius: '4px',  
+                                                textAlign: 'center'   
+                                        }}>SANCIONADO <br/>(AC. AMARILLAS)</Typography>
+                                    </div>
+                                    )}
+                                    {injuredPlayers.includes(row.nickname!) && (
+                                    <div
+                                        style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        width: '100%',
+                                        height: '100%',
+                                        backgroundColor: 'rgba(94, 92, 92, 0.5)', // Gray with 50% opacity
+                                        zIndex: 1,
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        }}
+                                    >
+                                        <Typography variant="body1"
+                                            sx={{
+                                                fontWeight: 'bold',      // or 700
+                                                color: 'white',          // font color
+                                                backgroundColor: 'rgb(120, 128, 20)', // background
+                                                padding: '4px 35px',      // optional padding
+                                                borderRadius: '4px',  
+                                                textAlign: 'center'   
+                                        }}>LESIONAT</Typography>
+                                    </div>
+                                    )}
+
                                 </TableRow>
                                         
                             ))}
@@ -441,12 +603,13 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, match
                     <Table stickyHeader>
                     <TableHead>
                         <TableRow>
-                            {["Jugador", "Goles", "T.Am.", "T.R."].map((col) => (
+                        {["Jugador", "Goles", "T.Am.", "T.R.", "Lesión"].map((col) => (
                                 <TableCell
                                     key={col}
                                     sx={{
                                         fontWeight: "bold",
-                                        textAlign: "center" // Center text in the header
+                                        textAlign: "center",
+                                        borderLeft: col === "Lesión" || col === "T.Am." ? '1px solid rgba(0, 0, 0, 0.12)' : ''  // Center text in the header
                                     }}
                                 >
                                     {col}
@@ -535,7 +698,100 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, match
 
                                     </TableCell>
 
-                                    
+                                    <TableCell sx={{ borderLeft: '1px solid rgba(0, 0, 0, 0.12)' }}>
+
+                                        <Checkbox
+                                            checked={matchStats[row.nickname!].injury}
+                                            onChange={(e) => handleInjuryChange(e.target.checked, row.nickname!)}
+                                            name="checkedL"
+                                            color="primary"
+                                            sx={{
+                                                '&.Mui-checked': {
+                                                  color: "black",  // Change color when checked (e.g., green)
+                                                },  // Change color when unchecked (e.g., blue)
+                                              }}
+                                        />
+
+                                    </TableCell>
+
+                                    {redCardPlayers.includes(row.nickname!) && (
+                                    <div
+                                        style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        width: '100%',
+                                        height: '100%',
+                                        backgroundColor: 'rgba(94, 92, 92, 0.5)', // Gray with 50% opacity
+                                        zIndex: 1,
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        }}
+                                    >
+                                        <Typography variant="body1"
+                                            sx={{
+                                                fontWeight: 'bold',      // or 700
+                                                color: 'white',          // font color
+                                                backgroundColor: 'darkred', // background
+                                                padding: '0px 35px',      // optional padding
+                                                borderRadius: '4px', 
+                                                textAlign: "center"    // optional rounded corners
+                                        }}>SANCIONADO <br/> por guarro (ROJA)</Typography>
+                                    </div>
+                                    )}
+                                    {yellowCardPlayers.includes(row.nickname!) && (
+                                    <div
+                                        style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        width: '100%',
+                                        height: '100%',
+                                        backgroundColor: 'rgba(94, 92, 92, 0.5)', // Gray with 50% opacity
+                                        zIndex: 1,
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        }}
+                                    >
+                                        <Typography variant="body1"
+                                            sx={{
+                                                fontWeight: 'bold',      // or 700
+                                                color: 'white',          // font color
+                                                backgroundColor: 'darkred', // background
+                                                padding: '4px 35px',      // optional padding
+                                                borderRadius: '4px',     // optional rounded corners
+                                                textAlign: 'center'
+                                        }}>SANCIONADO <br/>(AC. AMARILLAS)</Typography>
+                                    </div>
+                                    )}
+                                    {injuredPlayers.includes(row.nickname!) && (
+                                    <div
+                                        style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        width: '100%',
+                                        height: '100%',
+                                        backgroundColor: 'rgba(94, 92, 92, 0.5)', // Gray with 50% opacity
+                                        zIndex: 1,
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        }}
+                                    >
+                                        <Typography variant="body1"
+                                            sx={{
+                                                fontWeight: 'bold',      // or 700
+                                                color: 'white',          // font color
+                                                backgroundColor: 'rgb(120, 128, 20)', // background
+                                                padding: '4px 35px',      // optional padding
+                                                borderRadius: '4px',  
+                                                textAlign: 'center'   
+                                        }}>LESIONAT</Typography>
+                                    </div>
+                                    )}
                                             
                                 </TableRow>
                                         

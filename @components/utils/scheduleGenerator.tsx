@@ -31,22 +31,22 @@ export default function generateRoundRobinSchedule(teamsInput: (string | null)[]
           // Randomize home/away for ida
           const idaMatch = Math.random() < 0.5
             ? { 
-                local: { team: home, goals: [], ycards: [], rcards: [] }, 
-                visitor: { team: away, goals: [], ycards: [], rcards: [] },
+                local: { team: home, goals: [], ycards: [], rcards: [], injuries: [] }, 
+                visitor: { team: away, goals: [], ycards: [], rcards: [], injuries: [] },
                 played: false,
                 match_id: uuidv4()
               }
             : { 
-                local: { team: away, goals: [], ycards: [], rcards: [] }, 
-                visitor: { team: home, goals: [], ycards: [], rcards: [] },
+                local: { team: away, goals: [], ycards: [], rcards: [], injuries: [] }, 
+                visitor: { team: home, goals: [], ycards: [], rcards: [], injuries: [] },
                 played: false,
                 match_id: uuidv4()
               };
   
           // Vuelta is the reverse fixture
           const vueltaMatch = {
-            local: { team: idaMatch.visitor.team, goals: [], ycards: [], rcards: [] },
-            visitor: { team: idaMatch.local.team, goals: [], ycards: [], rcards: [] },
+            local: { team: idaMatch.visitor.team, goals: [], ycards: [], rcards: [], injuries: [] },
+            visitor: { team: idaMatch.local.team, goals: [], ycards: [], rcards: [], injuries: [] },
             played: false,
             match_id: uuidv4()
           };

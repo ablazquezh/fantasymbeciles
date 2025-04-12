@@ -1,4 +1,4 @@
-import { cards, goals } from "@prisma/client";
+import { cards, goals, injuries } from "@prisma/client";
 import { MatchRecords } from "../types/MatchRecords";
 import { Schedule } from "../types/Schedule";
 import { ParticipantsFull } from "../types/ParticipantsFull";
@@ -18,7 +18,7 @@ const findPlayerNameByPlayerID = (participants: ParticipantsFull[], playerId: nu
   return undefined;
 };
 
-const getScheduleInfo = (match: MatchRecords, dbgoals: goals[], dbcards: cards[], participants: ParticipantsFull[], team_fk: number) =>{
+const getScheduleInfo = (match: MatchRecords, dbgoals: goals[], dbcards: cards[], dbinjuries: injuries[], participants: ParticipantsFull[], team_fk: number) =>{
   // Group matches by matchday
   //const matchday = match.matchday!;
   //const stage = matchday! <= 3 ? "ida" : "vuelta"; // Determine stage (ida or vuelta)
@@ -35,10 +35,13 @@ const getScheduleInfo = (match: MatchRecords, dbgoals: goals[], dbcards: cards[]
   const shownRCards = dbcards.filter(item => item.match_id_fk === match.ID && item.team_id_fk == team_fk && item.type === "red")
   const rCardList = shownRCards.map(item => (findPlayerNameByPlayerID(participants, item.player_id_fk!)) );
 
-  return {goalList, yCardList, rCardList}
+  const injuries = dbinjuries.filter(item => item.match_id_fk === match.ID && item.team_id_fk == team_fk)
+  const injuryList = injuries.map(item => (findPlayerNameByPlayerID(participants, item.player_id_fk!)) );
+
+  return {goalList, yCardList, rCardList, injuryList}
 }
 
-export default function generateScheduleFromDB(matches: MatchRecords[], dbcards: cards[], dbgoals: goals[], leagueTable: any[], participants: ParticipantsFull[]) {
+export default function generateScheduleFromDB(matches: MatchRecords[], dbcards: cards[], dbgoals: goals[], dbinjuries: injuries[], leagueTable: any[], participants: ParticipantsFull[]) {
     const schedule: Schedule = {
       ida: [],
       vuelta: []
@@ -49,8 +52,8 @@ export default function generateScheduleFromDB(matches: MatchRecords[], dbcards:
       const matchday = match.matchday!;
       const stage = matchday! <= 3 ? "ida" : "vuelta"; // Determine stage (ida or vuelta)
 
-      const {goalList: lGoalList, yCardList: lYCardList, rCardList: lRCardList} = getScheduleInfo(match, dbgoals, dbcards, participants, match.local_team_id_fk!)
-      const {goalList: vGoalList, yCardList: vYCardList, rCardList: vRCardList} = getScheduleInfo(match, dbgoals, dbcards, participants, match.visitor_team_id_fk!)
+      const {goalList: lGoalList, yCardList: lYCardList, rCardList: lRCardList, injuryList: lInjuryList} = getScheduleInfo(match, dbgoals, dbcards, dbinjuries, participants, match.local_team_id_fk!)
+      const {goalList: vGoalList, yCardList: vYCardList, rCardList: vRCardList, injuryList: vInjuryList} = getScheduleInfo(match, dbgoals, dbcards, dbinjuries, participants, match.visitor_team_id_fk!)
 
       const matchObject = {
         local: {
@@ -58,12 +61,14 @@ export default function generateScheduleFromDB(matches: MatchRecords[], dbcards:
           goals: lGoalList,
           ycards: lYCardList,
           rcards: lRCardList,
+          injuries: lInjuryList,
         },
         visitor: {
           team: leagueTable.find(item => item.team_id === match.visitor_team_id_fk)?.team_name,
           goals: vGoalList,
           ycards: vYCardList,
           rcards: vRCardList,
+          injuries: vInjuryList,
         },
         played: match.played!,
         match_id: match.ID

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from "next/router";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, Divider, Paper, Button } from "@mui/material";
 import { GetServerSidePropsContext, NextPage } from 'next';
-import { PrismaClient, Prisma, users, leagues, matches, players, goals, cards } from "@prisma/client";
+import { PrismaClient, Prisma, users, leagues, matches, players, goals, cards, injuries } from "@prisma/client";
 import generateRoundRobinSchedule from '@/@components/utils/scheduleGenerator';
 import LeagueDashboard from '@/@components/leagueView/leagueDashboard';
 import mergeData from '@/@components/utils/mergeData';
@@ -22,6 +22,8 @@ import matchRecordGenerator from '@/@components/utils/matchRecordGenerator';
 import goalRecordGenerator from '@/@components/utils/goalRecordGenerator';
 import { CardRecords } from '@/@components/types/CardRecords';
 import cardRecordGenerator from '@/@components/utils/cardRecordGenerator';
+import injuryRecordGenerator from '@/@components/utils/injuryGenerator';
+import { InjuryRecords } from '@/@components/types/InjuryRecords';
 
 const prisma = new PrismaClient();
 
@@ -40,6 +42,14 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   );
 
   const dbgoals: goals[] | null = await prisma.goals.findMany({
+    where: {matches: {league_id_fk: Number(leagueId)}} ,
+    include: {
+      matches: true
+    }
+  }
+  );
+
+  const dbinjuries: injuries[] | null = await prisma.injuries.findMany({
     where: {matches: {league_id_fk: Number(leagueId)}} ,
     include: {
       matches: true
@@ -77,7 +87,8 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     dbmatches: dbmatches,
     leagueTeams: leagueTeams,
     dbcards: dbcards,
-    dbgoals: dbgoals
+    dbgoals: dbgoals,
+    dbinjuries: dbinjuries
   } };
 }
 
@@ -115,6 +126,7 @@ interface LeagueProps {
   leagueTeams: any[];
   dbcards: cards[];
   dbgoals: goals[];
+  dbinjuries: injuries[];
 }
 
 
@@ -149,7 +161,7 @@ const reshapeLeagueTeams = (leagueTeams: leagueTeams[], players: RowData[]) => {
   return groupedByTeam;
 };
 
-const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, dbmatches, leagueTeams, dbcards, dbgoals}) => {
+const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, dbmatches, leagueTeams, dbcards, dbgoals, dbinjuries}) => {
 
   const [topScorersInfo, setTopScorers] = useState<TopScorers[]>(topScorers)
   const [leagueTableInfo, setLeagueTable] = useState<LeagueTable[]>(leagueTable)
@@ -233,10 +245,10 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
 
     }else{
       console.log("Loaded matches")
-      const generatedSchedule = generateScheduleFromDB(dbmatches, dbcards, dbgoals, leagueTableInfo, completeLeagueTeams)
+      const generatedSchedule = generateScheduleFromDB(dbmatches, dbcards, dbgoals, dbinjuries, leagueTableInfo, completeLeagueTeams)
       console.log(generatedSchedule)
       setSchedule( generatedSchedule )
-      // ToDo: Means that there were results stored in the DB and here we must reshape them
+      // Means that there were results stored in the DB and here we must reshape them
     }
   }, [dbmatches, completeLeagueTeams]);
 
@@ -347,6 +359,56 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
       postCards()
       removeCards()
 
+
+      // POST CARDS
+      const injuryRecords: InjuryRecords[] = injuryRecordGenerator(schedule!, leagueTableInfo, leagueTeams);
+      
+      const removeInjuryRecords = dbinjuries.filter(aObj => 
+        !injuryRecords.some(bObj => bObj.match_id_fk === aObj.match_id_fk && bObj.player_id_fk === aObj.player_id_fk)
+      ).map(item => item.ID);
+
+      const removeInjuries = async () => {
+        try {
+          const response = await fetch("/api/removeinjuries", {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ idList: removeInjuryRecords }),
+            });
+      
+          const data = await response.json();
+      
+          if (response.ok) {
+            console.log("Success:", data);
+          } else {
+            console.error("Error:", data.error);
+          }
+        } catch (error) {
+          console.error("Request failed:", error);
+        }
+      }
+
+      const postInjuries = async () => {
+        try {
+          const response = await fetch("/api/createinjuries", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ records: injuryRecords }),
+            });
+      
+          const data = await response.json();
+      
+          if (response.ok) {
+            console.log("Success:", data);
+          } else {
+            console.error("Error:", data.error);
+          }
+        } catch (error) {
+          console.error("Request failed:", error);
+        }
+      }
+      postInjuries()
+      removeInjuries()
+
     }
     setView("home"); // may possibly need to update the matchinfo
   };
@@ -429,6 +491,8 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
 
   }, [updatedMatches]);
 
+
+  console.log(schedule)
   return (
     <Box sx={{
       margin: "auto",
@@ -464,7 +528,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
           leagueTeams={leagueTeams} handleMatchClick={handleMatchClick} schedule={schedule} />
       ) : view === "match" ? (
         <MatchInfoDashboard matchInfo={matchInfo!} matchIndex={matchIndex!} matchRound={matchRound!} matchDay={matchDay!} 
-          completeLeagueTeams={completeLeagueTeams} game={dbleague.game!} setSchedule={setSchedule} />
+          completeLeagueTeams={completeLeagueTeams} game={dbleague.game!} setSchedule={setSchedule} schedule={schedule!} leagueInfo={dbleague} />
       ) : view === "teams" ? (
         <TeamsView participantData={completeLeagueTeams} game={dbleague.game}/>
       ) : view === "market" ? (

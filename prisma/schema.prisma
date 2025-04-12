@@ -80,7 +80,7 @@ model market {
 }
 
 model matches {
-  ID                                      String   @id @db.Char(36)
+  ID                                      String     @id @db.Char(36)
   local_team_id_fk                        Int?
   visitor_team_id_fk                      Int?
   league_id_fk                            Int?
@@ -88,9 +88,10 @@ model matches {
   played                                  Boolean?
   cards                                   cards[]
   goals                                   goals[]
-  teams_matches_local_team_id_fkToteams   teams?   @relation("matches_local_team_id_fkToteams", fields: [local_team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "matches_ibfk_1")
-  teams_matches_visitor_team_id_fkToteams teams?   @relation("matches_visitor_team_id_fkToteams", fields: [visitor_team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "matches_ibfk_2")
-  leagues                                 leagues? @relation(fields: [league_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "matches_ibfk_3")
+  injuries                                injuries[]
+  teams_matches_local_team_id_fkToteams   teams?     @relation("matches_local_team_id_fkToteams", fields: [local_team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "matches_ibfk_1")
+  teams_matches_visitor_team_id_fkToteams teams?     @relation("matches_visitor_team_id_fkToteams", fields: [visitor_team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "matches_ibfk_2")
+  leagues                                 leagues?   @relation(fields: [league_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "matches_ibfk_3")
 
   @@index([league_id_fk], map: "league_id_fk")
   @@index([local_team_id_fk], map: "local_team_id_fk")
@@ -141,6 +142,7 @@ model players {
   game             String?            @db.VarChar(50)
   cards            cards[]
   goals            goals[]
+  injuries         injuries[]
   market           market[]
   player_transfers player_transfers[]
   teams            teams?             @relation(fields: [team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "players_ibfk_1")
@@ -176,6 +178,7 @@ model teams {
   team_country                              String?               @db.VarChar(50)
   cards                                     cards[]
   goals                                     goals[]
+  injuries                                  injuries[]
   league_participants                       league_participants[]
   matches_matches_local_team_id_fkToteams   matches[]             @relation("matches_local_team_id_fkToteams")
   matches_matches_visitor_team_id_fkToteams matches[]             @relation("matches_visitor_team_id_fkToteams")
@@ -187,6 +190,20 @@ model users {
   ID                  Int                   @id @default(autoincrement())
   user_name           String?               @db.VarChar(255)
   league_participants league_participants[]
+}
+
+model injuries {
+  ID           Int      @id @default(autoincrement())
+  match_id_fk  String?  @db.Char(36)
+  player_id_fk Int?
+  team_id_fk   Int?
+  matches      matches? @relation(fields: [match_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "injuries_ibfk_1")
+  players      players? @relation(fields: [player_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "injuries_ibfk_2")
+  teams        teams?   @relation(fields: [team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "injuries_ibfk_3")
+
+  @@unique([match_id_fk, player_id_fk], map: "match_id_fk")
+  @@index([player_id_fk], map: "player_id_fk")
+  @@index([team_id_fk], map: "team_id_fk")
 }
 
 enum leagues_type {
