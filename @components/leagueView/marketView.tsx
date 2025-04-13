@@ -15,6 +15,8 @@ import { RowData } from '@/@components/types/RowData';
 import { ParticipantsFull } from '../types/ParticipantsFull';
 import groupPlayerData from '../utils/groupPlayerData';
 
+// ToDo: Think- in same market session, transfer followed by removal implies no transfer record to insert in DB.
+
 // Custom column names
 const globalColnames = {
   nickname: "Jugador",
@@ -138,6 +140,7 @@ const MarketView: React.FC<PlayerSelectProps> = ({dbleague, participants, comple
         inputPlayer = foundItem.players[source.index]
       }
       
+      // ToDo: Create transfer record of player to new team
       // Apart from this -> setCompleteLeagueTeams
       const playerCopy = JSON.parse(JSON.stringify(inputPlayer));
       delete playerCopy.teams;
@@ -217,6 +220,7 @@ const MarketView: React.FC<PlayerSelectProps> = ({dbleague, participants, comple
 
   const handleOnSelect = (team_name: string, player: RowData) => {
 
+    // ToDo: Create transfer record of player to new team
     // Apart from this -> setCompleteLeagueTeams
     setCompleteLeagueTeams(prevData =>
         prevData.map(participant => {
@@ -282,6 +286,7 @@ const MarketView: React.FC<PlayerSelectProps> = ({dbleague, participants, comple
 
   const handleRemovePlayer = (participantIndex: number, playername: string) => {
 
+    // ToDo: Create transfer record of player to original game team
     // Apart from this -> setCompleteLeagueTeams
     setCompleteLeagueTeams(prevData => {
         const newData = [...prevData];

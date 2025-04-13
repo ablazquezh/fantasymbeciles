@@ -66,16 +66,16 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   }
   );
 
-  const leagueTable = await prisma.$queryRaw`
+  const leagueTable: LeagueTable[] = await prisma.$queryRaw`
     SELECT * FROM league_table WHERE league_id = ${dbleague?.ID}
   `;
-  
+
   const topScorers = await prisma.$queryRaw`
     SELECT player_name, team_name, goals FROM top_scorers_by_league WHERE league_id = ${dbleague?.ID} AND goals > 0
   `;
 
   const leagueTeams = await prisma.$queryRaw`
-    SELECT * FROM raw_league_teams WHERE league_id = ${dbleague?.ID}
+    SELECT * FROM raw_league_teams WHERE league_id = ${dbleague?.ID} AND team_id in (${Prisma.join(leagueTable.map((item: LeagueTable) => item.team_id))})
   `;
 
   const participants = await prisma.$queryRaw`
@@ -188,8 +188,6 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
   const [updatedGoals, setUpdatedGoals] = useState<boolean>(false);
   const [updatedMatches, setUpdatedMatches] = useState<boolean>(false);
 
-  console.log("----------------")
-  console.log(completeLeagueTeams)
 
   useEffect(() => {
 
@@ -297,6 +295,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
   };
 
   const handleBackClick = (view: string) => {
+
     //setMatchInfo(null);
     if(view === "match"){
       // POST GOALS
@@ -423,6 +422,9 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
       postInjuries()
       removeInjuries()
 
+    }else if(view === "market"){
+
+      // ToDo: insert transfer records in DB and re-set league teams
     }
     setView("home"); // may possibly need to update the matchinfo
   };
