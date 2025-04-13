@@ -3,39 +3,17 @@ import { useRouter } from "next/router";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, TablePagination, Paper, Button } from "@mui/material";
 import { players } from "@prisma/client";
 import { GetServerSidePropsContext, NextPage } from 'next';
-import CollapsableCard from "../@components/primitive/MovableCard"; // Ruta del componente
+import CollapsableCard from "../primitive/MovableCard"; // Ruta del componente
 import { PrismaClient, Prisma, users, leagues } from "@prisma/client";
 import { DragDropContext, Droppable, Draggable, DropResult, DraggableProvided, DraggableStateSnapshot} from "@hello-pangea/dnd";
-import Row from "../@components/primitive/Row"
+import Row from "../primitive/Row"
 import mergeData from '@/@components/utils/mergeData';
 import reshapeData from '@/@components/utils/reshapeData';
 import CustomDropdownSelect from '@/@components/primitive/CustomDropdown';
 import MinMax from '@/@components/primitive/MinMax';
 import { RowData } from '@/@components/types/RowData';
-
-const prisma = new PrismaClient();
-
-export async function getServerSideProps(context: GetServerSidePropsContext) {
-
-  const {leagueId} = context.query as {leagueId?: string};
-
-  const dbleague: leagues | null = await prisma.leagues.findUnique({
-    where: {ID: Number(leagueId)}
-  }
-  );
-
-  const participants = await prisma.$queryRaw`
-          SELECT participant_id, user_name, team_name, team_id FROM league_participants_view WHERE game = ${dbleague?.game} AND league_ID_fk = ${dbleague?.ID}
-      `;
-
-  return { props: {
-    dbleague: {
-      ...dbleague,
-      created_at: dbleague?.created_at ? dbleague.created_at.toISOString() : null,
-    },
-    participants: participants
-  } };
-}
+import { ParticipantsFull } from '../types/ParticipantsFull';
+import groupPlayerData from '../utils/groupPlayerData';
 
 // Custom column names
 const globalColnames = {
@@ -56,11 +34,14 @@ type playersFull = players & {
 };
 
 interface PlayerSelectProps {
-  dbleague: leagues;
-  participants: any[];
+    dbleague: leagues;
+    participants: any[];
+    setCompleteLeagueTeams: React.Dispatch<React.SetStateAction<ParticipantsFull[]>>;
+    completeLeagueTeams: ParticipantsFull[];
 }
 
-const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participants}) => {
+//const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participants}) => {
+const MarketView: React.FC<PlayerSelectProps> = ({dbleague, participants, completeLeagueTeams, setCompleteLeagueTeams}) => {
 
   console.log(participants)
   const router = useRouter();
@@ -137,7 +118,7 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
   
   const [participantData, setParticipantData] = useState(participants.map(item => ({
     ...item,
-    players: [] as playersFull[] // Empty array for 'items'
+    players: completeLeagueTeams.find(item2 => item2.team_id === item.team_id)?.players // Empty array for 'items'
   })))
 
   const handleOnDragEnd = (result: DropResult) => {
@@ -156,6 +137,47 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
         const foundItem = participantData.find(item => item.team_name === source.droppableId)
         inputPlayer = foundItem.players[source.index]
       }
+      
+      // Apart from this -> setCompleteLeagueTeams
+      const playerCopy = JSON.parse(JSON.stringify(inputPlayer));
+      delete playerCopy.teams;
+      setCompleteLeagueTeams(prevData =>
+        prevData.map(participant => {
+          if (participant.team_name === destination.droppableId) {
+            // If the participant matches, add the new player to the 'players' array
+
+            if (participant.players.some(item => item.nickname === inputPlayer?.nickname)){
+              // If that participant already contains the player, do nothing
+              return participant
+            }
+
+            return {
+              ...participant,
+              players: [...participant.players, playerCopy], // Add the new player
+              groupedPlayers: groupPlayerData([...participant.players, playerCopy])
+            };
+          }else{
+
+            if (participant.players.some(item => item.nickname === inputPlayer.nickname)){
+              // If that player was assigned to other participant, it should be dropped from the previous one
+              
+              return {
+                ...participant,
+                players: participant.players.filter(
+                  item => item.nickname?.toLowerCase() !== inputPlayer.nickname?.toLowerCase()
+                ),
+                groupedPlayers: groupPlayerData(participant.players.filter(
+                    item => item.nickname?.toLowerCase() !== inputPlayer.nickname?.toLowerCase()
+                  ))
+              };
+            }
+          }
+
+          // Otherwise, return the participant unchanged
+          return participant;
+        })
+      );
+
 
       setParticipantData(prevData =>
         prevData.map(participant => {
@@ -195,6 +217,39 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
 
   const handleOnSelect = (team_name: string, player: RowData) => {
 
+    // Apart from this -> setCompleteLeagueTeams
+    setCompleteLeagueTeams(prevData =>
+        prevData.map(participant => {
+          if (participant.team_name === team_name) {
+            // If the participant matches, add the new player to the 'players' array
+  
+            return {
+              ...participant,
+              players: [...participant.players, player], // Add the new player
+              groupedPlayers: groupPlayerData([...participant.players, player])
+            };
+          }else{
+            
+            if (participant.players.some(item => item.nickname === player.nickname)){
+              // If that player was assigned to other participant, it should be dropped from the previous one
+              
+              return {
+                ...participant,
+                players: participant.players.filter(
+                  item => item.nickname?.toLowerCase() !== player.nickname?.toLowerCase()
+                ),
+                groupedPlayers: groupPlayerData(participant.players.filter(
+                    item => item.nickname?.toLowerCase() !== player.nickname?.toLowerCase()
+                  ))
+              };
+            }
+          }
+  
+          // Otherwise, return the participant unchanged
+          return participant;
+        })
+      );
+
     setParticipantData(prevData =>
       prevData.map(participant => {
         if (participant.team_name === team_name) {
@@ -227,6 +282,26 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
 
   const handleRemovePlayer = (participantIndex: number, playername: string) => {
 
+    // Apart from this -> setCompleteLeagueTeams
+    setCompleteLeagueTeams(prevData => {
+        const newData = [...prevData];
+        const participant = newData[participantIndex];
+    
+        if (!participant) return prevData;
+    
+        const updatedPlayers = participant.players.filter(
+          player => player.nickname !== playername
+        );
+    
+        newData[participantIndex] = {
+          ...participant,
+          players: updatedPlayers,
+          groupedPlayers: groupPlayerData(updatedPlayers)
+        };
+    
+        return newData;
+      });
+
     setParticipantData(prevData => {
       const newData = [...prevData];
       const participant = newData[participantIndex];
@@ -246,35 +321,6 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
     });
   };
 
-  const handleBeginLeague = async () => {
-
-    const transferRecords = participantData.flatMap(pData =>
-      pData.players.map((player: playersFull) => ({
-        player_id_fk: Number(player.ID),
-        team_id_fk: Number(pData.team_id),
-        league_id_fk: Number(leagueId)
-      }))
-    );
-
-    try {
-      const response = await fetch("/api/createtransfers", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ records: transferRecords }),
-        });
-  
-      const data = await response.json();
-  
-      if (response.ok) {
-        console.log("Success:", data);
-        router.push(`/league?leagueId=${leagueId}`);
-      } else {
-        console.error("Error:", data.error);
-      }
-    } catch (error) {
-      console.error("Request failed:", error);
-    }
-  };
 
 console.log(participantData)
 
@@ -286,12 +332,6 @@ console.log(participantData)
         flexDirection: "column",
         position: "relative"
       }}>
-
-        <Button variant="contained" color="primary" disabled={false}
-          sx={{ width: 150, ml: "calc(100% - 150px)", position: 'absolute', top: '20px', right: '8px', }}
-          onClick={() => handleBeginLeague()}>
-            empezar liga
-        </Button>
 
         <DragDropContext onDragEnd={handleOnDragEnd}>
 
@@ -390,4 +430,4 @@ console.log(participantData)
     )
   }
   
-  export default PlayerSelectionPage
+  export default MarketView

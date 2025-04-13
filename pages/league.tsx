@@ -24,6 +24,7 @@ import { CardRecords } from '@/@components/types/CardRecords';
 import cardRecordGenerator from '@/@components/utils/cardRecordGenerator';
 import injuryRecordGenerator from '@/@components/utils/injuryGenerator';
 import { InjuryRecords } from '@/@components/types/InjuryRecords';
+import MarketView from '@/@components/leagueView/marketView';
 
 const prisma = new PrismaClient();
 
@@ -77,6 +78,10 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     SELECT * FROM raw_league_teams WHERE league_id = ${dbleague?.ID}
   `;
 
+  const participants = await prisma.$queryRaw`
+      SELECT participant_id, user_name, team_name, team_id FROM league_participants_view WHERE game = ${dbleague?.game} AND league_ID_fk = ${dbleague?.ID}
+  `;
+
   return { props: {
     dbleague: {
       ...dbleague,
@@ -88,7 +93,8 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     leagueTeams: leagueTeams,
     dbcards: dbcards,
     dbgoals: dbgoals,
-    dbinjuries: dbinjuries
+    dbinjuries: dbinjuries,
+    participants: participants
   } };
 }
 
@@ -127,6 +133,7 @@ interface LeagueProps {
   dbcards: cards[];
   dbgoals: goals[];
   dbinjuries: injuries[];
+  participants: any[];
 }
 
 
@@ -161,7 +168,7 @@ const reshapeLeagueTeams = (leagueTeams: leagueTeams[], players: RowData[]) => {
   return groupedByTeam;
 };
 
-const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, dbmatches, leagueTeams, dbcards, dbgoals, dbinjuries}) => {
+const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, dbmatches, leagueTeams, dbcards, dbgoals, dbinjuries, participants}) => {
 
   const [topScorersInfo, setTopScorers] = useState<TopScorers[]>(topScorers)
   const [leagueTableInfo, setLeagueTable] = useState<LeagueTable[]>(leagueTable)
@@ -180,6 +187,9 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
   
   const [updatedGoals, setUpdatedGoals] = useState<boolean>(false);
   const [updatedMatches, setUpdatedMatches] = useState<boolean>(false);
+
+  console.log("----------------")
+  console.log(completeLeagueTeams)
 
   useEffect(() => {
 
@@ -420,7 +430,9 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
   const handleTeamsClick = () => {
     setView("teams"); // may possibly need to update the matchinfo
   };
-
+  const handleMarketClick = () => {
+    setView("market"); // may possibly need to update the matchinfo
+  };
 
   useEffect(() => {
 
@@ -523,6 +535,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
       </Button>
       <Button variant="contained" color="primary" disabled={false}
         sx={{ width: 150, position: 'absolute', top: '20px', right: '0%', }}
+        onClick={handleMarketClick} 
       >            
         mercado
       </Button>
@@ -536,7 +549,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
       ) : view === "teams" ? (
         <TeamsView participantData={completeLeagueTeams} game={dbleague.game}/>
       ) : view === "market" ? (
-        <>test</>
+        <MarketView dbleague={dbleague} participants={participants} completeLeagueTeams={completeLeagueTeams} setCompleteLeagueTeams={setCompleteLeagueTeams}></MarketView>
       ) : (
         <></>
       )}
