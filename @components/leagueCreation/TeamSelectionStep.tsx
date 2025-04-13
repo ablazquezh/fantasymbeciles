@@ -126,7 +126,7 @@ import { useRouter } from "next/router";
 
     const leagueIdx = leagues.length > 0 ? leagues[leagues.length - 1].ID +1 : 1;
 
-    const handleCreateLeague = async () => {
+    const handleCreateLeague = () => {
 
       const hasMatch = leagues.some((obj) => obj.league_name === leagueName);
       if (hasMatch) {
@@ -144,6 +144,54 @@ import { useRouter } from "next/router";
         league_ID_fk: leagueIdx
       }));
 
+
+      const postLeague = async () => {
+        try {
+          const response = await fetch("/api/createleague", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ leagueName: leagueName, leagueType: formData.options?.leaguetype,
+              winterMarket: formData.options?.winterMarket, yellowCards: formData.options?.cardSuspension,
+              playerAvgLimit: formData.options?.averageLimit, budgetCalc: formData.options?.budgetCalculation,
+              game: formData.options?.game
+            }),
+          });
+      
+          const data = await response.json();
+      
+          if (response.ok) {
+            console.log("Success:", data);
+          } else {
+            console.error("Error:", data.error);
+          }
+        } catch (error) {
+          console.error("Request failed:", error);
+        }
+    }
+    postLeague();
+    const postLeagueParticipants = async () => {
+      try {
+        const response = await fetch("/api/createleagueparticipants", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ records: leagueParticipantRecords }),
+        });
+    
+        const data = await response.json();
+    
+        if (response.ok) {
+          console.log("Success:", data);
+        } else {
+          console.error("Error:", data.error);
+        }
+      } catch (error) {
+        console.error("Request failed:", error);
+      }
+    }
+    postLeagueParticipants();
+
+    router.push(`/playerSelection?leagueId=${leagueIdx}`);
+/*
       try {
         const [response1, response2] = await Promise.all([
           fetch("/api/createleague", {
@@ -173,7 +221,7 @@ import { useRouter } from "next/router";
         }
       } catch (error) {
         console.error("Request failed:", error);
-      }
+      }*/
     };
 
     const handleTextBoxChange = (e: React.ChangeEvent<HTMLInputElement>) => {

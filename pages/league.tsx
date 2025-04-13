@@ -217,6 +217,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
   useEffect(() => {
     if(dbmatches.length === 0){
       const generatedSchedule = generateRoundRobinSchedule(leagueTableInfo.map(team => team.team_name))
+      console.log(generatedSchedule)
       setSchedule( generatedSchedule )
 
       // PUSH MATCHES

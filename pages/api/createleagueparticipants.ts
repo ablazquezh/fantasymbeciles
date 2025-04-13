@@ -10,8 +10,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   
   try {
     const { records } = req.body; // Expecting an array of records
+    console.log("___________")
 
-    if (!Array.isArray(records) || records.length === 0) {
+    console.log(records)
+      if (!Array.isArray(records) || records.length === 0) {
       return res.status(400).json({ error: "Invalid or empty data array" });
     }
 
