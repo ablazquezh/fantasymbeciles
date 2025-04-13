@@ -224,6 +224,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
       const matchRecords: MatchRecords[] = matchRecordGenerator(generatedSchedule, leagueTableInfo, leagueId as string);
       
       const postMatches = async () => {
+        console.log("insert")
         try {
           const response = await fetch("/api/creatematches", {
               method: "POST",
@@ -242,7 +243,9 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
           console.error("Request failed:", error);
         }
     }
+    if(schedule !== null){
     postMatches()
+   }
 
     }else{
       console.log("Loaded matches")

@@ -125,16 +125,10 @@ import { useRouter } from "next/router";
     const [leagueName, setLeagueName] = useState('');
 
     const leagueIdx = leagues.length > 0 ? leagues[leagues.length - 1].ID +1 : 1;
+    
 
-    const handleCreateLeague = () => {
 
-      const hasMatch = leagues.some((obj) => obj.league_name === leagueName);
-      if (hasMatch) {
-        setLeagueName("")
-        setError(true); // Show error
-        setHelperText('Nombre de liga ya existente. Por favor, asigna uno distinto.');
-        return;
-      }
+    const handleCreateLeague = async() => {
 
       const leagueParticipantRecords = users
       .filter((user): user is { user_name: string; ID: number } => user.user_name !== null)
@@ -144,54 +138,59 @@ import { useRouter } from "next/router";
         league_ID_fk: leagueIdx
       }));
 
-
-      const postLeague = async () => {
-        try {
-          const response = await fetch("/api/createleague", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ leagueName: leagueName, leagueType: formData.options?.leaguetype,
-              winterMarket: formData.options?.winterMarket, yellowCards: formData.options?.cardSuspension,
-              playerAvgLimit: formData.options?.averageLimit, budgetCalc: formData.options?.budgetCalculation,
-              game: formData.options?.game
-            }),
-          });
-      
-          const data = await response.json();
-      
-          if (response.ok) {
-            console.log("Success:", data);
-          } else {
-            console.error("Error:", data.error);
-          }
-        } catch (error) {
-          console.error("Request failed:", error);
-        }
-    }
-    postLeague();
-    const postLeagueParticipants = async () => {
-      try {
-        const response = await fetch("/api/createleagueparticipants", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ records: leagueParticipantRecords }),
-        });
-    
-        const data = await response.json();
-    
-        if (response.ok) {
-          console.log("Success:", data);
-        } else {
-          console.error("Error:", data.error);
-        }
-      } catch (error) {
-        console.error("Request failed:", error);
+      const hasMatch = leagues.some((obj) => obj.league_name === leagueName);
+      if (hasMatch) {
+        setLeagueName("")
+        setError(true); 
+        setHelperText('Nombre de liga ya existente. Por favor, asigna uno distinto.');
+        return;
       }
-    }
-    postLeagueParticipants();
 
-    router.push(`/playerSelection?leagueId=${leagueIdx}`);
-/*
+        
+      const response = await fetch("/api/createleague", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leagueName: leagueName, leagueType: formData.options?.leaguetype,
+          winterMarket: formData.options?.winterMarket, yellowCards: formData.options?.cardSuspension,
+          playerAvgLimit: formData.options?.averageLimit, budgetCalc: formData.options?.budgetCalculation,
+          game: formData.options?.game
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        console.error("League creation failed:", error);
+        return;
+      }
+  
+      const leagueData = await response.json();
+
+
+      if (!leagueData?.ID) {
+        console.error("League creation response missing ID:", leagueData);
+        return;
+      }
+      
+      const response2 = await fetch("/api/createleagueparticipants", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ records: leagueParticipantRecords }),
+      });
+                
+      if (!response2.ok) {
+        const error = await response2.text();
+        console.error("Participant creation failed:", error);
+        return;
+      }
+      const participantsResult = await response2.json();
+      console.log("Participants inserted:", participantsResult);
+      if (participantsResult?.count === 0) {
+        console.warn("No participants inserted");
+        return;
+      }
+      router.push(`/playerSelection?leagueId=${leagueIdx}`);
+
+    /*
       try {
         const [response1, response2] = await Promise.all([
           fetch("/api/createleague", {
@@ -222,6 +221,7 @@ import { useRouter } from "next/router";
       } catch (error) {
         console.error("Request failed:", error);
       }*/
+
     };
 
     const handleTextBoxChange = (e: React.ChangeEvent<HTMLInputElement>) => {

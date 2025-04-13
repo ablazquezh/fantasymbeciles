@@ -20,10 +20,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Bulk insert using createMany()
     const result = await prisma.league_participants.createMany({
       data: records, // Must be an array of objects matching table columns
-      skipDuplicates: true, // Optional: Avoid inserting duplicates
+      //skipDuplicates: true, // Optional: Avoid inserting duplicates
     });
 
-    return res.status(201).json({ success: true, count: result.count });
+    return res.status(201).json({ success: true, count: result.count, item: records });
   } catch (error) {
       console.error("Database insert error:", error);
     return res.status(500).json({ error: "Internal Server Error" });
