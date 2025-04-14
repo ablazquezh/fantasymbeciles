@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 
 export default function generateRoundRobinSchedule(teamsInput: (string | null)[]): { ida: any[], vuelta: any[] } {
+  console.log("hello")
   const teams = [...teamsInput];
   const isOdd = teams.length % 2 !== 0;
 

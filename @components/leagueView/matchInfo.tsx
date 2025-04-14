@@ -13,6 +13,7 @@ import { leagues } from '@prisma/client';
 import getRedCardPlayersWithTeamFromPreviousMatchday from '../utils/getRedCardPlayersWithTeamFromPreviousMatchday';
 import getPlayersWithXYellowCardsWithReset from '../utils/getPlayersWithXYellowCardsWithReset';
 import getInjuredPlayers from '../utils/getInjuredPlayers';
+import findTeamNameByPlayerName from '../utils/findTeamNameByPlayerName';
 
 interface MatchInfoDashboardProps {
     matchInfo: MatchInfo; 
@@ -59,20 +60,6 @@ interface PlayerStats {
     [nickname: string]: PlayerStats;
   }
 
-const findTeamNameByPlayerName = (participants: ParticipantsFull[], playerName: string): string | undefined => {
-// Iterate over all participants
-for (const participant of participants) {
-    // Check if any player in the current participant's players array matches the given player name
-    const player = participant.players.find(p => p.nickname === playerName);
-
-    if (player) {
-    // If a match is found, return the team_name of the participant
-    return participant.team_name;
-    }
-}
-
-return undefined;
-};
 
 const getPlayerGoals = (arr: any[], playerName: string): number => {
     const player = arr.find(item => item.player === playerName);

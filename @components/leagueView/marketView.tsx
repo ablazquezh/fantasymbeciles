@@ -14,6 +14,7 @@ import MinMax from '@/@components/primitive/MinMax';
 import { RowData } from '@/@components/types/RowData';
 import { ParticipantsFull } from '../types/ParticipantsFull';
 import groupPlayerData from '../utils/groupPlayerData';
+import findTeamNameByPlayerName from '../utils/findTeamNameByPlayerName';
 
 // ToDo: Think- in same market session, transfer followed by removal implies no transfer record to insert in DB.
 
@@ -40,14 +41,14 @@ interface PlayerSelectProps {
     participants: any[];
     setCompleteLeagueTeams: React.Dispatch<React.SetStateAction<ParticipantsFull[]>>;
     completeLeagueTeams: ParticipantsFull[];
+    setTransferRecords: React.Dispatch<React.SetStateAction<any[]>>;
 }
 
 //const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participants}) => {
-const MarketView: React.FC<PlayerSelectProps> = ({dbleague, participants, completeLeagueTeams, setCompleteLeagueTeams}) => {
+const MarketView: React.FC<PlayerSelectProps> = ({dbleague, participants, completeLeagueTeams, setCompleteLeagueTeams, setTransferRecords}) => {
 
   console.log(participants)
   const router = useRouter();
-  const { leagueId } = router.query;
   const [league, setLeague] = useState<string | null>(null);
 
   const [players, setPlayers] = useState<playersFull[]>([]);
@@ -82,12 +83,12 @@ const MarketView: React.FC<PlayerSelectProps> = ({dbleague, participants, comple
     setTotal(data.total);
   };
 
-  useEffect(() => {
+  /*useEffect(() => {
     if (leagueId) {
         setLeague(leagueId as string);
     }
   }, [leagueId]);
-
+*/
 
   useEffect(() => {
     const fetchPlayers= async () => {
@@ -140,7 +141,16 @@ const MarketView: React.FC<PlayerSelectProps> = ({dbleague, participants, comple
         inputPlayer = foundItem.players[source.index]
       }
       
-      // ToDo: Create transfer record of player to new team
+      
+
+      // Create transfer record of player to new team
+      const transferRecord = {
+          player_id_fk: Number(inputPlayer.ID),
+          team_id_fk: participants.find((item) => item.team_name === destination.droppableId).team_id,
+          league_id_fk: Number(dbleague.ID)
+      };
+      setTransferRecords(prev => [...prev, transferRecord]);
+      
       // Apart from this -> setCompleteLeagueTeams
       const playerCopy = JSON.parse(JSON.stringify(inputPlayer));
       delete playerCopy.teams;
@@ -220,7 +230,14 @@ const MarketView: React.FC<PlayerSelectProps> = ({dbleague, participants, comple
 
   const handleOnSelect = (team_name: string, player: RowData) => {
 
-    // ToDo: Create transfer record of player to new team
+    // Create transfer record of player to new team
+    const transferRecord = {
+        player_id_fk: Number(player.ID),
+        team_id_fk: participants.find((item) => item.team_name === team_name).team_id,
+        league_id_fk: Number(dbleague.ID)
+    };
+    setTransferRecords(prev => [...prev, transferRecord]);
+
     // Apart from this -> setCompleteLeagueTeams
     setCompleteLeagueTeams(prevData =>
         prevData.map(participant => {
@@ -286,7 +303,17 @@ const MarketView: React.FC<PlayerSelectProps> = ({dbleague, participants, comple
 
   const handleRemovePlayer = (participantIndex: number, playername: string) => {
 
-    // ToDo: Create transfer record of player to original game team
+
+    const updateTeam = findTeamNameByPlayerName(completeLeagueTeams, playername, "id")
+
+    // Create transfer record of player to new team
+    const transferRecord = {
+      player_id_fk: updateTeam,
+      team_id_fk: null,
+      league_id_fk: Number(dbleague.ID)
+    };
+    setTransferRecords(prev => [...prev, transferRecord]);
+    
     // Apart from this -> setCompleteLeagueTeams
     setCompleteLeagueTeams(prevData => {
         const newData = [...prevData];

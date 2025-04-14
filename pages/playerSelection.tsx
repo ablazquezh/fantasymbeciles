@@ -134,7 +134,8 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
 
   const completePlayerInfo = mergeData(players, playerPositions)
   const shapedData = reshapeData(completePlayerInfo)
-  
+  console.log("*****")
+  console.log(shapedData)
   const [participantData, setParticipantData] = useState(participants.map(item => ({
     ...item,
     players: [] as playersFull[] // Empty array for 'items'

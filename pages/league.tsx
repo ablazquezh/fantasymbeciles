@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef} from 'react'
 import { useRouter } from "next/router";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, Divider, Paper, Button } from "@mui/material";
 import { GetServerSidePropsContext, NextPage } from 'next';
@@ -168,10 +168,13 @@ const reshapeLeagueTeams = (leagueTeams: leagueTeams[], players: RowData[]) => {
   return groupedByTeam;
 };
 
+
+
 const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, dbmatches, leagueTeams, dbcards, dbgoals, dbinjuries, participants}) => {
 
   const [topScorersInfo, setTopScorers] = useState<TopScorers[]>(topScorers)
   const [leagueTableInfo, setLeagueTable] = useState<LeagueTable[]>(leagueTable)
+  const [leagueTeamsInfo, setLeagueTeams] = useState<leagueTeams[]>(leagueTeams)
 
   const [schedule, setSchedule] = useState<Schedule | null>(null)
   const [view, setView] = useState<string>("home")
@@ -188,10 +191,11 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
   const [updatedGoals, setUpdatedGoals] = useState<boolean>(false);
   const [updatedMatches, setUpdatedMatches] = useState<boolean>(false);
 
+  const [transferRecords, setTransferRecords] = useState<any[]>([])
 
   useEffect(() => {
 
-    const playerIds = leagueTeams.map(item => item.player_id);
+    const playerIds = leagueTeamsInfo.map(item => item.player_id);
 
     const fetchPlayers= async () => {
       const res = await fetch(`/api/playersbyid?idList=${playerIds}`);
@@ -212,7 +216,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
 
   useEffect(() => {
     if (!Array.isArray(players) || players.length === 0) return;
-    const participants = reshapeLeagueTeams(leagueTeams, players)
+    const participants = reshapeLeagueTeams(leagueTeamsInfo, players)
 
     const transformed = participants.map((participant) => ({
     ...participant,
@@ -221,9 +225,13 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
     setCompleteLeagueTeams(transformed)
   }, [players]);
 
-
+  const hasRun = useRef(false);
   useEffect(() => {
+    
+    if (hasRun.current) return;
+    hasRun.current = true;
     if(dbmatches.length === 0){
+      if(schedule === null){
       const generatedSchedule = generateRoundRobinSchedule(leagueTableInfo.map(team => team.team_name))
       console.log(generatedSchedule)
       setSchedule( generatedSchedule )
@@ -250,11 +258,14 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
         } catch (error) {
           console.error("Request failed:", error);
         }
-    }
-    if(schedule !== null){
-    postMatches()
-   }
+      }
+      postMatches()
 
+    }
+      /*if(schedule !== null){
+        postMatches()
+      }*/
+      
     }else{
       console.log("Loaded matches")
       const generatedSchedule = generateScheduleFromDB(dbmatches, dbcards, dbgoals, dbinjuries, leagueTableInfo, completeLeagueTeams)
@@ -299,7 +310,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
     //setMatchInfo(null);
     if(view === "match"){
       // POST GOALS
-      const goalRecords: GoalRecords[] = goalRecordGenerator(schedule!, leagueTableInfo, leagueTeams);
+      const goalRecords: GoalRecords[] = goalRecordGenerator(schedule!, leagueTableInfo, leagueTeamsInfo);
       
       const postGoals = async () => {
         try {
@@ -324,7 +335,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
       postGoals()
 
       // POST CARDS
-      const cardRecords: CardRecords[] = cardRecordGenerator(schedule!, leagueTableInfo, leagueTeams);
+      const cardRecords: CardRecords[] = cardRecordGenerator(schedule!, leagueTableInfo, leagueTeamsInfo);
 
       const removeRecords = dbcards.filter(aObj => 
         !cardRecords.some(bObj => bObj.match_id_fk === aObj.match_id_fk && bObj.player_id_fk === aObj.player_id_fk)
@@ -374,7 +385,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
 
 
       // POST CARDS
-      const injuryRecords: InjuryRecords[] = injuryRecordGenerator(schedule!, leagueTableInfo, leagueTeams);
+      const injuryRecords: InjuryRecords[] = injuryRecordGenerator(schedule!, leagueTableInfo, leagueTeamsInfo);
       
       const removeInjuryRecords = dbinjuries.filter(aObj => 
         !injuryRecords.some(bObj => bObj.match_id_fk === aObj.match_id_fk && bObj.player_id_fk === aObj.player_id_fk)
@@ -424,7 +435,66 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
 
     }else if(view === "market"){
 
-      // ToDo: insert transfer records in DB and re-set league teams
+      // Insert transfer records in DB and re-set league teams
+      const postTransfers = async () => {
+
+        const response = await fetch("/api/createtransfers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ records: transferRecords }),
+        });
+  
+        if (!response.ok) {
+          const error = await response.text();
+          console.error("Transfer creation failed:", error);
+          return;
+        }
+    
+        const transferData = await response.json();
+  
+  
+        if (!transferData?.count) {
+          console.error("Transfer creation response missing count:", transferData);
+          return;
+        }
+        
+        const response2 = await fetch(`/api/leagueteams?leagueId=${leagueId}&teamIds=${leagueTable.map((item: LeagueTable) => item.team_id).join(",")}`);
+                  
+        if (!response2.ok) {
+          const error = await response2.text();
+          console.error("League teams GET failed:", error);
+          return;
+        }
+        const leagueteamsUpdated = await response2.json();
+        if (!leagueteamsUpdated) {
+          console.error("League teams GET failed.");
+          return;
+        }
+        console.log("________")
+        console.log(leagueteamsUpdated)
+        setLeagueTeams(leagueteamsUpdated);
+
+
+        try {
+          const response = await fetch("/api/createtransfers", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ records: transferRecords }),
+            });
+      
+          const data = await response.json();
+      
+          if (response.ok) {
+            console.log("Success:", data);
+          } else {
+            console.error("Error:", data.error);
+          }
+        } catch (error) {
+          console.error("Request failed:", error);
+        }
+      }
+      postTransfers()
+      setTransferRecords([]);
     }
     setView("home"); // may possibly need to update the matchinfo
   };
@@ -544,14 +614,15 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
 
       {schedule && view === "home" ? (
         <LeagueDashboard dbleague={dbleague} topScorers={topScorersInfo} leagueTable={leagueTableInfo} dbmatches={dbmatches} 
-          leagueTeams={leagueTeams} handleMatchClick={handleMatchClick} schedule={schedule} />
+          leagueTeams={leagueTeamsInfo} handleMatchClick={handleMatchClick} schedule={schedule} />
       ) : view === "match" ? (
         <MatchInfoDashboard matchInfo={matchInfo!} matchIndex={matchIndex!} matchRound={matchRound!} matchDay={matchDay!} 
           completeLeagueTeams={completeLeagueTeams} game={dbleague.game!} setSchedule={setSchedule} schedule={schedule!} leagueInfo={dbleague} />
       ) : view === "teams" ? (
         <TeamsView participantData={completeLeagueTeams} game={dbleague.game}/>
       ) : view === "market" ? (
-        <MarketView dbleague={dbleague} participants={participants} completeLeagueTeams={completeLeagueTeams} setCompleteLeagueTeams={setCompleteLeagueTeams}></MarketView>
+        <MarketView dbleague={dbleague} participants={participants} completeLeagueTeams={completeLeagueTeams} setCompleteLeagueTeams={setCompleteLeagueTeams}
+          setTransferRecords={setTransferRecords} /> 
       ) : (
         <></>
       )}
