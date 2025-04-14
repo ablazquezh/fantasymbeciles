@@ -36,12 +36,12 @@ export default function ButtonAppBar() {
     <Box sx={{ flexGrow: 1}}>
       <AppBar position="static" sx={{ height: 80 }}>
         <Toolbar  sx={{ height: "100%", position: "relative"}}>
-          <TemporaryDrawer/>
+          {/*<TemporaryDrawer/>*/}
           <IconButton size="large"
                   edge="start"
                   color="inherit"
                   aria-label="menu"
-                  sx={{ mr: 2 }}
+                  sx={{ position: "absolute", left:"20%" }}
                   href="/">
             <HomeIcon sx={{ fontSize: 40 }}/>
           </IconButton>
