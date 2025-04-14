@@ -9,9 +9,9 @@ interface StepOneProps {
 
 const HomeSelection: React.FC<StepOneProps> = ({ setStep }) => {
   return (
-    <Box justifyContent="space-evenly" sx={{ display: "flex", marginTop: 10, flexDirection: "column", gap: 2, alignItems: "center"}}>
+    <Box justifyContent="space-evenly" sx={{ display: "flex", marginTop: 10, flexDirection: "column", gap: 5, alignItems: "center"}}>
 
-      <Box display="flex" gap={2}>
+      <Box display="flex" gap={10}>
         <Card sx={{ maxWidth: 345, width: 345}}>
             <CardActionArea 
               onClick={() => setStep(2)}>

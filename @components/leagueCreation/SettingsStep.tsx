@@ -25,10 +25,18 @@ interface StepFourProps {
 const SettingsStep: React.FC<StepFourProps> = ({ setStep, setFormData, formData }) => {
 
   const [localOptions, setLocalOptions] = useState<Record<string, any>>({
-    winterMarket: formData.options?.winterMarket ?? false,
-    cardSuspension: formData.options?.cardSuspension ?? 3,
-    averageLimit: formData.options?.averageLimit ?? 85,
-    budgetCalculation: formData.options?.budgetCalculation ?? "default",
+    transferMarket: formData.options?.transferMarket ?? false, // MAIN SETTING
+    transferMarketSlot: formData.options?.transferMarketSlot ?? "season",
+
+    cardSuspension: formData.options?.cardSuspension ?? false, // MAIN SETTING
+    cardSuspensionAmount: formData.options?.cardSuspensionAmount ?? 3,
+    cardResetAmount: formData.options?.cardResetAmount ?? 2,
+    cardResetInjury: formData.options?.cardSuspensionAmount ?? true,
+    cardResetRed: formData.options?.cardSuspensionAmount ?? true,
+
+    bigTeamMultiplier: formData.options?.averageLimit ?? 2,
+    mediumTeamMultiplier: formData.options?.averageLimit ?? 4,
+    smallTeamMultiplier: formData.options?.averageLimit ?? 7,
   });
 
    // Update formData as user interacts
