@@ -31,12 +31,12 @@ const SettingsStep: React.FC<StepFourProps> = ({ setStep, setFormData, formData 
     cardSuspension: formData.options?.cardSuspension ?? false, // MAIN SETTING
     cardSuspensionAmount: formData.options?.cardSuspensionAmount ?? 3,
     cardResetAmount: formData.options?.cardResetAmount ?? 2,
-    cardResetInjury: formData.options?.cardSuspensionAmount ?? true,
-    cardResetRed: formData.options?.cardSuspensionAmount ?? true,
+    cardResetInjury: formData.options?.cardResetInjury ?? true,
+    cardResetRed: formData.options?.cardResetRed ?? true,
 
-    bigTeamMultiplier: formData.options?.averageLimit ?? 2,
-    mediumTeamMultiplier: formData.options?.averageLimit ?? 4,
-    smallTeamMultiplier: formData.options?.averageLimit ?? 7,
+    bigTeamMultiplier: formData.options?.bigTeamMultiplier ?? 2,
+    mediumTeamMultiplier: formData.options?.mediumTeamMultiplier ?? 4,
+    smallTeamMultiplier: formData.options?.smallTeamMultiplier ?? 7,
   });
 
    // Update formData as user interacts
@@ -46,22 +46,40 @@ const SettingsStep: React.FC<StepFourProps> = ({ setStep, setFormData, formData 
     }));
   }, [localOptions, setFormData]);
 
-
+  // MARKET STUFF
   const [open, setOpen] = useState(false);
-  const [yCardOpen, setYCardOpen] = useState(false);
-  const [showA, setShowA] = useState(true);
-  const [showB, setShowB] = useState(true);
-  const [value, setValue] = useState('a');
-
-  const handleToggle = () => setOpen((prev) => !prev);
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => setValue(event.target.value);
-
+  // MARKET RADIO GROUP + RADIO GROUP VALUE
+  const [value, setValue] = useState("");
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setValue(event.target.value);
+    setLocalOptions((prev) => ({ ...prev, transferMarketSlot: event.target.value }))
+  }
+  // MARKET ENABLED
   const handleMarketSwitch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setOpen(event.target.checked);
+    setLocalOptions((prev) => ({ ...prev, transferMarket: event.target.checked }))
   };
+
+  // YCARD STUFF
+  const [yCardOpen, setYCardOpen] = useState(false);
+  // YCAR CLEANING
+  const [showA, setShowA] = useState(true);
+  const [showB, setShowB] = useState(true);
   const handleYCardSwitch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setYCardOpen(event.target.checked);
+    setLocalOptions((prev) => ({ ...prev, cardSuspension: event.target.checked }))
   };
+
+  const handleInjuryCleanCheck = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setShowA((prev) => !prev)
+    setLocalOptions((prev) => ({ ...prev, cardResetInjury: event.target.checked }))
+  }
+
+  const handleRedCleanCheck = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setShowB((prev) => !prev)
+    setLocalOptions((prev) => ({ ...prev, cardResetRed: event.target.checked }))
+  }
+
   console.log("******")
   console.log(formData.options?.leaguetype)
   return (
@@ -113,9 +131,9 @@ const SettingsStep: React.FC<StepFourProps> = ({ setStep, setFormData, formData 
                         type="number"
                         label=""
                         inputProps={{ min: 1, max: 10, step: 1 }}
-                        value={localOptions.cardSuspension}
+                        value={localOptions.cardSuspensionAmount}
                         onChange={(e) =>
-                          setLocalOptions((prev) => ({ ...prev, cardSuspension: Math.min(10, Math.max(1, Number(e.target.value))) }))
+                          setLocalOptions((prev) => ({ ...prev, cardSuspensionAmount: Math.min(10, Math.max(1, Number(e.target.value))) }))
                         }
                         sx={{ width: "100%" }}
                       />
@@ -126,9 +144,9 @@ const SettingsStep: React.FC<StepFourProps> = ({ setStep, setFormData, formData 
                         type="number"
                         label=""
                         inputProps={{ min: 1, max: 10, step: 1 }}
-                        value={localOptions.cardSuspension}
+                        value={localOptions.cardResetAmount}
                         onChange={(e) =>
-                          setLocalOptions((prev) => ({ ...prev, cardSuspension: Math.min(10, Math.max(1, Number(e.target.value))) }))
+                          setLocalOptions((prev) => ({ ...prev, cardResetAmount: Math.min(10, Math.max(1, Number(e.target.value))) }))
                         }
                         sx={{ width: "70%" }}
                       />
@@ -137,11 +155,11 @@ const SettingsStep: React.FC<StepFourProps> = ({ setStep, setFormData, formData 
 
                   <Box sx={{display: "flex"}}>
                     <FormControlLabel
-                      control={<Checkbox checked={showA} onChange={() => setShowA((prev) => !prev)} />}
+                      control={<Checkbox checked={showA} onChange={handleInjuryCleanCheck} />}//() => //setShowA((prev) => !prev)} />}
                       label="Limpia tras lesión"
                     />
                     <FormControlLabel
-                      control={<Checkbox checked={showB} onChange={() => setShowB((prev) => !prev)} />}
+                      control={<Checkbox checked={showB} onChange={handleRedCleanCheck} />}//() => setShowB((prev) => !prev)} />}
                       label="Limpia tras roja"
                     />
                   </Box>
@@ -162,9 +180,9 @@ const SettingsStep: React.FC<StepFourProps> = ({ setStep, setFormData, formData 
                     type="number"
                     label=""
                     inputProps={{ min: 1, max: 10, step: 1 }}
-                    value={localOptions.cardSuspension}
+                    value={localOptions.bigTeamMultiplier}
                     onChange={(e) =>
-                      setLocalOptions((prev) => ({ ...prev, cardSuspension: Math.min(10, Math.max(1, Number(e.target.value))) }))
+                      setLocalOptions((prev) => ({ ...prev, bigTeamMultiplier: Math.min(10, Math.max(1, Number(e.target.value))) }))
                     }
                     sx={{ width: "100%" }}
                   />
@@ -175,9 +193,9 @@ const SettingsStep: React.FC<StepFourProps> = ({ setStep, setFormData, formData 
                     type="number"
                     label=""
                     inputProps={{ min: 1, max: 10, step: 1 }}
-                    value={localOptions.cardSuspension}
+                    value={localOptions.mediumTeamMultiplier}
                     onChange={(e) =>
-                      setLocalOptions((prev) => ({ ...prev, cardSuspension: Math.min(10, Math.max(1, Number(e.target.value))) }))
+                      setLocalOptions((prev) => ({ ...prev, mediumTeamMultiplier: Math.min(10, Math.max(1, Number(e.target.value))) }))
                     }
                     sx={{ width: "100%" }}
                   />
@@ -188,9 +206,9 @@ const SettingsStep: React.FC<StepFourProps> = ({ setStep, setFormData, formData 
                     type="number"
                     label=""
                     inputProps={{ min: 1, max: 10, step: 1 }}
-                    value={localOptions.cardSuspension}
+                    value={localOptions.smallTeamMultiplier}
                     onChange={(e) =>
-                      setLocalOptions((prev) => ({ ...prev, cardSuspension: Math.min(10, Math.max(1, Number(e.target.value))) }))
+                      setLocalOptions((prev) => ({ ...prev, smallTeamMultiplier: Math.min(10, Math.max(1, Number(e.target.value))) }))
                     }
                     sx={{ width: "100%" }}
                   />
