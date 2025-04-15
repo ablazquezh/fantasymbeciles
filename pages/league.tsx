@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef} from 'react'
 import { useRouter } from "next/router";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, Divider, Paper, Button } from "@mui/material";
 import { GetServerSidePropsContext, NextPage } from 'next';
-import { PrismaClient, Prisma, users, leagues, matches, players, goals, cards, injuries } from "@prisma/client";
+import { PrismaClient, Prisma, users, leagues, matches, players, goals, cards, injuries, team_budget } from "@prisma/client";
 import generateRoundRobinSchedule from '@/@components/utils/scheduleGenerator';
 import LeagueDashboard from '@/@components/leagueView/leagueDashboard';
 import mergeData from '@/@components/utils/mergeData';
@@ -25,6 +25,7 @@ import cardRecordGenerator from '@/@components/utils/cardRecordGenerator';
 import injuryRecordGenerator from '@/@components/utils/injuryGenerator';
 import { InjuryRecords } from '@/@components/types/InjuryRecords';
 import MarketView from '@/@components/leagueView/marketView';
+import reshapeLeagueTeams from '@/@components/utils/reshapeLeagueTeams';
 
 const prisma = new PrismaClient();
 
@@ -136,39 +137,12 @@ interface LeagueProps {
   participants: any[];
 }
 
-
 interface leagueTeams {
   player_id: number;
   team_id: number;
   player_name: string;
   team_name: string;
 }
-
-
-const reshapeLeagueTeams = (leagueTeams: leagueTeams[], players: RowData[]) => {
-  
-  const groupedByTeam: TeamWithPlayers[] = Object.values(
-    leagueTeams.reduce((acc: Record<number, TeamWithPlayers>, player) => {
-      const { team_id, team_name, player_id, player_name } = player;
-  
-      if (!acc[team_id]) {
-        acc[team_id] = {
-          team_id,
-          team_name,
-          players: []
-        };
-      }
-      const foundItem = players.find(item => item.ID === player_id);
-      acc[team_id].players.push(foundItem!);
-  
-      return acc;
-    }, {})
-  );
-
-  return groupedByTeam;
-};
-
-
 
 const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, dbmatches, leagueTeams, dbcards, dbgoals, dbinjuries, participants}) => {
 
@@ -206,7 +180,6 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
         
       const completePlayerInfo = mergeData(data.data, data2.positions)
       const shapedData = reshapeData(completePlayerInfo)
-
       setPlayers(shapedData);
   };
 

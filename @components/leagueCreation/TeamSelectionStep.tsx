@@ -60,6 +60,7 @@ import { useRouter } from "next/router";
     const validValuesCount = Object.values(localOptions).filter((value) => value !== null).length;
 
     const [teams, setTeams] = useState([]);
+    const [teamBudgets, setTeamBudgets] = useState([]);
     const [currentUser, setCurrentUser] = useState<string>('');
 
     useEffect(() => {
@@ -70,6 +71,14 @@ import { useRouter } from "next/router";
         };
 
         fetchTeams();
+
+        const fetchTeamBudgets = async () => {
+          const res = await fetch(`/api/teambudgets?game=${formData.options?.["game"]}`);
+          const data = await res.json();
+          setTeamBudgets(data.teams);
+      };
+
+      fetchTeamBudgets();
     }, [formData.options?.["game"]]);
 
      // Update formData as user interacts
@@ -163,6 +172,9 @@ import { useRouter } from "next/router";
           bigTeamMultiplier: formData.options?.bigTeamMultiplier,
           mediumTeamMultiplier: formData.options?.mediumTeamMultiplier,
           smallTeamMultiplier: formData.options?.smallTeamMultiplier,
+
+          winBonus: formData.options?.winBonus,
+          drawBonus: formData.options?.drawBonus,
         
           game: formData.options?.game
         }),
@@ -333,7 +345,8 @@ import { useRouter } from "next/router";
 
         {/* Modal Popup with an Empty Material UI Card inside */}
         <Modal open={openModal} onClose={handleCloseModal}>
-          <TeamStatsTable data={teams} game={formData.options?.["game"]} localOptions={localOptions} onSelect={(value, valueFK) => { handleSetLocalOption(value, valueFK); setOpenModal(false); }} />
+          <TeamStatsTable teamBudgets={teamBudgets} data={teams} game={formData.options?.["game"]} localOptions={localOptions} 
+            onSelect={(value, valueFK) => { handleSetLocalOption(value, valueFK); setOpenModal(false); }} formData={formData} />
         </Modal>
 
         <Modal open={openLeagueNameModal} onClose={handleCloseLeagueNameModal}>

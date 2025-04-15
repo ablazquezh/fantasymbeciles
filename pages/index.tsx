@@ -46,7 +46,7 @@ const FantasyHomePage: NextPage = () => {
       const res = await fetch(`/api/leagues`);
       const data = await res.json();
       setLeagues(data.leagues);
-  };
+    };
 
     fetchUsers();
     fetchLeagues();

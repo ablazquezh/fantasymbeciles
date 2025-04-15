@@ -21,7 +21,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       bigTeamMultiplier,
       mediumTeamMultiplier,
-      smallTeamMultiplier, game } = req.body; // Extract parameters from request    
+      smallTeamMultiplier,
+      winBonus,
+      drawBonus,
+      game } = req.body; // Extract parameters from request    
 
     // Insert into database using Prisma
     const newRecord = await prisma.leagues.create({
@@ -38,6 +41,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         big_team_multiplier: bigTeamMultiplier,
         medium_team_multiplier: mediumTeamMultiplier,
         small_team_multiplier: smallTeamMultiplier,
+        win_bonus: winBonus,
+        draw_bonus: drawBonus,
         game: game
       },
     });

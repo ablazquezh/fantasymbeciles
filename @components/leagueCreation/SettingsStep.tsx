@@ -37,6 +37,9 @@ const SettingsStep: React.FC<StepFourProps> = ({ setStep, setFormData, formData 
     bigTeamMultiplier: formData.options?.bigTeamMultiplier ?? 2,
     mediumTeamMultiplier: formData.options?.mediumTeamMultiplier ?? 4,
     smallTeamMultiplier: formData.options?.smallTeamMultiplier ?? 7,
+    
+    winBonus: formData.options?.winBonus ?? 4,
+    drawBonus: formData.options?.drawBonus ?? 2,
   });
 
    // Update formData as user interacts
@@ -171,18 +174,19 @@ const SettingsStep: React.FC<StepFourProps> = ({ setStep, setFormData, formData 
         </Box>
         
         {formData.options?.leaguetype === "pro" &&  (
-          <FormControl fullWidth sx={{ mt: 5 }}>
+          <Box sx={{display:"flex", mt:3}}>
+          <FormControl fullWidth sx={{ mt: 5, width: "fit-content", mr: 0}}>
             <Typography variant="body1" sx={{ fontWeight: 'bold', mb:2 }}>Multiplicadores de presupuesto de los equipos</Typography>
-              <Box sx={{display: "flex", flexDirection:"row", width: "fit-content", gap:5}} border={1} borderRadius={2} borderColor="grey.300" p={2} >
+              <Box sx={{display: "flex", flexDirection:"row", gap:5, width: "60%"}} border={1} borderRadius={2} borderColor="grey.300" p={2} >
                 <Box >
                   <Typography variant="body1">Grande</Typography>
                   <TextField
                     type="number"
                     label=""
-                    inputProps={{ min: 1, max: 10, step: 1 }}
+                    inputProps={{ min: 1, step: 1 }}
                     value={localOptions.bigTeamMultiplier}
                     onChange={(e) =>
-                      setLocalOptions((prev) => ({ ...prev, bigTeamMultiplier: Math.min(10, Math.max(1, Number(e.target.value))) }))
+                      setLocalOptions((prev) => ({ ...prev, bigTeamMultiplier: Math.max(1, Number(e.target.value)) }))
                     }
                     sx={{ width: "100%" }}
                   />
@@ -192,10 +196,10 @@ const SettingsStep: React.FC<StepFourProps> = ({ setStep, setFormData, formData 
                   <TextField
                     type="number"
                     label=""
-                    inputProps={{ min: 1, max: 10, step: 1 }}
+                    inputProps={{ min: 1, step: 1 }}
                     value={localOptions.mediumTeamMultiplier}
                     onChange={(e) =>
-                      setLocalOptions((prev) => ({ ...prev, mediumTeamMultiplier: Math.min(10, Math.max(1, Number(e.target.value))) }))
+                      setLocalOptions((prev) => ({ ...prev, mediumTeamMultiplier: Math.max(1, Number(e.target.value)) }))
                     }
                     sx={{ width: "100%" }}
                   />
@@ -205,16 +209,50 @@ const SettingsStep: React.FC<StepFourProps> = ({ setStep, setFormData, formData 
                   <TextField
                     type="number"
                     label=""
-                    inputProps={{ min: 1, max: 10, step: 1 }}
+                    inputProps={{ min: 1, step: 1 }}
                     value={localOptions.smallTeamMultiplier}
                     onChange={(e) =>
-                      setLocalOptions((prev) => ({ ...prev, smallTeamMultiplier: Math.min(10, Math.max(1, Number(e.target.value))) }))
+                      setLocalOptions((prev) => ({ ...prev, smallTeamMultiplier: Math.max(1, Number(e.target.value)) }))
                     }
                     sx={{ width: "100%" }}
                   />
                 </Box>
               </Box>
           </FormControl>
+
+          <FormControl sx={{ mt: 5, width: "fit-content"}}>
+          <Typography variant="body1" sx={{ fontWeight: 'bold', mb:2 }}>Bonificaciones (M€)</Typography>
+            <Box sx={{display: "flex", flexDirection:"row", gap:5, width: "60%"}} border={1} borderRadius={2} borderColor="grey.300" p={2} >
+            <Box >
+                <Typography variant="body1">Victoria</Typography>
+                <TextField
+                  type="number"
+                  label=""
+                  inputProps={{ min: 1, step: 1 }}
+                  value={localOptions.winBonus}
+                  onChange={(e) =>
+                    setLocalOptions((prev) => ({ ...prev, winBonus: Math.max(1, Number(e.target.value)) }))
+                  }
+                  sx={{ width: "100%" }}
+                />
+              </Box>
+              <Box >
+                <Typography variant="body1">Empate</Typography>
+                <TextField
+                  type="number"
+                  label=""
+                  inputProps={{ min: 1, step: 1 }}
+                  value={localOptions.drawBonus}
+                  onChange={(e) =>
+                    setLocalOptions((prev) => ({ ...prev, drawBonus: Math.max(1, Number(e.target.value)) }))
+                  }
+                  sx={{ width: "100%" }}
+                />
+              </Box>
+              
+            </Box>
+          </FormControl>
+          </ Box>
         )}
         
 

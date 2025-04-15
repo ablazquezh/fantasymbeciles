@@ -65,12 +65,15 @@ model leagues {
   big_team_multiplier    Int?
   medium_team_multiplier Int?
   small_team_multiplier  Int?
+  win_bonus              Int?
+  draw_bonus             Int?
   game                   String?               @db.VarChar(50)
   created_at             DateTime?             @default(now()) @db.Timestamp(0)
   league_participants    league_participants[]
   market                 market[]
   matches                matches[]
   player_transfers       player_transfers[]
+  team_budget            team_budget[]
 }
 
 model market {
@@ -210,6 +213,19 @@ model injuries {
   @@unique([match_id_fk, player_id_fk], map: "match_id_fk")
   @@index([player_id_fk], map: "player_id_fk")
   @@index([team_id_fk], map: "team_id_fk")
+}
+
+model team_budget {
+  team_id           Int      @id
+  team_name         String?  @db.VarChar(100)
+  team_avg_std      Decimal? @db.Decimal(10, 2)
+  budget            Int?
+  restricted_budget Int?
+  game              String?  @db.VarChar(10)
+  league_id_fk      Int?
+  leagues           leagues? @relation(fields: [league_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "team_budget_ibfk_1")
+
+  @@index([league_id_fk], map: "league_id_fk")
 }
 
 enum leagues_type {

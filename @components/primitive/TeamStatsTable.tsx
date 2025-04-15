@@ -4,6 +4,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination, Card, Box, IconButton, TextField, MenuItem, Select, InputLabel, FormControl } from "@mui/material";
 import { SelectChangeEvent } from '@mui/material';
 import { ListItemText, ListItemIcon, Checkbox, TableSortLabel } from '@mui/material';
+import { team_budget } from "@prisma/client";
 
 interface TeamStats {
     team_id_fk: number;
@@ -41,19 +42,23 @@ interface TeamStats {
     GK_avg_std: "Pt. Portería",
     DEF_avg_std: "Pt. Defensa",
     MID_avg_std: "Pt. Centrocampo",
-    FWD_avg_std: "Pt. Delantera",
+    FWD_avg_std: "Pt. Delantera",/*
     team_league: "Liga",
-    team_country: "País"
+    team_country: "País"*/
 };
 
 interface TeamStatsTableProps {
+    teamBudgets: team_budget[];
     data: TeamStats[]; 
     game: string; 
     onSelect: (value: string, valueFK: number) => void;
     localOptions: Record<string, any>;
+    formData: {
+        options?: Record<string, any>;
+    }
   }
 
-  const TeamStatsTable: React.FC<TeamStatsTableProps> = ({ data, game, onSelect, localOptions}) => {
+  const TeamStatsTable: React.FC<TeamStatsTableProps> = ({ teamBudgets, data, game, onSelect, localOptions, formData}) => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(25);
     const [countryFilter, setCountryFilter] = useState<string>('');
@@ -132,7 +137,8 @@ interface TeamStatsTableProps {
 
     if (!data || data.length === 0) return <p>No data available</p>;
 
-    const columns = Object.keys(data[0])
+    let columns = Object.keys(data[0])
+    columns = columns.filter(item => item !== "team_league" && item !== "team_country" )
 
     let paginatedData = sortedData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
@@ -146,7 +152,6 @@ interface TeamStatsTableProps {
         const matchedData = sortedData.filter((item) => item.team_name.toLowerCase().includes(search.toLowerCase()));
         paginatedData = matchedData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
     }
-
     return (
         <Box sx={modalStyle}>
 
@@ -207,7 +212,19 @@ interface TeamStatsTableProps {
                                         columnNames[col as keyof typeof columnNames] 
                                     )}
                                 </TableCell>
+                                 
                             ))}
+                            {formData.options?.leaguetype === "pro" &&
+                                <TableCell
+                                    key={"budget"}
+                                    sx={{
+                                        fontWeight: "bold",
+                                        textAlign: "center" // Center text in the header
+                                    }}
+                                >
+                                    Presupuesto
+                                </TableCell>
+                            }
                             {/* Add a column for the "Add" button */}
                             <TableCell></TableCell>
                         </TableRow>
@@ -263,6 +280,11 @@ interface TeamStatsTableProps {
                                     ) : (<></>)}
                                 </TableCell>
                                 ))}
+                                {formData.options?.leaguetype === "pro" &&
+                                    <TableCell>
+                                        {Intl.NumberFormat('de-DE').format(Number(teamBudgets.find(item => item.team_name === row.team_name)?.budget))}
+                                    </TableCell>
+                                }
                                 {/* Add a cell for the "Add" button */}
                                 <TableCell>
                                     <IconButton

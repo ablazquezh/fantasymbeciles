@@ -118,7 +118,7 @@ const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants, handleR
     handleRemovePlayer(participantIndex, playername);
   };
 
-  console.log(participants)
+  //console.log(participants)
   return (
     <Box
       sx={{

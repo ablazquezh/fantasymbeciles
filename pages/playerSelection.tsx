@@ -12,8 +12,18 @@ import reshapeData from '@/@components/utils/reshapeData';
 import CustomDropdownSelect from '@/@components/primitive/CustomDropdown';
 import MinMax from '@/@components/primitive/MinMax';
 import { RowData } from '@/@components/types/RowData';
+import { ParticipantsFull } from '@/@components/types/ParticipantsFull';
+import reshapeLeagueTeams from '@/@components/utils/reshapeLeagueTeams';
+import groupPlayerData from '@/@components/utils/groupPlayerData';
 
 const prisma = new PrismaClient();
+
+interface participant {
+  participant_id: number;
+  user_name: string;
+  team_name: string;
+  team_id: number;
+}
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
 
@@ -24,16 +34,16 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   }
   );
 
-  const participants = await prisma.$queryRaw`
+  const participants: participant[] = await prisma.$queryRaw`
           SELECT participant_id, user_name, team_name, team_id FROM league_participants_view WHERE game = ${dbleague?.game} AND league_ID_fk = ${dbleague?.ID}
       `;
 
   return { props: {
     dbleague: {
-      ...dbleague,
+      ...dbleague, 
       created_at: dbleague?.created_at ? dbleague.created_at.toISOString() : null,
     },
-    participants: participants
+    participants: participants,
   } };
 }
 
@@ -59,10 +69,15 @@ interface PlayerSelectProps {
   dbleague: leagues;
   participants: any[];
 }
+interface leagueTeams {
+  player_id: number;
+  team_id: number;
+  player_name: string;
+  team_name: string;
+}
 
 const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participants}) => {
-
-  console.log(participants)
+  
   const router = useRouter();
   const { leagueId } = router.query;
   const [league, setLeague] = useState<string | null>(null);
@@ -73,6 +88,8 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [total, setTotal] = useState(0);
 
+  // PRO STRUCTURES
+  const [proleagueteams, setProleagueTeams] = useState<leagueTeams[]>([]);
 
   // CUSTOM DROPDOWN CONTROL
   const [selected, setSelected] = useState<string[]>([]); 
@@ -98,6 +115,52 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
     setPlayers(data.data);
     setTotal(data.total);
   };
+
+  useEffect(() => {
+    if(dbleague.type === "pro"){
+      const fetchProteams= async () => {
+        const res = await fetch(`/api/proleagueteams?teamIds=${participants.map((item: participant) => item.team_id).join(",")}`);
+        const data = await res.json();
+        
+        setProleagueTeams(data);
+
+        console.log("__________")
+        console.log(participantData)     
+
+    };
+
+    fetchProteams();
+    }
+  }, [participants]);
+  useEffect(() => {
+    console.log("????")
+    console.log(proleagueteams)
+    if(proleagueteams.length > 0){
+      
+      const fetchPlayers= async () => {
+        const res = await fetch(`/api/playersbyid?idList=${proleagueteams.map(item => item.player_id)}`);
+        const data = await res.json();
+  
+        const res2 = await fetch(`/api/playerpositions?game=${dbleague.game}&idList=${proleagueteams.map(item => item.player_id)}`);
+        const data2 = await res2.json();
+          
+        const completePlayerInfo = mergeData(data.data, data2.positions)
+        const shapedData = reshapeData(completePlayerInfo)
+
+        if (!Array.isArray(shapedData) || shapedData.length === 0) return;
+        const participants = reshapeLeagueTeams(proleagueteams, shapedData)
+    
+        const transformed = participants.map((participant) => ({
+        ...participant,
+        groupedPlayers: groupPlayerData(participant.players),
+        }));
+        
+        console.log(transformed)
+        setParticipantData(transformed)
+      }
+      fetchPlayers();
+    }
+  }, [proleagueteams]);
 
   useEffect(() => {
     if (leagueId) {
@@ -134,8 +197,6 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
 
   const completePlayerInfo = mergeData(players, playerPositions)
   const shapedData = reshapeData(completePlayerInfo)
-  console.log("*****")
-  console.log(shapedData)
   const [participantData, setParticipantData] = useState(participants.map(item => ({
     ...item,
     players: [] as playersFull[] // Empty array for 'items'
@@ -277,7 +338,6 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
     }
   };
 
-console.log(participantData)
 
     return (
       <Box sx={{
