@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { PrismaClient, leagues_type } from "@prisma/client";
+import { leagues_market_type } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -9,17 +10,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { leagueName, leagueType, winterMarket, yellowCards, playerAvgLimit, budgetCalc, game } = req.body; // Extract parameters from request    
+    const { leagueName, leagueType, transferMarket, // MAIN SETTING
+      transferMarketSlot,
+
+      cardSuspension, // MAIN SETTING
+      cardSuspensionAmount,
+      cardResetAmount,
+      cardResetInjury,
+      cardResetRed,
+
+      bigTeamMultiplier,
+      mediumTeamMultiplier,
+      smallTeamMultiplier, game } = req.body; // Extract parameters from request    
 
     // Insert into database using Prisma
     const newRecord = await prisma.leagues.create({
       data: {
         league_name: leagueName,
         type: leagueType,
-        winter_market_enabled: winterMarket,
-        yellow_cards_suspension: yellowCards,
-        player_avg_limit: playerAvgLimit,
-        budget_calculation_type: budgetCalc,
+        market_enabled: transferMarket,
+        market_type: transferMarketSlot === "season" ? leagues_market_type.season : leagues_market_type.winter,  
+        card_suspension: cardSuspension,
+        card_suspension_amount: cardSuspensionAmount,
+        card_reset_amount: cardResetAmount,
+        card_reset_injury: cardResetInjury,
+        card_reset_red: cardResetRed,
+        big_team_multiplier: bigTeamMultiplier,
+        medium_team_multiplier: mediumTeamMultiplier,
+        small_team_multiplier: smallTeamMultiplier,
         game: game
       },
     });

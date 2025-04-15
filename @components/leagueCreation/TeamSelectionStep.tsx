@@ -151,8 +151,19 @@ import { useRouter } from "next/router";
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ leagueName: leagueName, leagueType: formData.options?.leaguetype,
-          winterMarket: formData.options?.winterMarket, yellowCards: formData.options?.cardSuspension,
-          playerAvgLimit: formData.options?.averageLimit, budgetCalc: formData.options?.budgetCalculation,
+          transferMarket: formData.options?.transferMarket, // MAIN SETTING
+          transferMarketSlot: formData.options?.transferMarketSlot,
+
+          cardSuspension: formData.options?.cardSuspension, // MAIN SETTING
+          cardSuspensionAmount: formData.options?.cardSuspensionAmount,
+          cardResetAmount: formData.options?.cardResetAmount,
+          cardResetInjury: formData.options?.cardResetInjury,
+          cardResetRed: formData.options?.cardResetRed,
+
+          bigTeamMultiplier: formData.options?.bigTeamMultiplier,
+          mediumTeamMultiplier: formData.options?.mediumTeamMultiplier,
+          smallTeamMultiplier: formData.options?.smallTeamMultiplier,
+        
           game: formData.options?.game
         }),
       });

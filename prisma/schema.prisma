@@ -52,19 +52,25 @@ model league_participants {
 }
 
 model leagues {
-  ID                      Int                              @id @default(autoincrement())
-  league_name             String?                          @unique(map: "league_name") @db.VarChar(255)
-  type                    leagues_type?
-  winter_market_enabled   Boolean?                         @default(false)
-  yellow_cards_suspension Int?                             @default(0)
-  player_avg_limit        Int?                             @default(0)
-  budget_calculation_type leagues_budget_calculation_type?
-  game                    String?                          @db.VarChar(50)
-  created_at              DateTime?                        @default(now()) @db.Timestamp(0)
-  league_participants     league_participants[]
-  market                  market[]
-  matches                 matches[]
-  player_transfers        player_transfers[]
+  ID                     Int                   @id @default(autoincrement())
+  league_name            String?               @unique(map: "league_name") @db.VarChar(255)
+  type                   leagues_type?
+  market_enabled         Boolean?              @default(false)
+  market_type            leagues_market_type?
+  card_suspension        Boolean?              @default(false)
+  card_suspension_amount Int?
+  card_reset_amount      Int?
+  card_reset_injury      Boolean?              @default(true)
+  card_reset_red         Boolean?              @default(true)
+  big_team_multiplier    Int?
+  medium_team_multiplier Int?
+  small_team_multiplier  Int?
+  game                   String?               @db.VarChar(50)
+  created_at             DateTime?             @default(now()) @db.Timestamp(0)
+  league_participants    league_participants[]
+  market                 market[]
+  matches                matches[]
+  player_transfers       player_transfers[]
 }
 
 model market {
@@ -93,8 +99,8 @@ model matches {
   teams_matches_visitor_team_id_fkToteams teams?     @relation("matches_visitor_team_id_fkToteams", fields: [visitor_team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "matches_ibfk_2")
   leagues                                 leagues?   @relation(fields: [league_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "matches_ibfk_3")
 
+  @@unique([local_team_id_fk, visitor_team_id_fk, league_id_fk], map: "local_team_id_fk")
   @@index([league_id_fk], map: "league_id_fk")
-  @@index([local_team_id_fk], map: "local_team_id_fk")
   @@index([visitor_team_id_fk], map: "visitor_team_id_fk")
 }
 
@@ -108,8 +114,8 @@ model player_transfers {
   leagues        leagues?  @relation(fields: [league_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "player_transfers_ibfk_2")
   teams          teams?    @relation(fields: [team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "player_transfers_ibfk_3")
 
+  @@unique([player_id_fk, team_id_fk, league_id_fk, transferred_at], map: "player_id_fk")
   @@index([league_id_fk], map: "league_id_fk")
-  @@index([player_id_fk], map: "player_id_fk")
   @@index([team_id_fk], map: "team_id_fk")
 }
 
@@ -221,7 +227,7 @@ enum cards_type {
   red
 }
 
-enum leagues_budget_calculation_type {
-  restrictive
-  default
+enum leagues_market_type {
+  season
+  winter
 }

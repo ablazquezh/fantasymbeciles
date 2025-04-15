@@ -49,7 +49,7 @@ const SettingsStep: React.FC<StepFourProps> = ({ setStep, setFormData, formData 
   // MARKET STUFF
   const [open, setOpen] = useState(false);
   // MARKET RADIO GROUP + RADIO GROUP VALUE
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState("season");
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setValue(event.target.value);
     setLocalOptions((prev) => ({ ...prev, transferMarketSlot: event.target.value }))
