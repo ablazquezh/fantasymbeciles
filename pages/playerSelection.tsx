@@ -77,7 +77,6 @@ interface leagueTeams {
 }
 
 const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participants}) => {
-  
   const router = useRouter();
   const { leagueId } = router.query;
   const [league, setLeague] = useState<string | null>(null);
@@ -121,11 +120,11 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
       const fetchProteams= async () => {
         const res = await fetch(`/api/proleagueteams?teamIds=${participants.map((item: participant) => item.team_id).join(",")}`);
         const data = await res.json();
-        
-        setProleagueTeams(data);
+        console.log("ññññññññ")
 
-        console.log("__________")
-        console.log(participantData)     
+        console.log(data)
+
+        setProleagueTeams(data);   
 
     };
 
@@ -133,11 +132,11 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
     }
   }, [participants]);
   useEffect(() => {
-    console.log("????")
-    console.log(proleagueteams)
     if(proleagueteams.length > 0){
       
       const fetchPlayers= async () => {
+        console.log("*______________")
+        console.log(proleagueteams)
         const res = await fetch(`/api/playersbyid?idList=${proleagueteams.map(item => item.player_id)}`);
         const data = await res.json();
   
@@ -154,7 +153,7 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
         ...participant,
         groupedPlayers: groupPlayerData(participant.players),
         }));
-        
+        console.log("^?????????")
         console.log(transformed)
         setParticipantData(transformed)
       }
@@ -338,12 +337,8 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
     }
   };
 
-  console.log(dbleague)
-  const [open, setOpen] = useState(false);
-
-  const handleToggle = () => {
-    setOpen((prev) => !prev);
-  };
+  console.log("***********")
+  console.log(participantData)
     return (
       <Box sx={{
         margin: "auto",

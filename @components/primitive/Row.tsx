@@ -79,7 +79,6 @@ export default function Row(props: { dbleague: leagues, row: RowData, gamekey: s
       setSelectedValue(event.target.value as string);
       onSelect(event.target.value, row)
     };
-    console.log(dbleague)
     return (
       <React.Fragment>
   
