@@ -11,6 +11,7 @@ import { Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material'; // 👈 Import this from MUI
 import { RowData } from '../types/RowData';
 import getRowColor from '../utils/getRowColor';
+import { leagues } from '@prisma/client';
 
 const globalDetailColnames = {
     age: "Edad",
@@ -61,10 +62,10 @@ const Clone = styled(Item)`
   }
 `;
 
-export default function Row(props: { row: RowData, gamekey: string | null, provided: DraggableProvided, snapshot: DraggableStateSnapshot, 
+export default function Row(props: { dbleague: leagues, row: RowData, gamekey: string | null, provided: DraggableProvided, snapshot: DraggableStateSnapshot, 
   teams: string[], onSelect: (team_name: string, player: RowData) => void, selectedTeam: string }) {
     
-    const { row, gamekey, provided, snapshot, teams, onSelect, selectedTeam } = props;
+    const { dbleague, row, gamekey, provided, snapshot, teams, onSelect, selectedTeam } = props;
 
     const [open, setOpen] = React.useState(false);
 
@@ -78,6 +79,7 @@ export default function Row(props: { row: RowData, gamekey: string | null, provi
       setSelectedValue(event.target.value as string);
       onSelect(event.target.value, row)
     };
+    console.log(dbleague)
     return (
       <React.Fragment>
   
@@ -175,6 +177,11 @@ export default function Row(props: { row: RowData, gamekey: string | null, provi
               )}
             </TableCell>
           ))}
+          {dbleague?.type === "pro" &&
+            <TableCell>
+                {Intl.NumberFormat('de-DE').format(Number(row.value))}
+            </TableCell>
+          } 
           <TableCell sx={{ borderLeft: '1px solid rgba(0, 0, 0, 0.12)'}}>
            <FormControl fullWidth sx={{ alignItems: 'center' }}>
               <Select

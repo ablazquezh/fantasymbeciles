@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, IconButton } from "@mui/material";
+import { Card, CardContent, IconButton, Popover, Tooltip} from "@mui/material";
 import { KeyboardArrowUp, KeyboardArrowDown } from "@mui/icons-material";
 import { DragDropContext, Droppable, Draggable, DropResult} from "@hello-pangea/dnd";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, TablePagination, Paper } from "@mui/material";
-import { players } from "@prisma/client";
+import { leagues, players } from "@prisma/client";
 import React from "react";
 import CloseIcon from '@mui/icons-material/Close';
 import ReactDOM from 'react-dom';
@@ -15,12 +15,14 @@ import styled from "styled-components";
 import { RowData } from '../types/RowData';
 import groupPlayerData from "../utils/groupPlayerData";
 import getRowColor from "../utils/getRowColor";
+import EuroSymbolIcon from '@mui/icons-material/EuroSymbol';
 
 type PortalAwareItemProps = {
   provided: DraggableProvided;
   snapshot: DraggableStateSnapshot;
   children: React.ReactNode;
-  row: RowData
+  row: RowData;
+  dbleague: leagues;
 };
 const PortalAwareItem: React.FC<PortalAwareItemProps> = ({
   provided,
@@ -29,6 +31,7 @@ const PortalAwareItem: React.FC<PortalAwareItemProps> = ({
   row
 }) =>  {
   const child = (
+   
     <TableRow sx={{ bgcolor: getRowColor(row.global_position), position:"relative"}} ref={provided.innerRef}
       {...provided.draggableProps}
       {...provided.dragHandleProps}
@@ -89,6 +92,7 @@ interface MovableCardProps {
     participantIndex: number,
     playername: string,
   ) => void;
+  dbleague: leagues;
 }
 
 // Custom column names
@@ -99,7 +103,7 @@ const globalColnames = {
 };
 
 
-const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants, handleRemovePlayer}) => {
+const MovableCard: React.FC<MovableCardProps> = ({dbleague, gamekey, participants, handleRemovePlayer}) => {
   const [expanded, setExpanded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [participantData, setParticipantData] = useState<ParticipantsFull[]>([])
@@ -119,6 +123,7 @@ const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants, handleR
   };
 
   //console.log(participants)
+  
   return (
     <Box
       sx={{
@@ -226,12 +231,12 @@ const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants, handleR
                 
                               {/* Render rows for this category */}
                               {participant.groupedPlayers[category].map((row, index) => (
+                                 
                                 <Draggable key={row.ID} draggableId={"moved"+String(row.ID)} index={index}>
                                 {(provided, snapshot) => {
                             
                                   return(
-
-                                    <PortalAwareItem provided={provided} snapshot={snapshot} row={row} >
+                                    <PortalAwareItem provided={provided} snapshot={snapshot} row={row} dbleague={dbleague} >
                                       { Object.keys(globalColnames).map((col) => (
 
                                         <TableCell key={col} >
@@ -251,12 +256,32 @@ const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants, handleR
                               
                                       ))}
 
+                                      {dbleague.type === "pro" &&
+                                        <Tooltip title={Intl.NumberFormat('de-DE').format(Number(row.value))} placement="top" arrow  componentsProps={{
+                                          tooltip: {
+                                            sx: {
+                                              fontSize: '0.95rem',
+                                              padding: '12px',
+                                              maxWidth: 250,
+                                            },
+                                          },
+                                        }}>
+                                          <IconButton sx={{
+                                              position: "absolute",
+                                              bottom: 0, // Espaciado desde arriba
+                                              right: 0, // Espaciado desde la derecha
+                                              color: 'white',
+                                          }}>
+                                            <EuroSymbolIcon fontSize="small" />
+                                          </IconButton>
+                                        </Tooltip>
+                                      }
+
                                       <IconButton
                                         sx={{
                                             position: "absolute",
                                             top: 0, // Espaciado desde arriba
                                             right: 0, // Espaciado desde la derecha
-                                            color: 'white',
                                         }}
                                         onClick={() => handleClickRemove(pindex, row.nickname!)}
                                       >
@@ -264,7 +289,6 @@ const MovableCard: React.FC<MovableCardProps> = ({gamekey, participants, handleR
                                       </IconButton>
 
                                     </PortalAwareItem>
-
                                   )}}
                               </Draggable>
                               ))}

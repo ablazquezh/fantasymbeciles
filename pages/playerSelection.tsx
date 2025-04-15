@@ -338,7 +338,12 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
     }
   };
 
+  console.log(dbleague)
+  const [open, setOpen] = useState(false);
 
+  const handleToggle = () => {
+    setOpen((prev) => !prev);
+  };
     return (
       <Box sx={{
         margin: "auto",
@@ -381,6 +386,11 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
                             {globalColnames[col as keyof typeof globalColnames]}
                           </TableCell>
                         ))}
+                        {dbleague.type === "pro" &&
+                          <TableCell sx={{fontWeight: "bold", textAlign: "center", }}>
+                              Precio
+                          </TableCell>
+                        }
                         <TableCell sx={{fontWeight: "bold", textAlign: "center", borderLeft: '1px solid rgba(0, 0, 0, 0.12)' }} colSpan={2}>
                           Traspaso
                         </TableCell>
@@ -394,7 +404,7 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
                             {(provided, snapshot) => {
                         
                               return(
-                                <Row key={row.nickname} row={row} gamekey={dbleague.game} provided={provided} 
+                                <Row key={row.nickname} dbleague={dbleague} row={row} gamekey={dbleague.game} provided={provided} 
                                   snapshot={snapshot} teams={participants.map(part => part.team_name)} onSelect={handleOnSelect} 
                                   selectedTeam={participantData.find(x =>
                                     x.players.some((aItem: RowData) => aItem.nickname === row.nickname)
@@ -444,7 +454,7 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
 
           </Paper>
           
-          <CollapsableCard participants={participantData} gamekey={dbleague.game} handleRemovePlayer={handleRemovePlayer} />
+          <CollapsableCard dbleague={dbleague} participants={participantData} gamekey={dbleague.game} handleRemovePlayer={handleRemovePlayer} />
           
         </DragDropContext>
       </ Box>

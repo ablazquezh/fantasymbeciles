@@ -405,7 +405,7 @@ console.log(participantData)
                             {(provided, snapshot) => {
                         
                               return(
-                                <Row key={row.nickname} row={row} gamekey={dbleague.game} provided={provided} 
+                                <Row key={row.nickname} dbleague={dbleague} row={row} gamekey={dbleague.game} provided={provided} 
                                   snapshot={snapshot} teams={participants.map(part => part.team_name)} onSelect={handleOnSelect} 
                                   selectedTeam={participantData.find(x =>
                                     x.players.some((aItem: RowData) => aItem.nickname === row.nickname)
@@ -455,7 +455,7 @@ console.log(participantData)
 
           </Paper>
           
-          <CollapsableCard participants={participantData} gamekey={dbleague.game} handleRemovePlayer={handleRemovePlayer} />
+          <CollapsableCard dbleague={dbleague} participants={participantData} gamekey={dbleague.game} handleRemovePlayer={handleRemovePlayer} />
           
         </DragDropContext>
       </ Box>
