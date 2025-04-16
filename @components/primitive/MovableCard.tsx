@@ -229,25 +229,28 @@ const MovableCard: React.FC<MovableCardProps> = ({dbleague, gamekey, participant
                                 </TableCell>
                               </TableRow>
                 
-                              {/* Render rows for this category */}
-                              {participant.groupedPlayers[category].map((row, index) => (
+                              {/* Render rows for this category 
+                              {participant.groupedPlayers[category].map((row, index) => (*/}
+                                {participant.players
+                                  .map((item, index) => (item.global_position === category  ? index : -1))
+                                  .filter(index => index !== -1).map((playerIndex, idx) => (
                                  
-                                <Draggable key={row.ID} draggableId={"moved"+String(row.ID)} index={index}>
+                                <Draggable key={participant.players[playerIndex].ID} draggableId={"moved"+String(participant.players[playerIndex].ID)} index={playerIndex}>
                                 {(provided, snapshot) => {
                             
                                   return(
-                                    <PortalAwareItem provided={provided} snapshot={snapshot} row={row} dbleague={dbleague} >
+                                    <PortalAwareItem provided={provided} snapshot={snapshot} row={participant.players[playerIndex]} dbleague={dbleague} >
                                       { Object.keys(globalColnames).map((col) => (
 
                                         <TableCell key={col} >
-                                          {row[col as keyof typeof globalColnames] !== null &&
-                                            row[col as keyof typeof globalColnames] !== undefined ? (
-                                              Array.isArray(row[col as keyof typeof globalColnames]) ? (
-                                                (row[col as keyof typeof globalColnames] as string[]).map((item, index) => (
+                                          {participant.players[playerIndex][col as keyof typeof globalColnames] !== null &&
+                                            participant.players[playerIndex][col as keyof typeof globalColnames] !== undefined ? (
+                                              Array.isArray(participant.players[playerIndex][col as keyof typeof globalColnames]) ? (
+                                                (participant.players[playerIndex][col as keyof typeof globalColnames] as string[]).map((item, index) => (
                                                   <Chip key={index} label={item} sx={{ margin: "2px" }} />
                                                 ))
                                               ) : (
-                                                row[col as keyof typeof globalColnames]
+                                                participant.players[playerIndex][col as keyof typeof globalColnames]
                                               )
                                             ) : (
                                               "-"
@@ -257,7 +260,7 @@ const MovableCard: React.FC<MovableCardProps> = ({dbleague, gamekey, participant
                                       ))}
 
                                       {dbleague.type === "pro" &&
-                                        <Tooltip title={Intl.NumberFormat('de-DE').format(Number(row.value))} placement="top" arrow  componentsProps={{
+                                        <Tooltip title={Intl.NumberFormat('de-DE').format(Number(participant.players[playerIndex].value))} placement="top" arrow  componentsProps={{
                                           tooltip: {
                                             sx: {
                                               fontSize: '0.95rem',
@@ -283,7 +286,7 @@ const MovableCard: React.FC<MovableCardProps> = ({dbleague, gamekey, participant
                                             top: 0, // Espaciado desde arriba
                                             right: 0, // Espaciado desde la derecha
                                         }}
-                                        onClick={() => handleClickRemove(pindex, row.nickname!)}
+                                        onClick={() => handleClickRemove(pindex, participant.players[playerIndex].nickname!)}
                                       >
                                         <CloseIcon fontSize='small' sx={{ color: "red" }} />
                                       </IconButton>

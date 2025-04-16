@@ -120,9 +120,6 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
       const fetchProteams= async () => {
         const res = await fetch(`/api/proleagueteams?teamIds=${participants.map((item: participant) => item.team_id).join(",")}`);
         const data = await res.json();
-        console.log("ññññññññ")
-
-        console.log(data)
 
         setProleagueTeams(data);   
 
@@ -135,8 +132,7 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
     if(proleagueteams.length > 0){
       
       const fetchPlayers= async () => {
-        console.log("*______________")
-        console.log(proleagueteams)
+        
         const res = await fetch(`/api/playersbyid?idList=${proleagueteams.map(item => item.player_id)}`);
         const data = await res.json();
   
@@ -153,9 +149,8 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
         ...participant,
         groupedPlayers: groupPlayerData(participant.players),
         }));
-        console.log("^?????????")
-        console.log(transformed)
-        setParticipantData(transformed)
+        
+        setParticipantData(participants)//transformed)
       }
       fetchPlayers();
     }
@@ -203,7 +198,6 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
 
   const handleOnDragEnd = (result: DropResult) => {
       const { source, destination } = result;
-      
       if (!destination) return; // If dropped outside
   
       if (source.droppableId === destination.droppableId && source.index === destination.index) {
@@ -217,6 +211,10 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
         const foundItem = participantData.find(item => item.team_name === source.droppableId)
         inputPlayer = foundItem.players[source.index]
       }
+      console.log(participantData)
+      console.log(source.index)
+      console.log(inputPlayer)
+      
 
       setParticipantData(prevData =>
         prevData.map(participant => {
