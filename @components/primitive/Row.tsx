@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, TablePagination, Paper } from "@mui/material";
 import IconButton from '@mui/material/IconButton';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -11,7 +11,8 @@ import { Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material'; // 👈 Import this from MUI
 import { RowData } from '../types/RowData';
 import getRowColor from '../utils/getRowColor';
-import { leagues } from '@prisma/client';
+import { leagues, team_budget } from '@prisma/client';
+import NegotiationModal from './NegotiationModal';
 
 const globalDetailColnames = {
     age: "Edad",
@@ -63,27 +64,55 @@ const Clone = styled(Item)`
 `;
 
 export default function Row(props: { dbleague: leagues, row: RowData, gamekey: string | null, provided: DraggableProvided, snapshot: DraggableStateSnapshot, 
-  teams: string[], onSelect: (team_name: string, player: RowData) => void, selectedTeam: string }) {
-    
-    const { dbleague, row, gamekey, provided, snapshot, teams, onSelect, selectedTeam } = props;
+  teams: string[], onSelect: (team_name: string, player: RowData, prev: string, newSellerBudget?: number|null, result?:number|null, newBudget?: number|null) => void, 
+  selectedTeam: string, team_budgets?: team_budget[], onTriggerPrompt?: (defaultValue?: number) => Promise<number | null>;}) {
+        
+    const { dbleague, row, gamekey, provided, snapshot, teams, onSelect, selectedTeam, team_budgets, onTriggerPrompt } = props;
 
     const [open, setOpen] = React.useState(false);
 
     const [selectedValue, setSelectedValue] = React.useState(selectedTeam);
-    
+    const prevValueRef = useRef<string>(selectedValue);
     useEffect(() => {
       setSelectedValue(selectedTeam);
     }, [selectedTeam]);
 
-    const handleChange = (event: SelectChangeEvent) => {
-      setSelectedValue(event.target.value as string);
-      onSelect(event.target.value, row)
+    const handleChange = async(event: SelectChangeEvent) => {
+      const previousValue = prevValueRef.current;
+
+      if(dbleague.type === "pro"){
+        console.log("check")
+        console.log(previousValue)
+        let newBudget = team_budgets!.find(item => item.team_name === event.target.value)?.budget!;// - player.value!
+        let result = null;
+        let newSellerBudget = null;
+        if(previousValue !== "Sin traspaso"){
+          console.log("check")
+          result = await onTriggerPrompt!(row.value!);
+          
+          if(result !== -1){
+            newBudget = newBudget - Number(result);
+              
+            if(newBudget >= 0){
+              newSellerBudget = team_budgets!.find(item => item.team_name === previousValue)?.budget! + Number(result);// player.value!
+            }
+          }
+        }
+        onSelect(event.target.value, row, previousValue, newSellerBudget, result, newBudget)
+
+      }
+
+      if(team_budgets && previousValue === "Sin traspaso" && team_budgets.find(item => item.team_name === event.target.value)?.budget! < row.value!){
+        setSelectedValue(previousValue);
+      }else{
+        setSelectedValue(event.target.value as string);
+        onSelect(event.target.value, row, previousValue)
+      }
     };
     return (
       <React.Fragment>
   
-        <TableRow sx={{ bgcolor: getRowColor(row.global_position) }}
-        >
+        <TableRow sx={{ bgcolor: getRowColor(row.global_position) }} >
                                 
           <TableCell sx={{width: 0, paddingRight:0}}>
             <IconButton

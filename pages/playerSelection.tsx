@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from "next/router";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, TablePagination, Paper, Button } from "@mui/material";
-import { players } from "@prisma/client";
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, TablePagination, Paper, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button } from "@mui/material";
+import { players, team_budget } from "@prisma/client";
 import { GetServerSidePropsContext, NextPage } from 'next';
 import CollapsableCard from "../@components/primitive/MovableCard"; // Ruta del componente
 import { PrismaClient, Prisma, users, leagues } from "@prisma/client";
@@ -15,6 +15,7 @@ import { RowData } from '@/@components/types/RowData';
 import { ParticipantsFull } from '@/@components/types/ParticipantsFull';
 import reshapeLeagueTeams from '@/@components/utils/reshapeLeagueTeams';
 import groupPlayerData from '@/@components/utils/groupPlayerData';
+import NegotiationModal from '@/@components/primitive/NegotiationModal';
 
 const prisma = new PrismaClient();
 
@@ -38,12 +39,13 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
           SELECT participant_id, user_name, team_name, team_id FROM league_participants_view WHERE game = ${dbleague?.game} AND league_ID_fk = ${dbleague?.ID}
       `;
 
+
   return { props: {
     dbleague: {
       ...dbleague, 
       created_at: dbleague?.created_at ? dbleague.created_at.toISOString() : null,
     },
-    participants: participants,
+    participants: participants
   } };
 }
 
@@ -89,6 +91,7 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
 
   // PRO STRUCTURES
   const [proleagueteams, setProleagueTeams] = useState<leagueTeams[]>([]);
+  const [team_budgets, setTeamBudgets] = useState<team_budget[]>([])
 
   // CUSTOM DROPDOWN CONTROL
   const [selected, setSelected] = useState<string[]>([]); 
@@ -123,6 +126,25 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
 
         setProleagueTeams(data);   
 
+      const fetchTeamBudgets = async () => {
+          const res = await fetch(`/api/teambudgets?game=${dbleague.game}&idList=${participants.map((item: participant) => item.team_id).join(",")}`);
+          const data = await res.json();
+
+          data.teams.forEach((obj: team_budget) => {
+            if (Number(obj.team_avg_std!) >= 80) {
+              obj.budget! *= dbleague.big_team_multiplier!;
+            } else if (Number(obj.team_avg_std!) >= 75) {
+              obj.budget! *= dbleague.medium_team_multiplier!;
+            } else {
+              obj.budget! *= dbleague.small_team_multiplier!;
+            }
+          });
+        
+
+          setTeamBudgets(data.teams);
+      };
+
+      fetchTeamBudgets();
     };
 
     fetchProteams();
@@ -196,7 +218,8 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
     players: [] as playersFull[] // Empty array for 'items'
   })))
 
-  const handleOnDragEnd = (result: DropResult) => {
+  const { prompt, Modal } = NegotiationModal();
+  const handleOnDragEnd = async(result: DropResult) => {
       const { source, destination } = result;
       if (!destination) return; // If dropped outside
   
@@ -211,11 +234,71 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
         const foundItem = participantData.find(item => item.team_name === source.droppableId)
         inputPlayer = foundItem.players[source.index]
       }
-      console.log(participantData)
-      console.log(source.index)
-      console.log(inputPlayer)
-      
 
+      let allowance = true;
+
+    if(dbleague.type === "pro"){
+      let newBudget = team_budgets!.find(item => item.team_name === destination.droppableId)?.budget!;// - inputPlayer.value!
+      let result = null;
+      if(source.droppableId !== "mainTable"){
+        result = await prompt(inputPlayer.value);
+
+        if(result !== -1){
+          newBudget = newBudget - Number(result);
+          if(newBudget >= 0){
+            const newSellerBudget = team_budgets!.find(item => item.team_name === source.droppableId)?.budget! + Number(result);//+ inputPlayer.value!
+            setTeamBudgets(prevItems =>
+              prevItems.map(item =>
+                item.team_name === source.droppableId
+                  ? { ...item, budget: newSellerBudget } // update X if A matches
+                  : item                      // otherwise keep the same
+              )
+            );
+          }
+          }
+      }else{
+
+        const prevSelected = participantData.find(x =>
+          x.players.some((aItem: RowData) => aItem.nickname === inputPlayer.nickname)
+        )?.team_name || 'Sin traspaso'
+
+        if(prevSelected !== "Sin traspaso"){
+          result = await prompt(inputPlayer.value);
+
+          if(result !== -1){
+            newBudget = newBudget - Number(result);
+            
+            if(newBudget >= 0){
+              const newSellerBudget = team_budgets!.find(item => item.team_name === prevSelected)?.budget! + Number(result);//inputPlayer.value!
+              setTeamBudgets(prevItems =>
+                prevItems.map(item =>
+                  item.team_name === prevSelected
+                    ? { ...item, budget: newSellerBudget } // update X if A matches
+                    : item                      // otherwise keep the same
+                )
+              );
+            } 
+          }
+        }
+      }
+
+      if (result === null){
+        newBudget = newBudget - inputPlayer.value!;
+      }
+      if (newBudget >= 0 && result !== -1){
+        setTeamBudgets(prevItems =>
+          prevItems.map(item =>
+            item.team_name === destination.droppableId
+              ? { ...item, budget: newBudget } // update X if A matches
+              : item                      // otherwise keep the same
+          )
+        );
+      }else{
+        allowance = false;
+      }
+    }
+
+    if(allowance){
       setParticipantData(prevData =>
         prevData.map(participant => {
           if (participant.team_name === destination.droppableId) {
@@ -248,43 +331,102 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
           return participant;
         })
       );
-      
+    }
       
   };
+  console.log("__________")
+console.log(team_budgets)
+  const handleOnSelect = async(team_name: string, player: RowData, prev: string, newSellerBudget?: number|null, result?:number|null, newBudget?: number|null) => {
 
-  const handleOnSelect = (team_name: string, player: RowData) => {
+    let allowance = true;
 
-    setParticipantData(prevData =>
-      prevData.map(participant => {
-        if (participant.team_name === team_name) {
-          // If the participant matches, add the new player to the 'players' array
+    if(dbleague.type === "pro"){
+      
+      if(prev !== "Sin traspaso"){
+        result = await prompt(player.value!);
 
-          return {
-            ...participant,
-            players: [...participant.players, player] // Add the new player
-          };
-        }else{
-          
-          if (participant.players.some((item:playersFull) => item.nickname === player.nickname)){
-            // If that player was assigned to other participant, it should be dropped from the previous one
+        if(result !== -1){
             
-            return {
-              ...participant,
-              players: participant.players.filter(
-                (item:playersFull) => item.nickname?.toLowerCase() !== player.nickname?.toLowerCase()
-              ) // Add the new player
-            };
+          if(newBudget! >= 0){
+            setTeamBudgets(prevItems =>
+              prevItems.map(item =>
+                item.team_name === prev
+                  ? { ...item, budget: newSellerBudget! } // update X if A matches
+                  : item                      // otherwise keep the same
+              )
+            );
           }
         }
+      }
 
-        // Otherwise, return the participant unchanged
-        return participant;
-      })
-    );
-    
+      if(result === null){
+        newBudget = newBudget! - player.value!;
+      }
+      if (newBudget! >= 0 && result !== -1){
+        setTeamBudgets(prevItems =>
+          prevItems.map(item =>
+            item.team_name === team_name
+              ? { ...item, budget: newBudget! } // update X if A matches
+              : item                      // otherwise keep the same
+          )
+        );
+      }else{
+        allowance = false;
+      }
+    }
+
+    if(allowance){
+
+      setParticipantData(prevData =>
+        prevData.map(participant => {
+          if (participant.team_name === team_name) {
+            // If the participant matches, add the new player to the 'players' array
+
+            return {
+              ...participant,
+              players: [...participant.players, player] // Add the new player
+            };
+          }else{
+            
+            if (participant.players.some((item:playersFull) => item.nickname === player.nickname)){
+              // If that player was assigned to other participant, it should be dropped from the previous one
+              
+              return {
+                ...participant,
+                players: participant.players.filter(
+                  (item:playersFull) => item.nickname?.toLowerCase() !== player.nickname?.toLowerCase()
+                ) // Add the new player
+              };
+            }
+          }
+
+          // Otherwise, return the participant unchanged
+          return participant;
+        })
+      );
+    }
   };
 
   const handleRemovePlayer = (participantIndex: number, playername: string) => {
+
+    let allowance = true;
+
+    if(dbleague.type === "pro"){
+      const newBudget = team_budgets!.find(item => item.team_name === participantData[participantIndex].team_name)?.budget! + 
+        participantData[participantIndex].players.find((item:playersFull) => item.nickname === playername).value!
+
+      if (newBudget >= 0 ){
+        setTeamBudgets(prevItems =>
+          prevItems.map(item =>
+            item.team_name === participantData[participantIndex].team_name
+              ? { ...item, budget: newBudget } // update X if A matches
+              : item                      // otherwise keep the same
+          )
+        );
+      }else{
+        allowance = false;
+      }
+    }
 
     setParticipantData(prevData => {
       const newData = [...prevData];
@@ -337,6 +479,11 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
 
   console.log("***********")
   console.log(participantData)
+
+
+
+
+
     return (
       <Box sx={{
         margin: "auto",
@@ -398,7 +545,8 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
                         
                               return(
                                 <Row key={row.nickname} dbleague={dbleague} row={row} gamekey={dbleague.game} provided={provided} 
-                                  snapshot={snapshot} teams={participants.map(part => part.team_name)} onSelect={handleOnSelect} 
+                                  snapshot={snapshot} teams={participants.map(part => part.team_name)} onSelect={handleOnSelect} team_budgets={team_budgets}
+                                  onTriggerPrompt={prompt}
                                   selectedTeam={participantData.find(x =>
                                     x.players.some((aItem: RowData) => aItem.nickname === row.nickname)
                                   )?.team_name || 'Sin traspaso'} />
@@ -446,10 +594,14 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
             </Box>
 
           </Paper>
-          
-          <CollapsableCard dbleague={dbleague} participants={participantData} gamekey={dbleague.game} handleRemovePlayer={handleRemovePlayer} />
-          
+          {dbleague.type === "pro" ?
+            <CollapsableCard team_budgets={team_budgets} dbleague={dbleague} participants={participantData} gamekey={dbleague.game} handleRemovePlayer={handleRemovePlayer} /> :
+            <CollapsableCard dbleague={dbleague} participants={participantData} gamekey={dbleague.game} handleRemovePlayer={handleRemovePlayer} />
+          }
         </DragDropContext>
+        <>
+        {Modal}
+        </>
       </ Box>
     )
   }

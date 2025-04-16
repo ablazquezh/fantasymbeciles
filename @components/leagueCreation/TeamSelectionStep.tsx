@@ -62,7 +62,7 @@ import { useRouter } from "next/router";
     const [teams, setTeams] = useState([]);
     const [teamBudgets, setTeamBudgets] = useState([]);
     const [currentUser, setCurrentUser] = useState<string>('');
-
+    
     useEffect(() => {
         const fetchTeams = async () => {
             const res = await fetch(`/api/teams?game=${formData.options?.["game"]}`);

@@ -34,9 +34,9 @@ const SettingsStep: React.FC<StepFourProps> = ({ setStep, setFormData, formData 
     cardResetInjury: formData.options?.cardResetInjury ?? true,
     cardResetRed: formData.options?.cardResetRed ?? true,
 
-    bigTeamMultiplier: formData.options?.bigTeamMultiplier ?? 2,
-    mediumTeamMultiplier: formData.options?.mediumTeamMultiplier ?? 4,
-    smallTeamMultiplier: formData.options?.smallTeamMultiplier ?? 7,
+    bigTeamMultiplier: formData.options?.bigTeamMultiplier ?? 3,
+    mediumTeamMultiplier: formData.options?.mediumTeamMultiplier ?? 3.5,
+    smallTeamMultiplier: formData.options?.smallTeamMultiplier ?? 4.5,
     
     winBonus: formData.options?.winBonus ?? 4,
     drawBonus: formData.options?.drawBonus ?? 2,
@@ -183,7 +183,7 @@ const SettingsStep: React.FC<StepFourProps> = ({ setStep, setFormData, formData 
                   <TextField
                     type="number"
                     label=""
-                    inputProps={{ min: 1, step: 1 }}
+                    inputProps={{ min: 1, step: 0.1 }}
                     value={localOptions.bigTeamMultiplier}
                     onChange={(e) =>
                       setLocalOptions((prev) => ({ ...prev, bigTeamMultiplier: Math.max(1, Number(e.target.value)) }))
@@ -196,7 +196,7 @@ const SettingsStep: React.FC<StepFourProps> = ({ setStep, setFormData, formData 
                   <TextField
                     type="number"
                     label=""
-                    inputProps={{ min: 1, step: 1 }}
+                    inputProps={{ min: 1, step: 0.1 }}
                     value={localOptions.mediumTeamMultiplier}
                     onChange={(e) =>
                       setLocalOptions((prev) => ({ ...prev, mediumTeamMultiplier: Math.max(1, Number(e.target.value)) }))
@@ -209,7 +209,7 @@ const SettingsStep: React.FC<StepFourProps> = ({ setStep, setFormData, formData 
                   <TextField
                     type="number"
                     label=""
-                    inputProps={{ min: 1, step: 1 }}
+                    inputProps={{ min: 1, step: 0.1 }}
                     value={localOptions.smallTeamMultiplier}
                     onChange={(e) =>
                       setLocalOptions((prev) => ({ ...prev, smallTeamMultiplier: Math.max(1, Number(e.target.value)) }))

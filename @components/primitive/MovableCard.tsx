@@ -3,7 +3,7 @@ import { Card, CardContent, IconButton, Popover, Tooltip} from "@mui/material";
 import { KeyboardArrowUp, KeyboardArrowDown } from "@mui/icons-material";
 import { DragDropContext, Droppable, Draggable, DropResult} from "@hello-pangea/dnd";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, TablePagination, Paper } from "@mui/material";
-import { leagues, players } from "@prisma/client";
+import { leagues, players, team_budget } from "@prisma/client";
 import React from "react";
 import CloseIcon from '@mui/icons-material/Close';
 import ReactDOM from 'react-dom';
@@ -93,6 +93,7 @@ interface MovableCardProps {
     playername: string,
   ) => void;
   dbleague: leagues;
+  team_budgets?: team_budget[];
 }
 
 // Custom column names
@@ -103,7 +104,7 @@ const globalColnames = {
 };
 
 
-const MovableCard: React.FC<MovableCardProps> = ({dbleague, gamekey, participants, handleRemovePlayer}) => {
+const MovableCard: React.FC<MovableCardProps> = ({team_budgets, dbleague, gamekey, participants, handleRemovePlayer}) => {
   const [expanded, setExpanded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [participantData, setParticipantData] = useState<ParticipantsFull[]>([])
@@ -192,9 +193,32 @@ const MovableCard: React.FC<MovableCardProps> = ({dbleague, gamekey, participant
                       marginRight: "auto"
                     }}
                   />
-                  <Typography gutterBottom variant="body1" component="div" sx={{margin: "auto"}}>
-                      N. jugadores: {participant.players.length}
-                  </Typography>
+                  {dbleague.type === "pro" &&
+                    <Tooltip title={"Presupuesto"} placement="top" arrow  componentsProps={{
+                                            tooltip: {
+                                              sx: {
+                                                fontSize: '0.95rem',
+                                                padding: '12px',
+                                                maxWidth: 250,
+                                              },
+                                            },
+                                          }}>
+                    <Chip key={participant.team_name+"nj"} label={Intl.NumberFormat('de-DE').format(team_budgets?.find(item => item.team_name === participant.team_name)?.budget!) + " €"} 
+                      sx={{ margin: "2px", padding:2, mr: "auto"}} />
+                    </Tooltip>
+                  }
+                  <Tooltip title={"Núm. jugadores"} placement="top" arrow  componentsProps={{
+                                          tooltip: {
+                                            sx: {
+                                              fontSize: '0.95rem',
+                                              padding: '12px',
+                                              maxWidth: 250,
+                                            },
+                                          },
+                                        }}>
+                  <Chip key={participant.team_name+"nj"} label={participant.players.length} sx={{ margin: "2px" }} />
+                  </Tooltip>
+
                   </div>
 
                     <TableContainer sx={{ minHeight: "200px", maxHeight: "550px", maxWidth: "310px", minWidth: "310px", overflowY: "auto" }} >

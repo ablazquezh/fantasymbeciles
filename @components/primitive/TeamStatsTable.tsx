@@ -282,7 +282,13 @@ interface TeamStatsTableProps {
                                 ))}
                                 {formData.options?.leaguetype === "pro" &&
                                     <TableCell>
-                                        {Intl.NumberFormat('de-DE').format(Number(teamBudgets.find(item => item.team_name === row.team_name)?.budget))}
+                                        {Number(teamBudgets.find(item => item.team_name === row.team_name)?.team_avg_std) >= 80 ?
+                                            Intl.NumberFormat('de-DE').format(teamBudgets.find(item => item.team_name === row.team_name)?.budget! * formData.options.bigTeamMultiplier!) : 
+
+                                            Number(teamBudgets.find(item => item.team_name === row.team_name)?.team_avg_std) >= 75 ?
+                                            Intl.NumberFormat('de-DE').format(teamBudgets.find(item => item.team_name === row.team_name)?.budget! * formData.options.mediumTeamMultiplier!) : 
+
+                                            Intl.NumberFormat('de-DE').format(teamBudgets.find(item => item.team_name === row.team_name)?.budget! * formData.options.smallTeamMultiplier!) }
                                     </TableCell>
                                 }
                                 {/* Add a cell for the "Add" button */}
