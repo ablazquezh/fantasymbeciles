@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from "next/router";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, TablePagination, Paper, Button } from "@mui/material";
-import { players } from "@prisma/client";
+import { players, team_budget } from "@prisma/client";
 import { GetServerSidePropsContext, NextPage } from 'next';
 import CollapsableCard from "../primitive/MovableCard"; // Ruta del componente
 import { PrismaClient, Prisma, users, leagues } from "@prisma/client";
@@ -15,9 +15,15 @@ import { RowData } from '@/@components/types/RowData';
 import { ParticipantsFull } from '../types/ParticipantsFull';
 import groupPlayerData from '../utils/groupPlayerData';
 import findTeamNameByPlayerName from '../utils/findTeamNameByPlayerName';
+import NegotiationModal from '../primitive/NegotiationModal';
 
 // ToDo: Think- in same market session, transfer followed by removal implies no transfer record to insert in DB.
-
+interface participant {
+  participant_id: number;
+  user_name: string;
+  team_name: string;
+  team_id: number;
+}
 // Custom column names
 const globalColnames = {
   nickname: "Jugador",
@@ -50,6 +56,8 @@ const MarketView: React.FC<PlayerSelectProps> = ({dbleague, participants, comple
   console.log(participants)
   const router = useRouter();
   const [league, setLeague] = useState<string | null>(null);
+
+  const [team_budgets, setTeamBudgets] = useState<team_budget[]>([])
 
   const [players, setPlayers] = useState<playersFull[]>([]);
   const [playerPositions, setPlayerPositions] = useState([]);    
@@ -90,6 +98,32 @@ const MarketView: React.FC<PlayerSelectProps> = ({dbleague, participants, comple
   }, [leagueId]);
 */
 
+useEffect(() => {
+    if(dbleague.type === "pro"){ 
+
+      const fetchTeamBudgets = async () => {
+          const res = await fetch(`/api/teambudgets?game=${dbleague.game}&idList=${participants.map((item: participant) => item.team_id).join(",")}`);
+          const data = await res.json();
+
+          data.teams.forEach((obj: team_budget) => {
+            if (Number(obj.team_avg_std!) >= 80) {
+              obj.budget! *= dbleague.big_team_multiplier!;
+            } else if (Number(obj.team_avg_std!) >= 75) {
+              obj.budget! *= dbleague.medium_team_multiplier!;
+            } else {
+              obj.budget! *= dbleague.small_team_multiplier!;
+            }
+          });
+        
+
+          setTeamBudgets(data.teams);
+      };
+
+      fetchTeamBudgets();
+    
+    }
+  }, [participants]);
+  
   useEffect(() => {
     const fetchPlayers= async () => {
         const res = await fetch(`/api/players?page=${page + 1}&pageSize=${rowsPerPage}&game=${dbleague.game}&minValue=${minValue}&maxValue=${maxValue}&positions=${selected}`);
@@ -124,198 +158,335 @@ const MarketView: React.FC<PlayerSelectProps> = ({dbleague, participants, comple
     players: completeLeagueTeams.find(item2 => item2.team_id === item.team_id)?.players // Empty array for 'items'
   })))
 
-  const handleOnDragEnd = (result: DropResult) => {
-      const { source, destination } = result;
-      
-      if (!destination) return; // If dropped outside
   
-      if (source.droppableId === destination.droppableId && source.index === destination.index) {
-        return; // If dropped in the same place
+    const { prompt, Modal } = NegotiationModal();
+    const handleOnDragEnd = async(result: DropResult) => {
+        const { source, destination } = result;
+        if (!destination) return; // If dropped outside
+    
+        if (source.droppableId === destination.droppableId && source.index === destination.index) {
+          return; // If dropped in the same place
+        }
+        
+        let inputPlayer = null
+        if(source.droppableId == "mainTable"){
+          inputPlayer = completePlayerInfo[source.index]
+        }else{
+          const foundItem = participantData.find(item => item.team_name === source.droppableId)
+          inputPlayer = foundItem.players[source.index]
+        }
+  
+        let allowance = true;
+  
+      if(dbleague.type === "pro"){
+        let newBudget = team_budgets!.find(item => item.team_name === destination.droppableId)?.budget!;// - inputPlayer.value!
+        let result = null;
+        if(source.droppableId !== "mainTable"){
+          result = await prompt(inputPlayer.value);
+  
+          if(result !== -1){
+            newBudget = newBudget - Number(result);
+            if(newBudget >= 0){
+              const newSellerBudget = team_budgets!.find(item => item.team_name === source.droppableId)?.budget! + Number(result);//+ inputPlayer.value!
+              setTeamBudgets(prevItems =>
+                prevItems.map(item =>
+                  item.team_name === source.droppableId
+                    ? { ...item, budget: newSellerBudget } // update X if A matches
+                    : item                      // otherwise keep the same
+                )
+              );
+            }
+            }
+        }else{
+  
+          const prevSelected = participantData.find(x =>
+            x.players.some((aItem: RowData) => aItem.nickname === inputPlayer.nickname)
+          )?.team_name || 'Sin traspaso'
+  
+          if(prevSelected !== "Sin traspaso"){
+            result = await prompt(inputPlayer.value);
+  
+            if(result !== -1){
+              newBudget = newBudget - Number(result);
+              
+              if(newBudget >= 0){
+                const newSellerBudget = team_budgets!.find(item => item.team_name === prevSelected)?.budget! + Number(result);//inputPlayer.value!
+                setTeamBudgets(prevItems =>
+                  prevItems.map(item =>
+                    item.team_name === prevSelected
+                      ? { ...item, budget: newSellerBudget } // update X if A matches
+                      : item                      // otherwise keep the same
+                  )
+                );
+              } 
+            }
+          }
+        }
+  
+        if (result === null){
+          newBudget = newBudget - inputPlayer.value!;
+        }
+        if (newBudget >= 0 && result !== -1){
+          setTeamBudgets(prevItems =>
+            prevItems.map(item =>
+              item.team_name === destination.droppableId
+                ? { ...item, budget: newBudget } // update X if A matches
+                : item                      // otherwise keep the same
+            )
+          );
+        }else{
+          allowance = false;
+        }
       }
-      
-      let inputPlayer = null
-      if(source.droppableId == "mainTable"){
-        inputPlayer = completePlayerInfo[source.index]
-      }else{
-        const foundItem = participantData.find(item => item.team_name === source.droppableId)
-        inputPlayer = foundItem.players[source.index]
-      }
-      
-      
+  
+      if(allowance){
 
-      // Create transfer record of player to new team
-      const transferRecord = {
+        const transferRecord = {
           player_id_fk: Number(inputPlayer.ID),
           team_id_fk: participants.find((item) => item.team_name === destination.droppableId).team_id,
           league_id_fk: Number(dbleague.ID)
-      };
-      setTransferRecords(prev => [...prev, transferRecord]);
-      
-      // Apart from this -> setCompleteLeagueTeams
-      const playerCopy = JSON.parse(JSON.stringify(inputPlayer));
-      delete playerCopy.teams;
-      setCompleteLeagueTeams(prevData =>
-        prevData.map(participant => {
-          if (participant.team_name === destination.droppableId) {
-            // If the participant matches, add the new player to the 'players' array
+        };
+        setTransferRecords(prev => [...prev, transferRecord]);
 
-            if (participant.players.some(item => item.nickname === inputPlayer?.nickname)){
-              // If that participant already contains the player, do nothing
-              return participant
-            }
-
-            return {
-              ...participant,
-              players: [...participant.players, playerCopy], // Add the new player
-              groupedPlayers: groupPlayerData([...participant.players, playerCopy])
-            };
-          }else{
-
-            if (participant.players.some(item => item.nickname === inputPlayer.nickname)){
-              // If that player was assigned to other participant, it should be dropped from the previous one
-              
+        const playerCopy = JSON.parse(JSON.stringify(inputPlayer));
+        delete playerCopy.teams;
+        setCompleteLeagueTeams(prevData =>
+          prevData.map(participant => {
+            if (participant.team_name === destination.droppableId) {
+              // If the participant matches, add the new player to the 'players' array
+  
+              if (participant.players.some(item => item.nickname === inputPlayer?.nickname)){
+                // If that participant already contains the player, do nothing
+                return participant
+              }
+  
               return {
                 ...participant,
-                players: participant.players.filter(
-                  item => item.nickname?.toLowerCase() !== inputPlayer.nickname?.toLowerCase()
-                ),
-                groupedPlayers: groupPlayerData(participant.players.filter(
+                players: [...participant.players, playerCopy], // Add the new player
+                groupedPlayers: groupPlayerData([...participant.players, playerCopy])
+              };
+            }else{
+  
+              if (participant.players.some(item => item.nickname === inputPlayer.nickname)){
+                // If that player was assigned to other participant, it should be dropped from the previous one
+                
+                return {
+                  ...participant,
+                  players: participant.players.filter(
                     item => item.nickname?.toLowerCase() !== inputPlayer.nickname?.toLowerCase()
-                  ))
-              };
+                  ),
+                  groupedPlayers: groupPlayerData(participant.players.filter(
+                      item => item.nickname?.toLowerCase() !== inputPlayer.nickname?.toLowerCase()
+                    ))
+                };
+              }
             }
-          }
+  
+            // Otherwise, return the participant unchanged
+            return participant;
+          })
+        );
 
-          // Otherwise, return the participant unchanged
-          return participant;
-        })
-      );
 
-
-      setParticipantData(prevData =>
-        prevData.map(participant => {
-          if (participant.team_name === destination.droppableId) {
-            // If the participant matches, add the new player to the 'players' array
-
-            if (participant.players.some((item:playersFull) => item.nickname === inputPlayer?.nickname)){
-              // If that participant already contains the player, do nothing
-              return participant
-            }
-
-            return {
-              ...participant,
-              players: [...participant.players, inputPlayer] // Add the new player
-            };
-          }else{
-
-            if (participant.players.some((item:playersFull) => item.nickname === inputPlayer.nickname)){
-              // If that player was assigned to other participant, it should be dropped from the previous one
-              
+        setParticipantData(prevData =>
+          prevData.map(participant => {
+            if (participant.team_name === destination.droppableId) {
+              // If the participant matches, add the new player to the 'players' array
+  
+              if (participant.players.some((item:playersFull) => item.nickname === inputPlayer?.nickname)){
+                // If that participant already contains the player, do nothing
+                return participant
+              }
+  
               return {
                 ...participant,
-                players: participant.players.filter(
-                  (item:playersFull) => item.nickname?.toLowerCase() !== inputPlayer.nickname?.toLowerCase()
-                ) // Add the new player
+                players: [...participant.players, inputPlayer] // Add the new player
               };
+            }else{
+  
+              if (participant.players.some((item:playersFull) => item.nickname === inputPlayer.nickname)){
+                // If that player was assigned to other participant, it should be dropped from the previous one
+                
+                return {
+                  ...participant,
+                  players: participant.players.filter(
+                    (item:playersFull) => item.nickname?.toLowerCase() !== inputPlayer.nickname?.toLowerCase()
+                  ) // Add the new player
+                };
+              }
             }
-          }
-
-          // Otherwise, return the participant unchanged
-          return participant;
-        })
-      );
-      
-      
-  };
-
-  const handleOnSelect = (team_name: string, player: RowData) => {
-
-    // Create transfer record of player to new team
-    const transferRecord = {
-        player_id_fk: Number(player.ID),
-        team_id_fk: participants.find((item) => item.team_name === team_name).team_id,
-        league_id_fk: Number(dbleague.ID)
+  
+            // Otherwise, return the participant unchanged
+            return participant;
+          })
+        );
+      }
+        
     };
-    setTransferRecords(prev => [...prev, transferRecord]);
-
-    // Apart from this -> setCompleteLeagueTeams
-    setCompleteLeagueTeams(prevData =>
-        prevData.map(participant => {
-          if (participant.team_name === team_name) {
-            // If the participant matches, add the new player to the 'players' array
+    
   
-            return {
-              ...participant,
-              players: [...participant.players, player], // Add the new player
-              groupedPlayers: groupPlayerData([...participant.players, player])
-            };
-          }else{
-            
-            if (participant.players.some(item => item.nickname === player.nickname)){
-              // If that player was assigned to other participant, it should be dropped from the previous one
-              
-              return {
-                ...participant,
-                players: participant.players.filter(
-                  item => item.nickname?.toLowerCase() !== player.nickname?.toLowerCase()
-                ),
-                groupedPlayers: groupPlayerData(participant.players.filter(
-                    item => item.nickname?.toLowerCase() !== player.nickname?.toLowerCase()
-                  ))
-              };
-            }
-          }
+    const handleOnSelect = async(team_name: string, player: RowData, prev?: string, ) => {
   
-          // Otherwise, return the participant unchanged
-          return participant;
-        })
-      );
-
-    setParticipantData(prevData =>
-      prevData.map(participant => {
-        if (participant.team_name === team_name) {
-          // If the participant matches, add the new player to the 'players' array
-
-          return {
-            ...participant,
-            players: [...participant.players, player] // Add the new player
-          };
-        }else{
+      // HERE WE ONLY HAVE PROPAGATED INFO FROM ROW IF IT IS NOT PRO MODE, OR IF IT IS PROMODE AND TWO DIFFERENT TEAMS NEGOTIATE
+      let allowance = true;
+  
+      if(dbleague.type === "pro"){
+        
+        let newBudget = team_budgets!.find(item => item.team_name === team_name)?.budget!;// - inputPlayer.value!
+        let result = null;
+  
+        if(prev !== "Sin traspaso" && team_name === "Sin traspaso"){
+          // REMOVAL FROM TEAM OF THE LEAGUE
+          const newSellerBudget = team_budgets!.find(item => item.team_name === prev)?.budget! + Number(player.value);//+ inputPlayer.value!
+          setTeamBudgets(prevItems =>
+            prevItems.map(item =>
+              item.team_name === prev
+                ? { ...item, budget: newSellerBudget } // update X if A matches
+                : item                      // otherwise keep the same
+            )
+          );
+  
+        }else if (prev === "Sin traspaso" && team_name !== "Sin traspaso"){
+          // SALE FROM MARKET TO TEAM OF THE LEAGUE
           
-          if (participant.players.some((item:playersFull) => item.nickname === player.nickname)){
-            // If that player was assigned to other participant, it should be dropped from the previous one
-            
-            return {
-              ...participant,
-              players: participant.players.filter(
-                (item:playersFull) => item.nickname?.toLowerCase() !== player.nickname?.toLowerCase()
-              ) // Add the new player
-            };
+        }else if(team_name !== prev){
+          result = await prompt(player.value!);
+  
+          if(result !== -1){
+            newBudget = newBudget - Number(result);
+            if(newBudget >= 0){
+              const newSellerBudget = team_budgets!.find(item => item.team_name === prev)?.budget! + Number(result);//+ inputPlayer.value!
+              setTeamBudgets(prevItems =>
+                prevItems.map(item =>
+                  item.team_name === prev
+                    ? { ...item, budget: newSellerBudget } // update X if A matches
+                    : item                      // otherwise keep the same
+                )
+              );
+            }
           }
         }
+  
+        if (result === null && newBudget !== undefined){
+          // THE MODAL HASN'T OPENED -> IT WAS A BUY FROM MARKET OR IT WAS A SALE TO MARKET
+          newBudget = newBudget - player.value!;
+        }
+        if (newBudget >= 0 && result !== -1){
+          setTeamBudgets(prevItems =>
+            prevItems.map(item =>
+              item.team_name === team_name
+                ? { ...item, budget: newBudget } // update X if A matches
+                : item                      // otherwise keep the same
+            )
+          );
+        }else if (newBudget !== undefined){
+          allowance = false;
+        }
+        
+      }
+      
+      if(allowance){
 
-        // Otherwise, return the participant unchanged
-        return participant;
-      })
-    );
+        const transferRecord = {
+          player_id_fk: Number(player.ID),
+          team_id_fk: participants.find((item) => item.team_name === team_name).team_id,
+          league_id_fk: Number(dbleague.ID)
+        };
+        setTransferRecords(prev => [...prev, transferRecord]);
+  
+
+        setCompleteLeagueTeams(prevData =>
+          prevData.map(participant => {
+            if (participant.team_name === team_name) {
+              // If the participant matches, add the new player to the 'players' array
     
-  };
+              return {
+                ...participant,
+                players: [...participant.players, player], // Add the new player
+                groupedPlayers: groupPlayerData([...participant.players, player])
+              };
+            }else{
+              
+              if (participant.players.some(item => item.nickname === player.nickname)){
+                // If that player was assigned to other participant, it should be dropped from the previous one
+                
+                return {
+                  ...participant,
+                  players: participant.players.filter(
+                    item => item.nickname?.toLowerCase() !== player.nickname?.toLowerCase()
+                  ),
+                  groupedPlayers: groupPlayerData(participant.players.filter(
+                      item => item.nickname?.toLowerCase() !== player.nickname?.toLowerCase()
+                    ))
+                };
+              }
+            }
+    
+            // Otherwise, return the participant unchanged
+            return participant;
+          })
+        );
 
-  const handleRemovePlayer = (participantIndex: number, playername: string) => {
 
-
-    const updateTeam = findTeamNameByPlayerName(completeLeagueTeams, playername, "id")
-
-    // Create transfer record of player to new team
-    const transferRecord = {
-      player_id_fk: updateTeam,
-      team_id_fk: null,
-      league_id_fk: Number(dbleague.ID)
+        setParticipantData(prevData =>
+          prevData.map(participant => {
+            if (participant.team_name === team_name) {
+              // If the participant matches, add the new player to the 'players' array
+  
+              return {
+                ...participant,
+                players: [...participant.players, player] // Add the new player
+              };
+            }else{
+              
+              if (participant.players.some((item:playersFull) => item.nickname === player.nickname)){
+                // If that player was assigned to other participant, it should be dropped from the previous one
+                
+                return {
+                  ...participant,
+                  players: participant.players.filter(
+                    (item:playersFull) => item.nickname?.toLowerCase() !== player.nickname?.toLowerCase()
+                  ) // Add the new player
+                };
+              }
+            }
+  
+            // Otherwise, return the participant unchanged
+            return participant;
+          })
+        );
+      }
     };
-    setTransferRecords(prev => [...prev, transferRecord]);
-    
-    // Apart from this -> setCompleteLeagueTeams
-    setCompleteLeagueTeams(prevData => {
+  
+    const handleRemovePlayer = (participantIndex: number, playername: string) => {
+  
+      let allowance = true;
+  
+      if(dbleague.type === "pro"){
+        const newBudget = team_budgets!.find(item => item.team_name === participantData[participantIndex].team_name)?.budget! + 
+          participantData[participantIndex].players.find((item:playersFull) => item.nickname === playername).value!
+  
+        if (newBudget >= 0 ){
+          setTeamBudgets(prevItems =>
+            prevItems.map(item =>
+              item.team_name === participantData[participantIndex].team_name
+                ? { ...item, budget: newBudget } // update X if A matches
+                : item                      // otherwise keep the same
+            )
+          );
+        }else{
+          allowance = false;
+        }
+      }
+      const updateTeam = findTeamNameByPlayerName(completeLeagueTeams, playername, "id")
+      const transferRecord = {
+        player_id_fk: updateTeam,
+        team_id_fk: null,
+        league_id_fk: Number(dbleague.ID)
+      };
+      setTransferRecords(prev => [...prev, transferRecord]);
+
+      setCompleteLeagueTeams(prevData => {
         const newData = [...prevData];
         const participant = newData[participantIndex];
     
@@ -334,24 +505,25 @@ const MarketView: React.FC<PlayerSelectProps> = ({dbleague, participants, comple
         return newData;
       });
 
-    setParticipantData(prevData => {
-      const newData = [...prevData];
-      const participant = newData[participantIndex];
+      setParticipantData(prevData => {
+        const newData = [...prevData];
+        const participant = newData[participantIndex];
+    
+        if (!participant) return prevData;
+    
+        const updatedPlayers = participant.players.filter(
+          (player: playersFull) => player.nickname !== playername
+        );
+    
+        newData[participantIndex] = {
+          ...participant,
+          players: updatedPlayers,
+        };
+    
+        return newData;
+      });
+    };
   
-      if (!participant) return prevData;
-  
-      const updatedPlayers = participant.players.filter(
-        (player: playersFull) => player.nickname !== playername
-      );
-  
-      newData[participantIndex] = {
-        ...participant,
-        players: updatedPlayers,
-      };
-  
-      return newData;
-    });
-  };
 
 
 console.log(participantData)
@@ -359,7 +531,7 @@ console.log(participantData)
     return (
       <Box sx={{
         margin: "auto",
-        width: "60%",
+        width: "70%",
         display: "flex",
         flexDirection: "column",
         position: "relative"
@@ -392,6 +564,11 @@ console.log(participantData)
                             {globalColnames[col as keyof typeof globalColnames]}
                           </TableCell>
                         ))}
+                        {dbleague.type === "pro" &&
+                          <TableCell sx={{fontWeight: "bold", textAlign: "center", }}>
+                              Precio
+                          </TableCell>
+                        }
                         <TableCell sx={{fontWeight: "bold", textAlign: "center", borderLeft: '1px solid rgba(0, 0, 0, 0.12)' }} colSpan={2}>
                           Traspaso
                         </TableCell>
@@ -405,12 +582,12 @@ console.log(participantData)
                             {(provided, snapshot) => {
                         
                               return(
-                                <Row key={row.nickname} dbleague={dbleague} row={row} gamekey={dbleague.game} provided={provided} 
-                                  snapshot={snapshot} teams={participants.map(part => part.team_name)} onSelect={handleOnSelect} 
-                                  selectedTeam={participantData.find(x =>
-                                    x.players.some((aItem: RowData) => aItem.nickname === row.nickname)
-                                  )?.team_name || 'Sin traspaso'} />
-                            )}}
+                                  <Row key={row.nickname} dbleague={dbleague} row={row} gamekey={dbleague.game} provided={provided} 
+                                    snapshot={snapshot} teams={participants.map(part => part.team_name)} onSelect={handleOnSelect} team_budgets={team_budgets}
+                                    selectedTeam={participantData.find(x =>
+                                      x.players.some((aItem: RowData) => aItem.nickname === row.nickname)
+                                    )?.team_name || 'Sin traspaso'} />
+                              )}}
                           </Draggable>
                         ))}
                         {provided.placeholder}
@@ -455,9 +632,15 @@ console.log(participantData)
 
           </Paper>
           
-          <CollapsableCard dbleague={dbleague} participants={participantData} gamekey={dbleague.game} handleRemovePlayer={handleRemovePlayer} />
-          
+          {dbleague.type === "pro" ?
+            <CollapsableCard team_budgets={team_budgets} dbleague={dbleague} participants={participantData} gamekey={dbleague.game} handleRemovePlayer={handleRemovePlayer} /> :
+            <CollapsableCard dbleague={dbleague} participants={participantData} gamekey={dbleague.game} handleRemovePlayer={handleRemovePlayer} />
+          }          
         </DragDropContext>
+        
+        <>
+        {Modal}
+        </>
       </ Box>
     )
   }

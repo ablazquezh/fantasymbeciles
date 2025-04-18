@@ -334,24 +334,43 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
     }
       
   };
-  console.log("__________")
-console.log(team_budgets)
-  const handleOnSelect = async(team_name: string, player: RowData, prev: string, newSellerBudget?: number|null, result?:number|null, newBudget?: number|null) => {
+  
 
+  const handleOnSelect = async(team_name: string, player: RowData, prev?: string, ) => {
+
+    // HERE WE ONLY HAVE PROPAGATED INFO FROM ROW IF IT IS NOT PRO MODE, OR IF IT IS PROMODE AND TWO DIFFERENT TEAMS NEGOTIATE
     let allowance = true;
 
     if(dbleague.type === "pro"){
       
-      if(prev !== "Sin traspaso"){
+      let newBudget = team_budgets!.find(item => item.team_name === team_name)?.budget!;// - inputPlayer.value!
+      let result = null;
+
+      if(prev !== "Sin traspaso" && team_name === "Sin traspaso"){
+        // REMOVAL FROM TEAM OF THE LEAGUE
+        const newSellerBudget = team_budgets!.find(item => item.team_name === prev)?.budget! + Number(player.value);//+ inputPlayer.value!
+        setTeamBudgets(prevItems =>
+          prevItems.map(item =>
+            item.team_name === prev
+              ? { ...item, budget: newSellerBudget } // update X if A matches
+              : item                      // otherwise keep the same
+          )
+        );
+
+      }else if (prev === "Sin traspaso" && team_name !== "Sin traspaso"){
+        // SALE FROM MARKET TO TEAM OF THE LEAGUE
+        
+      }else if(team_name !== prev){
         result = await prompt(player.value!);
 
         if(result !== -1){
-            
-          if(newBudget! >= 0){
+          newBudget = newBudget - Number(result);
+          if(newBudget >= 0){
+            const newSellerBudget = team_budgets!.find(item => item.team_name === prev)?.budget! + Number(result);//+ inputPlayer.value!
             setTeamBudgets(prevItems =>
               prevItems.map(item =>
                 item.team_name === prev
-                  ? { ...item, budget: newSellerBudget! } // update X if A matches
+                  ? { ...item, budget: newSellerBudget } // update X if A matches
                   : item                      // otherwise keep the same
               )
             );
@@ -359,22 +378,24 @@ console.log(team_budgets)
         }
       }
 
-      if(result === null){
-        newBudget = newBudget! - player.value!;
+      if (result === null && newBudget !== undefined){
+        // THE MODAL HASN'T OPENED -> IT WAS A BUY FROM MARKET OR IT WAS A SALE TO MARKET
+        newBudget = newBudget - player.value!;
       }
-      if (newBudget! >= 0 && result !== -1){
+      if (newBudget >= 0 && result !== -1){
         setTeamBudgets(prevItems =>
           prevItems.map(item =>
             item.team_name === team_name
-              ? { ...item, budget: newBudget! } // update X if A matches
+              ? { ...item, budget: newBudget } // update X if A matches
               : item                      // otherwise keep the same
           )
         );
-      }else{
+      }else if (newBudget !== undefined){
         allowance = false;
       }
+      
     }
-
+    
     if(allowance){
 
       setParticipantData(prevData =>
@@ -546,7 +567,6 @@ console.log(team_budgets)
                               return(
                                 <Row key={row.nickname} dbleague={dbleague} row={row} gamekey={dbleague.game} provided={provided} 
                                   snapshot={snapshot} teams={participants.map(part => part.team_name)} onSelect={handleOnSelect} team_budgets={team_budgets}
-                                  onTriggerPrompt={prompt}
                                   selectedTeam={participantData.find(x =>
                                     x.players.some((aItem: RowData) => aItem.nickname === row.nickname)
                                   )?.team_name || 'Sin traspaso'} />

@@ -12,7 +12,6 @@ import { SelectChangeEvent } from '@mui/material'; // 👈 Import this from MUI
 import { RowData } from '../types/RowData';
 import getRowColor from '../utils/getRowColor';
 import { leagues, team_budget } from '@prisma/client';
-import NegotiationModal from './NegotiationModal';
 
 const globalDetailColnames = {
     age: "Edad",
@@ -64,49 +63,46 @@ const Clone = styled(Item)`
 `;
 
 export default function Row(props: { dbleague: leagues, row: RowData, gamekey: string | null, provided: DraggableProvided, snapshot: DraggableStateSnapshot, 
-  teams: string[], onSelect: (team_name: string, player: RowData, prev: string, newSellerBudget?: number|null, result?:number|null, newBudget?: number|null) => void, 
-  selectedTeam: string, team_budgets?: team_budget[], onTriggerPrompt?: (defaultValue?: number) => Promise<number | null>;}) {
+  teams: string[], onSelect: (team_name: string, player: RowData, prev?: string, newSellerBudget?: number|null, result?:number|null, newBudget?: number|null) => void, 
+  selectedTeam: string, team_budgets?: team_budget[], }) {
         
-    const { dbleague, row, gamekey, provided, snapshot, teams, onSelect, selectedTeam, team_budgets, onTriggerPrompt } = props;
+    const { dbleague, row, gamekey, provided, snapshot, teams, onSelect, selectedTeam, team_budgets, } = props;
 
     const [open, setOpen] = React.useState(false);
 
     const [selectedValue, setSelectedValue] = React.useState(selectedTeam);
-    const prevValueRef = useRef<string>(selectedValue);
+
     useEffect(() => {
       setSelectedValue(selectedTeam);
     }, [selectedTeam]);
 
     const handleChange = async(event: SelectChangeEvent) => {
-      const previousValue = prevValueRef.current;
 
-      if(dbleague.type === "pro"){
-        console.log("check")
-        console.log(previousValue)
-        let newBudget = team_budgets!.find(item => item.team_name === event.target.value)?.budget!;// - player.value!
-        let result = null;
-        let newSellerBudget = null;
-        if(previousValue !== "Sin traspaso"){
-          console.log("check")
-          result = await onTriggerPrompt!(row.value!);
-          
-          if(result !== -1){
-            newBudget = newBudget - Number(result);
-              
-            if(newBudget >= 0){
-              newSellerBudget = team_budgets!.find(item => item.team_name === previousValue)?.budget! + Number(result);// player.value!
-            }
+
+      if(team_budgets) {
+        // WE ARE IN PRO MODE 
+        
+        if(selectedValue !== "Sin traspaso" && event.target.value === "Sin traspaso"){
+          setSelectedValue(event.target.value as string);
+          onSelect(event.target.value, row, selectedValue)
+
+        }else if(team_budgets.find(item => item.team_name === event.target.value)?.budget! >= row.value!){
+          // IF THE BUDGET WAS ENOUGH -> SEE HOW TO ASSIGN 
+          if(selectedValue === "Sin traspaso"){
+            // IF THE VALUE BEFORE CHANGING WAS NOT A LEAGUE TEAM -> ASSIGN THE TRANSFER
+            onSelect(event.target.value, row, selectedValue);
+          }else{
+            // TRIGGER A NEGOTIATION WINDOW
+            onSelect(event.target.value, row, selectedValue)
           }
-        }
-        onSelect(event.target.value, row, previousValue, newSellerBudget, result, newBudget)
-
-      }
-
-      if(team_budgets && previousValue === "Sin traspaso" && team_budgets.find(item => item.team_name === event.target.value)?.budget! < row.value!){
-        setSelectedValue(previousValue);
+       }else{
+          // IF THE BUDGET IS NOT ENOUGH BETWEEN TWO LEAGUE TEAMS -> TRIGGER A NEGOTIATION WINDOW
+            onSelect(event.target.value, row, selectedValue)
+       }
       }else{
+        // IF NOT IN PRO MODE -> ALWAYS ASSIGN WHATEVER YOU DO
         setSelectedValue(event.target.value as string);
-        onSelect(event.target.value, row, previousValue)
+        onSelect(event.target.value, row)
       }
     };
     return (
