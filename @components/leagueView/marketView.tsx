@@ -48,10 +48,11 @@ interface PlayerSelectProps {
     setCompleteLeagueTeams: React.Dispatch<React.SetStateAction<ParticipantsFull[]>>;
     completeLeagueTeams: ParticipantsFull[];
     setTransferRecords: React.Dispatch<React.SetStateAction<any[]>>;
+    setBudgetRecords: React.Dispatch<React.SetStateAction<any[]>>;
 }
 
 //const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participants}) => {
-const MarketView: React.FC<PlayerSelectProps> = ({dbleague, participants, completeLeagueTeams, setCompleteLeagueTeams, setTransferRecords}) => {
+const MarketView: React.FC<PlayerSelectProps> = ({dbleague, participants, completeLeagueTeams, setCompleteLeagueTeams, setTransferRecords, setBudgetRecords}) => {
 
   console.log(participants)
   const router = useRouter();
@@ -102,10 +103,10 @@ useEffect(() => {
     if(dbleague.type === "pro"){ 
 
       const fetchTeamBudgets = async () => {
-          const res = await fetch(`/api/teambudgets?game=${dbleague.game}&idList=${participants.map((item: participant) => item.team_id).join(",")}`);
+          const res = await fetch(`/api/teambudgets?game=${dbleague.game}&idList=${participants.map((item: participant) => item.team_id).join(",")}&leagueId=${dbleague.ID}`);
           const data = await res.json();
 
-          data.teams.forEach((obj: team_budget) => {
+          /*data.teams.forEach((obj: team_budget) => {
             if (Number(obj.team_avg_std!) >= 80) {
               obj.budget! *= dbleague.big_team_multiplier!;
             } else if (Number(obj.team_avg_std!) >= 75) {
@@ -113,7 +114,7 @@ useEffect(() => {
             } else {
               obj.budget! *= dbleague.small_team_multiplier!;
             }
-          });
+          });*/
         
 
           setTeamBudgets(data.teams);
@@ -195,6 +196,15 @@ useEffect(() => {
                     : item                      // otherwise keep the same
                 )
               );
+              const check = participantData.find(item => item.team_name === source.droppableId)
+                const budgetRecord = {
+                  team_id: check.team_id,
+                  team_name: check.team_name,
+                  budget: newSellerBudget,
+                  game: dbleague.game,
+                  league_id_fk: dbleague.ID
+                };
+                setBudgetRecords(prev => [...prev, budgetRecord]);
             }
             }
         }else{
@@ -218,6 +228,15 @@ useEffect(() => {
                       : item                      // otherwise keep the same
                   )
                 );
+                const check = participantData.find(item => item.team_name === prevSelected)
+                const budgetRecord = {
+                  team_id: check.team_id,
+                  team_name: check.team_name,
+                  budget: newSellerBudget,
+                  game: dbleague.game,
+                  league_id_fk: dbleague.ID
+                };
+                setBudgetRecords(prev => [...prev, budgetRecord]);
               } 
             }
           }
@@ -234,6 +253,15 @@ useEffect(() => {
                 : item                      // otherwise keep the same
             )
           );
+          const check = participantData.find(item => item.team_name === destination.droppableId)
+          const budgetRecord = {
+            team_id: check.team_id,
+            team_name: check.team_name,
+            budget: newBudget,
+            game: dbleague.game,
+            league_id_fk: dbleague.ID
+          };
+          setBudgetRecords(prev => [...prev, budgetRecord]);
         }else{
           allowance = false;
         }
@@ -345,6 +373,15 @@ useEffect(() => {
                 : item                      // otherwise keep the same
             )
           );
+          const check = participantData.find(item => item.team_name === prev)
+          const budgetRecord = {
+            team_id: check.team_id,
+            team_name: check.team_name,
+            budget: newSellerBudget,
+            game: dbleague.game,
+            league_id_fk: dbleague.ID
+          };
+          setBudgetRecords(prev => [...prev, budgetRecord]);
   
         }else if (prev === "Sin traspaso" && team_name !== "Sin traspaso"){
           // SALE FROM MARKET TO TEAM OF THE LEAGUE
@@ -363,6 +400,15 @@ useEffect(() => {
                     : item                      // otherwise keep the same
                 )
               );
+              const check = participantData.find(item => item.team_name === prev)
+              const budgetRecord = {
+                team_id: check.team_id,
+                team_name: check.team_name,
+                budget: newSellerBudget,
+                game: dbleague.game,
+                league_id_fk: dbleague.ID
+              };
+              setBudgetRecords(prev => [...prev, budgetRecord]);
             }
           }
         }
@@ -379,6 +425,15 @@ useEffect(() => {
                 : item                      // otherwise keep the same
             )
           );
+          const check = participantData.find(item => item.team_name === team_name)
+          const budgetRecord = {
+            team_id: check.team_id,
+            team_name: check.team_name,
+            budget: newBudget,
+            game: dbleague.game,
+            league_id_fk: dbleague.ID
+          };
+          setBudgetRecords(prev => [...prev, budgetRecord]);
         }else if (newBudget !== undefined){
           allowance = false;
         }
@@ -474,6 +529,15 @@ useEffect(() => {
                 : item                      // otherwise keep the same
             )
           );
+          const check = participantData.find(item => item.team_name === participantData[participantIndex].team_name)
+          const budgetRecord = {
+            team_id: check.team_id,
+            team_name: check.team_name,
+            budget: newBudget,
+            game: dbleague.game,
+            league_id_fk: dbleague.ID
+          };
+          setBudgetRecords(prev => [...prev, budgetRecord]);
         }else{
           allowance = false;
         }

@@ -166,6 +166,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
   const [updatedMatches, setUpdatedMatches] = useState<boolean>(false);
 
   const [transferRecords, setTransferRecords] = useState<any[]>([])
+  const [budgetRecords, setBudgetRecords] = useState<any[]>([])
 
   useEffect(() => {
 
@@ -416,8 +417,16 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ records: transferRecords }),
         });
-  
-        if (!response.ok) {
+
+        const response3 = await fetch("/api/createteambudgets", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ records: budgetRecords }),
+        });
+    
+        const data3 = await response3.json();
+
+        if (response.ok && response3.ok) {
           const error = await response.text();
           console.error("Transfer creation failed:", error);
           return;
@@ -457,7 +466,15 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
       
           const data = await response.json();
       
-          if (response.ok) {
+          const response2 = await fetch("/api/createteambudgets", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ records: budgetRecords }),
+          });
+    
+        const data2 = await response2.json();
+
+          if (response.ok && response2.ok) {
             console.log("Success:", data);
           } else {
             console.error("Error:", data.error);
@@ -595,7 +612,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
         <TeamsView participantData={completeLeagueTeams} game={dbleague.game}/>
       ) : view === "market" ? (
         <MarketView dbleague={dbleague} participants={participants} completeLeagueTeams={completeLeagueTeams} setCompleteLeagueTeams={setCompleteLeagueTeams}
-          setTransferRecords={setTransferRecords} /> 
+          setTransferRecords={setTransferRecords} setBudgetRecords={setBudgetRecords}/> 
       ) : (
         <></>
       )}

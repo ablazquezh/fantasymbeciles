@@ -478,17 +478,35 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
       }))
     );
 
+    const budgetRecords = team_budgets.flatMap((bData: team_budget)=> 
+    ({
+      team_id: bData.team_id,
+      team_name: bData.team_name,
+      budget: bData.budget,  
+      game: bData.game,
+      league_id_fk: Number(leagueId)
+    })
+    )
+
     try {
       const response = await fetch("/api/createtransfers", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ records: transferRecords }),
         });
-  
       const data = await response.json();
+
+        
+      const response2 = await fetch("/api/createteambudgets", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ records: budgetRecords }),
+        });      
+      const data2 = await response2.json();
+
   
-      if (response.ok) {
-        console.log("Success:", data);
+      if (response.ok && response2.ok) {
+        console.log("Success:", data, data2);
         router.push(`/league?leagueId=${leagueId}`);
       } else {
         console.error("Error:", data.error);

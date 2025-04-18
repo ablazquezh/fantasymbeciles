@@ -225,6 +225,7 @@ model team_budget {
   league_id_fk      Int?
   leagues           leagues? @relation(fields: [league_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "team_budget_ibfk_1")
 
+  @@unique([team_name, game, league_id_fk], map: "team_name")
   @@index([league_id_fk], map: "league_id_fk")
 }
 
