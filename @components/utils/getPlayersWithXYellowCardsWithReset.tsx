@@ -4,7 +4,9 @@ export default function getPlayersWithXYellowCardsWithReset(
     schedule: Schedule,
     currentMatchday: number,
     yellowCardThreshold: number,
-    resetConsecutive: number
+    resetConsecutive: number,
+    injuryReset: boolean,
+    redReset: boolean
   ): string[] {
     const yellowCardMap = new Map<
       string,
@@ -57,7 +59,7 @@ export default function getPlayersWithXYellowCardsWithReset(
         const gotRed = playersWithRedCard.has(player);
         const gotInjury = playersWithInjury.has(player);
   
-        if (gotRed || gotInjury) {
+        if ((gotRed && redReset) || (gotInjury && injuryReset)) {
           // Reset immediately on red
           entry.count = 0;
           entry.history = [];

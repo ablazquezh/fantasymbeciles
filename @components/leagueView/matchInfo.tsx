@@ -73,7 +73,7 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, match
     const [matchStats, setMatchStats] = useState<MatchStats>()
 
     const [redCardPlayers, setRedCardPlayers] = useState<string[]>(getRedCardPlayersWithTeamFromPreviousMatchday(schedule, matchDay));
-    const [yellowCardPlayers, setYellowCardPlayers] = useState<string[]>(getPlayersWithXYellowCardsWithReset(schedule, matchDay, leagueInfo.yellow_cards_suspension!, 2));
+    const [yellowCardPlayers, setYellowCardPlayers] = useState<string[]>(getPlayersWithXYellowCardsWithReset(schedule, matchDay, leagueInfo.card_suspension_amount!, leagueInfo.card_reset_amount!, leagueInfo.card_reset_injury!, leagueInfo.card_reset_red!));
     const [injuredPlayers, setInjuredPlayers] = useState<string[]>(getInjuredPlayers(schedule, matchDay));
     useEffect(() => {
         
@@ -519,7 +519,7 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, match
                                         }}>SANCIONADO <br/> por guarro (ROJA)</Typography>
                                     </div>
                                     )}
-                                    {yellowCardPlayers.includes(row.nickname!) && (
+                                    {(yellowCardPlayers.includes(row.nickname!) && leagueInfo.card_suspension) && (
                                     <div
                                         style={{
                                         position: 'absolute',
@@ -728,7 +728,7 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, match
                                         }}>SANCIONADO <br/> por guarro (ROJA)</Typography>
                                     </div>
                                     )}
-                                    {yellowCardPlayers.includes(row.nickname!) && (
+                                    {(yellowCardPlayers.includes(row.nickname!) && leagueInfo.card_suspension) && (
                                     <div
                                         style={{
                                         position: 'absolute',
