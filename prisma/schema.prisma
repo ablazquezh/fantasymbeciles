@@ -95,6 +95,7 @@ model matches {
   league_id_fk                            Int?
   matchday                                Int?
   played                                  Boolean?
+  bonus                                   bonus[]
   cards                                   cards[]
   goals                                   goals[]
   injuries                                injuries[]
@@ -185,6 +186,7 @@ model teams {
   game                                      String?               @db.VarChar(50)
   team_league                               String?               @db.VarChar(50)
   team_country                              String?               @db.VarChar(50)
+  bonus                                     bonus[]
   cards                                     cards[]
   goals                                     goals[]
   injuries                                  injuries[]
@@ -216,7 +218,8 @@ model injuries {
 }
 
 model team_budget {
-  team_id           Int      @id
+  ID                Int      @id @default(autoincrement())
+  team_id           Int?
   team_name         String?  @db.VarChar(100)
   team_avg_std      Decimal? @db.Decimal(10, 2)
   budget            Int?
@@ -227,6 +230,18 @@ model team_budget {
 
   @@unique([team_name, game, league_id_fk], map: "team_name")
   @@index([league_id_fk], map: "league_id_fk")
+}
+
+model bonus {
+  ID          Int      @id @default(autoincrement())
+  match_id_fk String?  @db.Char(36)
+  team_id_fk  Int?
+  quantity    Int?
+  matches     matches? @relation(fields: [match_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "bonus_ibfk_1")
+  teams       teams?   @relation(fields: [team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "bonus_ibfk_2")
+
+  @@unique([match_id_fk, team_id_fk], map: "match_id_fk")
+  @@index([team_id_fk], map: "team_id_fk")
 }
 
 enum leagues_type {

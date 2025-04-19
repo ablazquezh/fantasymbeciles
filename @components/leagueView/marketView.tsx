@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from "next/router";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, TablePagination, Paper, Button } from "@mui/material";
-import { players, team_budget } from "@prisma/client";
+import { bonus, players, team_budget } from "@prisma/client";
 import { GetServerSidePropsContext, NextPage } from 'next';
 import CollapsableCard from "../primitive/MovableCard"; // Ruta del componente
 import { PrismaClient, Prisma, users, leagues } from "@prisma/client";
@@ -16,6 +16,7 @@ import { ParticipantsFull } from '../types/ParticipantsFull';
 import groupPlayerData from '../utils/groupPlayerData';
 import findTeamNameByPlayerName from '../utils/findTeamNameByPlayerName';
 import NegotiationModal from '../primitive/NegotiationModal';
+import getTeamBonusSum from '../utils/getTeamBonusSum';
 
 // ToDo: Think- in same market session, transfer followed by removal implies no transfer record to insert in DB.
 interface participant {
@@ -49,10 +50,11 @@ interface PlayerSelectProps {
     completeLeagueTeams: ParticipantsFull[];
     setTransferRecords: React.Dispatch<React.SetStateAction<any[]>>;
     setBudgetRecords: React.Dispatch<React.SetStateAction<any[]>>;
+    leagueBonusInfo: bonus[];
 }
 
 //const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participants}) => {
-const MarketView: React.FC<PlayerSelectProps> = ({dbleague, participants, completeLeagueTeams, setCompleteLeagueTeams, setTransferRecords, setBudgetRecords}) => {
+const MarketView: React.FC<PlayerSelectProps> = ({dbleague, participants, completeLeagueTeams, setCompleteLeagueTeams, setTransferRecords, setBudgetRecords, leagueBonusInfo}) => {
 
   console.log(participants)
   const router = useRouter();
@@ -160,8 +162,8 @@ useEffect(() => {
   })))
 
   
-    const { prompt, Modal } = NegotiationModal();
-    const handleOnDragEnd = async(result: DropResult) => {
+  const { prompt, Modal } = NegotiationModal();
+  const handleOnDragEnd = async(result: DropResult) => {
         const { source, destination } = result;
         if (!destination) return; // If dropped outside
     
@@ -187,7 +189,7 @@ useEffect(() => {
   
           if(result !== -1){
             newBudget = newBudget - Number(result);
-            if(newBudget >= 0){
+            if(newBudget + getTeamBonusSum(leagueBonusInfo, participantData.find(item => item.team_name === destination.droppableId).team_id) >= 0){
               const newSellerBudget = team_budgets!.find(item => item.team_name === source.droppableId)?.budget! + Number(result);//+ inputPlayer.value!
               setTeamBudgets(prevItems =>
                 prevItems.map(item =>
@@ -219,7 +221,7 @@ useEffect(() => {
             if(result !== -1){
               newBudget = newBudget - Number(result);
               
-              if(newBudget >= 0){
+              if(newBudget + getTeamBonusSum(leagueBonusInfo, participantData.find(item => item.team_name === destination.droppableId).team_id) >= 0){
                 const newSellerBudget = team_budgets!.find(item => item.team_name === prevSelected)?.budget! + Number(result);//inputPlayer.value!
                 setTeamBudgets(prevItems =>
                   prevItems.map(item =>
@@ -245,7 +247,7 @@ useEffect(() => {
         if (result === null){
           newBudget = newBudget - inputPlayer.value!;
         }
-        if (newBudget >= 0 && result !== -1){
+        if (newBudget + getTeamBonusSum(leagueBonusInfo, participantData.find(item => item.team_name === destination.droppableId).team_id) >= 0 && result !== -1){
           setTeamBudgets(prevItems =>
             prevItems.map(item =>
               item.team_name === destination.droppableId
@@ -391,7 +393,7 @@ useEffect(() => {
   
           if(result !== -1){
             newBudget = newBudget - Number(result);
-            if(newBudget >= 0){
+            if(newBudget + getTeamBonusSum(leagueBonusInfo, participantData.find(item => item.team_name === team_name).team_id) >= 0){
               const newSellerBudget = team_budgets!.find(item => item.team_name === prev)?.budget! + Number(result);//+ inputPlayer.value!
               setTeamBudgets(prevItems =>
                 prevItems.map(item =>
@@ -417,7 +419,7 @@ useEffect(() => {
           // THE MODAL HASN'T OPENED -> IT WAS A BUY FROM MARKET OR IT WAS A SALE TO MARKET
           newBudget = newBudget - player.value!;
         }
-        if (newBudget >= 0 && result !== -1){
+        if (newBudget + getTeamBonusSum(leagueBonusInfo, participantData.find(item => item.team_name === team_name)) >= 0 && result !== -1){
           setTeamBudgets(prevItems =>
             prevItems.map(item =>
               item.team_name === team_name
@@ -697,7 +699,8 @@ console.log(participantData)
           </Paper>
           
           {dbleague.type === "pro" ?
-            <CollapsableCard team_budgets={team_budgets} dbleague={dbleague} participants={participantData} gamekey={dbleague.game} handleRemovePlayer={handleRemovePlayer} /> :
+            <CollapsableCard team_budgets={team_budgets} dbleague={dbleague} participants={participantData} gamekey={dbleague.game} 
+              handleRemovePlayer={handleRemovePlayer} leagueBonusInfo={leagueBonusInfo} /> :
             <CollapsableCard dbleague={dbleague} participants={participantData} gamekey={dbleague.game} handleRemovePlayer={handleRemovePlayer} />
           }          
         </DragDropContext>

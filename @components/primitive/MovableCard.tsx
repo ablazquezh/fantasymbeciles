@@ -3,7 +3,7 @@ import { Card, CardContent, IconButton, Popover, Tooltip} from "@mui/material";
 import { KeyboardArrowUp, KeyboardArrowDown } from "@mui/icons-material";
 import { DragDropContext, Droppable, Draggable, DropResult} from "@hello-pangea/dnd";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, TablePagination, Paper } from "@mui/material";
-import { leagues, players, team_budget } from "@prisma/client";
+import { bonus, leagues, players, team_budget } from "@prisma/client";
 import React from "react";
 import CloseIcon from '@mui/icons-material/Close';
 import ReactDOM from 'react-dom';
@@ -16,6 +16,7 @@ import { RowData } from '../types/RowData';
 import groupPlayerData from "../utils/groupPlayerData";
 import getRowColor from "../utils/getRowColor";
 import EuroSymbolIcon from '@mui/icons-material/EuroSymbol';
+import getTeamBonusSum from "../utils/getTeamBonusSum";
 
 type PortalAwareItemProps = {
   provided: DraggableProvided;
@@ -69,10 +70,17 @@ const HoverBox = styled.div<{ isHovered: boolean, isDragging: boolean }>`
 
 `;
 
+interface participant {
+  participant_id: number;
+  user_name: string;
+  team_name: string;
+  team_id: number;
+}
 
 interface Participants {
   user_name: string;
   team_name: string;
+  team_id: number;
   players: RowData[];
 }
 
@@ -82,6 +90,7 @@ interface ParticipantsFull {
   };
   user_name: string;
   team_name: string;
+  team_id: number;
   players: RowData[];
 }
 
@@ -94,6 +103,7 @@ interface MovableCardProps {
   ) => void;
   dbleague: leagues;
   team_budgets?: team_budget[];
+  leagueBonusInfo?: bonus[];
 }
 
 // Custom column names
@@ -104,7 +114,7 @@ const globalColnames = {
 };
 
 
-const MovableCard: React.FC<MovableCardProps> = ({team_budgets, dbleague, gamekey, participants, handleRemovePlayer}) => {
+const MovableCard: React.FC<MovableCardProps> = ({team_budgets, dbleague, gamekey, participants, handleRemovePlayer, leagueBonusInfo}) => {
   const [expanded, setExpanded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [participantData, setParticipantData] = useState<ParticipantsFull[]>([])
@@ -203,8 +213,15 @@ const MovableCard: React.FC<MovableCardProps> = ({team_budgets, dbleague, gameke
                                               },
                                             },
                                           }}>
-                    <Chip key={participant.team_name+"nj"} label={Intl.NumberFormat('de-DE').format(team_budgets?.find(item => item.team_name === participant.team_name)?.budget!) + " €"} 
-                      sx={{ margin: "2px", padding:2, mr: "auto"}} />
+                      {leagueBonusInfo !== undefined ? ( 
+                        <Chip key={participant.team_name+"nj"} label={Intl.NumberFormat('de-DE').format(team_budgets?.find(item => item.team_name === participant.team_name)?.budget!
+                          + getTeamBonusSum(leagueBonusInfo!, participant.team_id)) + " €"} 
+                          sx={{ margin: "2px", padding:2, mr: "auto"}} />
+                        ) : (
+                        <Chip key={participant.team_name+"nj"} label={Intl.NumberFormat('de-DE').format(team_budgets?.find(item => item.team_name === participant.team_name)?.budget!) + " €"} 
+                          sx={{ margin: "2px", padding:2, mr: "auto"}} />
+                        )
+                      }
                     </Tooltip>
                   }
                   <Tooltip title={"Núm. jugadores"} placement="top" arrow  componentsProps={{

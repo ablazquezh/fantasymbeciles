@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef} from 'react'
 import { useRouter } from "next/router";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, Divider, Paper, Button } from "@mui/material";
 import { GetServerSidePropsContext, NextPage } from 'next';
-import { PrismaClient, Prisma, users, leagues, matches, players, goals, cards, injuries, team_budget } from "@prisma/client";
+import { PrismaClient, Prisma, users, leagues, matches, players, goals, cards, injuries, team_budget, bonus } from "@prisma/client";
 import generateRoundRobinSchedule from '@/@components/utils/scheduleGenerator';
 import LeagueDashboard from '@/@components/leagueView/leagueDashboard';
 import mergeData from '@/@components/utils/mergeData';
@@ -26,6 +26,8 @@ import injuryRecordGenerator from '@/@components/utils/injuryGenerator';
 import { InjuryRecords } from '@/@components/types/InjuryRecords';
 import MarketView from '@/@components/leagueView/marketView';
 import reshapeLeagueTeams from '@/@components/utils/reshapeLeagueTeams';
+import bonusRecordGenerator from '@/@components/utils/bonusRecordGenerator';
+import { BonusRecords } from '@/@components/types/BonusRecords';
 
 const prisma = new PrismaClient();
 
@@ -44,6 +46,14 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   );
 
   const dbgoals: goals[] | null = await prisma.goals.findMany({
+    where: {matches: {league_id_fk: Number(leagueId)}} ,
+    include: {
+      matches: true
+    }
+  }
+  );
+
+  const dbbonus: bonus[] | null = await prisma.bonus.findMany({
     where: {matches: {league_id_fk: Number(leagueId)}} ,
     include: {
       matches: true
@@ -95,7 +105,8 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     dbcards: dbcards,
     dbgoals: dbgoals,
     dbinjuries: dbinjuries,
-    participants: participants
+    participants: participants,
+    dbbonus: dbbonus
   } };
 }
 
@@ -135,6 +146,7 @@ interface LeagueProps {
   dbgoals: goals[];
   dbinjuries: injuries[];
   participants: any[];
+  dbbonus: bonus[];
 }
 
 interface leagueTeams {
@@ -144,11 +156,12 @@ interface leagueTeams {
   team_name: string;
 }
 
-const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, dbmatches, leagueTeams, dbcards, dbgoals, dbinjuries, participants}) => {
+const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, dbmatches, leagueTeams, dbcards, dbgoals, dbinjuries, participants, dbbonus}) => {
 
   const [topScorersInfo, setTopScorers] = useState<TopScorers[]>(topScorers)
   const [leagueTableInfo, setLeagueTable] = useState<LeagueTable[]>(leagueTable)
   const [leagueTeamsInfo, setLeagueTeams] = useState<leagueTeams[]>(leagueTeams)
+  const [leagueBonusInfo, setLeagueBonus] = useState<bonus[]>(dbbonus)
 
   const [schedule, setSchedule] = useState<Schedule | null>(null)
   const [view, setView] = useState<string>("home")
@@ -308,6 +321,33 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
       }
       postGoals()
 
+
+      // POST BONUS
+      const bonusRecords: BonusRecords[] = bonusRecordGenerator(schedule!, leagueTableInfo, dbleague);
+
+      const postBonus = async () => {
+        try {
+          const response = await fetch("/api/createbonus", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ records: bonusRecords }),
+            });
+      
+          const data = await response.json();
+      
+          if (response.ok) {
+            console.log("Success:", data);
+            setUpdatedGoals(true)
+          } else {
+            console.error("Error:", data.error);
+          }
+        } catch (error) {
+          console.error("Request failed:", error);
+        }
+      }
+      postBonus()
+
+
       // POST CARDS
       const cardRecords: CardRecords[] = cardRecordGenerator(schedule!, leagueTableInfo, leagueTeamsInfo);
 
@@ -426,7 +466,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
     
         const data3 = await response3.json();
 
-        if (response.ok && response3.ok) {
+        if (!response.ok && !response3.ok) {
           const error = await response.text();
           console.error("Transfer creation failed:", error);
           return;
@@ -564,6 +604,23 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
     };
     fetchTopScorers();
 
+
+    const fetchBonus = async () => {
+      try {
+        const response = await fetch(`/api/bonus?leagueId=${dbleague.ID}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch top scorers');
+        }
+    
+        const leagueBonus: bonus[] = await response.json();
+
+        setLeagueBonus(leagueBonus);
+      } catch (error) {
+        console.error(error);
+        // Handle error (e.g., show a message to the user)
+      }
+    };
+    fetchBonus();
     
     setUpdatedMatches(false)
 
@@ -612,7 +669,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
         <TeamsView participantData={completeLeagueTeams} game={dbleague.game}/>
       ) : view === "market" ? (
         <MarketView dbleague={dbleague} participants={participants} completeLeagueTeams={completeLeagueTeams} setCompleteLeagueTeams={setCompleteLeagueTeams}
-          setTransferRecords={setTransferRecords} setBudgetRecords={setBudgetRecords}/> 
+          setTransferRecords={setTransferRecords} setBudgetRecords={setBudgetRecords} leagueBonusInfo={leagueBonusInfo} /> 
       ) : (
         <></>
       )}
