@@ -158,6 +158,7 @@ interface leagueTeams {
 
 const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, dbmatches, leagueTeams, dbcards, dbgoals, dbinjuries, participants, dbbonus}) => {
 
+
   const [topScorersInfo, setTopScorers] = useState<TopScorers[]>(topScorers)
   const [leagueTableInfo, setLeagueTable] = useState<LeagueTable[]>(leagueTable)
   const [leagueTeamsInfo, setLeagueTeams] = useState<leagueTeams[]>(leagueTeams)
@@ -210,13 +211,14 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
     groupedPlayers: groupPlayerData(participant.players),
     }));
     setCompleteLeagueTeams(transformed)
+    
   }, [players]);
 
-  const hasRun = useRef(false);
+  //const hasRun = useRef(false);
   useEffect(() => {
     
-    if (hasRun.current) return;
-    hasRun.current = true;
+    //if (hasRun.current) return;
+    //hasRun.current = true;
     if(dbmatches.length === 0){
       if(schedule === null){
       const generatedSchedule = generateRoundRobinSchedule(leagueTableInfo.map(team => team.team_name))
@@ -254,14 +256,13 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
       }*/
       
     }else{
-      console.log("Loaded matches")
-      const generatedSchedule = generateScheduleFromDB(dbmatches, dbcards, dbgoals, dbinjuries, leagueTableInfo, completeLeagueTeams)
-      console.log(generatedSchedule)
-      setSchedule( generatedSchedule )
+        console.log("Loaded matches")
+        const generatedSchedule = generateScheduleFromDB(dbmatches, dbcards, dbgoals, dbinjuries, leagueTableInfo, completeLeagueTeams!)
+     
+        setSchedule( generatedSchedule )}
       // Means that there were results stored in the DB and here we must reshape them
-    }
-  }, [dbmatches, completeLeagueTeams]);
-
+    
+  }, [completeLeagueTeams]);
 
   useEffect(() => {
     // Select the parent and child elements
@@ -298,7 +299,6 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
     if(view === "match"){
       // POST GOALS
       const goalRecords: GoalRecords[] = goalRecordGenerator(schedule!, leagueTableInfo, leagueTeamsInfo);
-      
       const postGoals = async () => {
         try {
           const response = await fetch("/api/creategoals", {
@@ -324,7 +324,9 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
 
       // POST BONUS
       const bonusRecords: BonusRecords[] = bonusRecordGenerator(schedule!, leagueTableInfo, dbleague);
-
+      const removeBonusRecords = dbbonus.filter(aObj => 
+        !bonusRecords.some(bObj => bObj.match_id_fk === aObj.match_id_fk && bObj.team_id_fk === aObj.team_id_fk)
+      ).map(item => item.ID);
       const postBonus = async () => {
         try {
           const response = await fetch("/api/createbonus", {
@@ -345,7 +347,27 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
           console.error("Request failed:", error);
         }
       }
+      const removeBonus = async () => {
+        try {
+          const response = await fetch("/api/removebonus", {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ idList: removeBonusRecords }),
+            });
+      
+          const data = await response.json();
+      
+          if (response.ok) {
+            console.log("Success:", data);
+          } else {
+            console.error("Error:", data.error);
+          }
+        } catch (error) {
+          console.error("Request failed:", error);
+        }
+      }
       postBonus()
+      removeBonus()
 
 
       // POST CARDS
@@ -613,7 +635,8 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
         }
     
         const leagueBonus: bonus[] = await response.json();
-
+        console.log(":::::::::::::::::")
+        console.log(leagueBonus)
         setLeagueBonus(leagueBonus);
       } catch (error) {
         console.error(error);

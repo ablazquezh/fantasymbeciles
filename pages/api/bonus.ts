@@ -14,7 +14,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     if(leagueId !== null){
       const bonus = await prisma.bonus.findMany({
-        where: {ID: Number(leagueId)}
+        where: {matches: {league_id_fk: Number(leagueId)}} ,
+        include: {
+          matches: true
+        }
       });
       res.status(200).json(bonus);
     }

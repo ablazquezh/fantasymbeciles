@@ -118,7 +118,6 @@ const MovableCard: React.FC<MovableCardProps> = ({team_budgets, dbleague, gameke
   const [expanded, setExpanded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [participantData, setParticipantData] = useState<ParticipantsFull[]>([])
-
   useEffect(() => {
     if (participants.length > 0) {
       const transformed = participants.map((participant) => ({
@@ -132,7 +131,7 @@ const MovableCard: React.FC<MovableCardProps> = ({team_budgets, dbleague, gameke
   const handleClickRemove = (participantIndex: number, playername: string,) => {
     handleRemovePlayer(participantIndex, playername);
   };
-
+  
   //console.log(participants)
   
   return (

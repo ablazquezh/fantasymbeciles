@@ -56,7 +56,7 @@ interface PlayerSelectProps {
 //const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participants}) => {
 const MarketView: React.FC<PlayerSelectProps> = ({dbleague, participants, completeLeagueTeams, setCompleteLeagueTeams, setTransferRecords, setBudgetRecords, leagueBonusInfo}) => {
 
-  console.log(participants)
+console.log("-----bonuses--------", leagueBonusInfo)
   const router = useRouter();
   const [league, setLeague] = useState<string | null>(null);
 

@@ -9,43 +9,45 @@ export default function bonusRecordGenerator(schedule: Schedule, leagueTable: an
     
     schedule!.ida.forEach(day => {
     day.matches.forEach((match: MatchInfo) => {
-        
-        let localctr = 0;
-        let visitorctr = 0;
+        if(match.played){
 
-        match.local.goals.forEach((goal: any) => {
-            localctr = localctr + goal.n
-        
-        });
+            let localctr = 0;
+            let visitorctr = 0;
 
-        match.visitor.goals.forEach((goal: any) => {
-            visitorctr = visitorctr + goal.n
+            match.local.goals.forEach((goal: any) => {
+                localctr = localctr + goal.n
+            
+            });
 
-        });
+            match.visitor.goals.forEach((goal: any) => {
+                visitorctr = visitorctr + goal.n
 
-        if(localctr > visitorctr){
-            bonusRecords.push({
-                team_id_fk: leagueTable.find(item => item.team_name === match.local.team)?.team_id,
-                match_id_fk: match.match_id,
-                quantity: dbleague.win_bonus
             });
-        }else if(localctr < visitorctr){
-            bonusRecords.push({
-                team_id_fk: leagueTable.find(item => item.team_name === match.visitor.team)?.team_id,
-                match_id_fk: match.match_id,
-                quantity: dbleague.win_bonus
-            });
-        }else{
-            bonusRecords.push({
-                team_id_fk: leagueTable.find(item => item.team_name === match.local.team)?.team_id,
-                match_id_fk: match.match_id,
-                quantity: dbleague.draw_bonus
-            });
-            bonusRecords.push({
-                team_id_fk: leagueTable.find(item => item.team_name === match.visitor.team)?.team_id,
-                match_id_fk: match.match_id,
-                quantity: dbleague.draw_bonus
-            });
+
+            if(localctr > visitorctr){
+                bonusRecords.push({
+                    team_id_fk: leagueTable.find(item => item.team_name === match.local.team)?.team_id,
+                    match_id_fk: match.match_id,
+                    quantity: dbleague.win_bonus
+                });
+            }else if(localctr < visitorctr){
+                bonusRecords.push({
+                    team_id_fk: leagueTable.find(item => item.team_name === match.visitor.team)?.team_id,
+                    match_id_fk: match.match_id,
+                    quantity: dbleague.win_bonus
+                });
+            }else{
+                bonusRecords.push({
+                    team_id_fk: leagueTable.find(item => item.team_name === match.local.team)?.team_id,
+                    match_id_fk: match.match_id,
+                    quantity: dbleague.draw_bonus
+                });
+                bonusRecords.push({
+                    team_id_fk: leagueTable.find(item => item.team_name === match.visitor.team)?.team_id,
+                    match_id_fk: match.match_id,
+                    quantity: dbleague.draw_bonus
+                });
+            }
         }
 
     });
@@ -53,6 +55,7 @@ export default function bonusRecordGenerator(schedule: Schedule, leagueTable: an
 
     schedule!.vuelta.forEach(day => {
     day.matches.forEach((match: MatchInfo) => {
+        if(match.played){
         
             let localctr = 0;
             let visitorctr = 0;
@@ -91,7 +94,7 @@ export default function bonusRecordGenerator(schedule: Schedule, leagueTable: an
                     quantity: dbleague.draw_bonus
                 });
             }
-
+        }
     });
     });
 

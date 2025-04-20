@@ -22,13 +22,13 @@ const getScheduleInfo = (match: MatchRecords, dbgoals: goals[], dbcards: cards[]
   // Group matches by matchday
   //const matchday = match.matchday!;
   //const stage = matchday! <= 3 ? "ida" : "vuelta"; // Determine stage (ida or vuelta)
-
+  
   const scoredGoals = dbgoals.filter(item => item.match_id_fk === match.ID && item.team_id_fk == team_fk)
   const goalList = scoredGoals.map(item => ({
+    
     player: findPlayerNameByPlayerID(participants, item.player_id_fk!),
     n: item.quantity,
   }));
-  
   const shownYCards = dbcards.filter(item => item.match_id_fk === match.ID && item.team_id_fk == team_fk && item.type === "yellow")
   const yCardList = shownYCards.map(item => (findPlayerNameByPlayerID(participants, item.player_id_fk!)) );
 
