@@ -7,7 +7,6 @@ import Button from '@mui/material/Button'
 // import IconButton from '@mui/material/IconButton';
 // import MenuIcon from '@mui/icons-material/Menu';
 import TemporaryDrawer from './Drawer'
-import UserMenu from './UserMenu'
 //import { useAuth0 } from '@auth0/auth0-react'
 import { request } from 'graphql-request'
 //import { creatUser } from '../../gql_queries'
