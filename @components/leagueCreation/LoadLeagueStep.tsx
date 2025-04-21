@@ -1,0 +1,86 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Paper,
+  Box,
+} from "@mui/material";
+import { leagues } from '@prisma/client';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, TextField, MenuItem, Select, InputLabel, FormControl } from "@mui/material";
+import { useRouter } from "next/router";
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+
+interface LeagueSelectProps {
+    leagues: leagues[];
+  }
+
+const LoadLeagueStep: React.FC<LeagueSelectProps> = ({ leagues }) => {
+  const router = useRouter();
+
+  const handleClick = (leagueId: number) => {
+    router.push(`/league?leagueId=${String(leagueId)}`);
+
+  };
+
+  console.log(leagues)
+  return (
+    <Paper sx={{ paddingTop: 4, paddingBottom: 4, marginTop: 11,  display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+
+      <Box sx={{marginRight: 6, marginLeft: 6, display: "flex", flexDirection: "column", width:"70%" }}>
+
+        <TableContainer sx={{ minHeight: "550px", maxHeight: "550px", overflowY: "auto" }}>
+          <Table stickyHeader>
+              <TableHead>
+                  <TableRow>
+                      {["Nombre", "Fecha"].map((col) => (
+                          <TableCell
+                              key={col}
+                              sx={{
+                                  fontWeight: "bold",
+                                  textAlign: "center" // Center text in the header
+                              }} >
+                            {col}
+                          </TableCell>
+                            
+                      ))}
+                      {/* Add a column for the "Load" button */}
+                      <TableCell></TableCell>
+                  </TableRow>
+              </TableHead>
+              <TableBody sx={{backgroundColor: '#fafafa'}}>
+                  {leagues.map((row, index) => (
+                      <TableRow key={index} sx={{ backgroundColor: 'white' }} >
+                          <TableCell sx={{ textAlign: "center"  }} >
+                            {row.league_name}
+                          </TableCell >
+                          <TableCell sx={{ textAlign: "center" }} >
+                            { new Date(row.created_at!).toLocaleDateString('en-GB')}
+                          </TableCell>
+                          
+                          {/* Add a cell for the "Add" button */}
+                          <TableCell sx={{width:"10%"}}>
+                              <IconButton
+                                  onClick={() => handleClick(row.ID)} // Trigger function on click
+                                  color="primary"
+                                  sx={{
+                                      backgroundColor: "green", // Set the default color to green
+                                      color: "white", // Set the icon color to white
+                                      '&:hover': {
+                                          backgroundColor: "lightgreen", // Change to a lighter green on hover
+                                      },
+                                      padding: "0px", // Optional: Adjust button padding if necessary
+                                  }}
+                              >
+                                  <PlayArrowIcon />
+                              </IconButton>
+                          </TableCell>
+                      </TableRow>
+                  ))}
+              </TableBody>
+          </Table>
+        </TableContainer>
+
+      </Box>
+    </Paper>
+  );
+};
+
+export default LoadLeagueStep;

@@ -1,59 +1,80 @@
-// components/ProgressBar.tsx
-import { Box, LinearProgress, Typography } from "@mui/material";
+'use client';
 
-interface ProgressBarProps {
-  value: number; // value between 0 and 100
-  label?: string;
+import { useState, useEffect } from 'react';
+import { useInView } from 'react-intersection-observer';
+import { motion } from 'framer-motion';
+import styles from '../styles/Timeline.module.css';
+import Box from '@mui/material/Box'
+import VerticalLayoutTextboxSearch from '@/@components/layout/VerticalLayoutTextboxSearch';
+const timelineData = [
+  { title: 'Start Project', icon: '🚀', description: 'Kickoff the build.' },
+  { title: 'Design', icon: '🎨', description: 'Wireframes and UI/UX.' },
+  { title: 'Development', icon: '💻', description: 'Code and components.' },
+  { title: 'Testing', icon: '🧪', description: 'QA and bug squashing.' },
+  { title: 'Launch', icon: '🚢', description: 'Deploy to production.' },
+];
+
+export default function HorizontalTimeline() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Update the progress bar
+  const updateProgress = (index: number) => {
+    setCurrentIndex(index);
+  };
+
+  return (
+    <VerticalLayoutTextboxSearch sx={{ width: "60%" }}>
+    <div className={styles.timelineWrapper}>
+      <div className={styles.timelineTrack}>
+        {timelineData.map((item, index) => (
+          <TimelineItem
+            key={index}
+            index={index}
+            {...item}
+            onInView={updateProgress}
+          />
+        ))}
+      </div>
+      {/* Progress Bar */}
+      <div className={styles.progressBarWrapper}>
+        <div
+          className={styles.progressBar}
+          style={{ width: `${((currentIndex + 1) / timelineData.length) * 100}%` }}
+        />
+      </div>
+    </div>
+    </VerticalLayoutTextboxSearch>
+  );
 }
 
-const ProgressBar: React.FC<ProgressBarProps> = ({ value, label }) => {
-  return (
-    <Box sx={{widht:310}}>
-      {label && (
-        <Typography variant="body2" mb={0.5}>
-          {label}
-        </Typography>
-      )}
-      <Box display="flex" alignItems="center">
-        <Box width="100%" mr={1}>
-          <LinearProgress variant="determinate" value={value}  sx={{
-              height: 12,
-              borderRadius: 6,
-              '& .MuiLinearProgress-bar': {
-                backgroundColor: '#1976d2', // nice blue
-              },
-              backgroundColor: '#e3f2fd', // light blue background
-            }}
-          />
-        </Box>
-      </Box>
-    </Box>
-  );
-};
+function TimelineItem({
+  title,
+  icon,
+  description,
+  index,
+  onInView,
+}: any) {
+  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.3 });
 
-
-
-// pages/index.tsx (or any component)
-import { useState, useEffect } from "react";
-import {  Button } from "@mui/material";
-
-export default function Home() {
-  const [progress, setProgress] = useState(100);
-
-  const increase = () => setProgress((prev) => Math.min(prev + 10, 100));
-  const decrease = () => setProgress((prev) => Math.max(prev - 10, 0));
+  useEffect(() => {
+    if (inView) {
+      onInView(index); // Update progress when in view
+    }
+  }, [inView, index, onInView]);
 
   return (
-    <Box p={4} sx={{width:310}}>
-      <ProgressBar value={progress} label="Completion" />
-      <Box mt={2} display="flex" gap={2}>
-        <Button variant="contained" onClick={decrease}>
-          - Decrease
-        </Button>
-        <Button variant="contained" onClick={increase}>
-          + Increase
-        </Button>
-      </Box>
-    </Box>
+    <motion.div
+      ref={ref}
+      className={`${styles.timelineItem} ${inView ? styles.active : ''}`}
+      initial={{ opacity: 0, x: 50 }}
+      animate={inView ? { opacity: 1, x: 0 } : {}}
+      transition={{ duration: 0.6, ease: 'easeOut' }}
+    >
+      <div className={styles.icon}>{icon}</div>
+      <div className={styles.content}>
+        <h3>{title}</h3>
+        <p>{description}</p>
+      </div>
+    </motion.div>
   );
 }

@@ -13,6 +13,7 @@ import StepperNav from "../@components/leagueCreation/BreadcrumbsNav";
 import { Fade, Container, Paper } from "@mui/material";
 import { useEffect, useState } from "react";
 import { PrismaClient, Prisma, users, leagues } from "@prisma/client";
+import LoadLeagueStep from '@/@components/leagueCreation/LoadLeagueStep';
   
 const prisma = new PrismaClient();
 
@@ -56,18 +57,18 @@ const FantasyHomePage: NextPage = () => {
   if (!mounted) return null
 
   const handleStepChange = (newStep: number) => {
-    if (newStep > 1) setShowBreadcrumbs(true); // Show breadcrumbs after Step 1
+    if (newStep > 1 && newStep < 999) {
+      setShowBreadcrumbs(true); // Show breadcrumbs after Step 1
+    }
     setStep(newStep);
   };
-  console.log(formData)
-  console.log(users)
-  console.log(leagues)
+  
   return (
 
     <VerticalLayoutTextboxSearch sx={{ width: "60%" }}>
 
       
-        {step > 1 && <StepperNav step={step} setStep={handleStepChange} />}
+        {showBreadcrumbs && <StepperNav step={step} setStep={handleStepChange} />}
 
         <Fade in={step === 1} timeout={500} unmountOnExit>
           <div>{step === 1 ? <HomeSelection setStep={handleStepChange} /> : <span />}</div>
@@ -91,6 +92,10 @@ const FantasyHomePage: NextPage = () => {
 
         <Fade in={step === 5} timeout={500} unmountOnExit>
           <div>{step === 5 && <TeamSelectStep formData={formData} setStep={handleStepChange} setFormData={setFormData} users={users} leagues={leagues} />}</div>
+        </Fade>
+
+        <Fade in={step === 999} timeout={500} unmountOnExit>
+          <div>{step === 999 && <LoadLeagueStep leagues={leagues} />}</div>
         </Fade>
 
       
