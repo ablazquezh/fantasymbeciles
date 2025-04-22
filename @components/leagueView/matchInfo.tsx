@@ -376,7 +376,7 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, match
         <MatchCard matchInfo={matchInfo} game={game!} handleMatchClick={undefined} handleMatchInfoClick={handleMatchInfoClick} matchIndex={null} matchRound={null} matchDay={null} />
         <Box sx={{width: "100%", display: "flex", alignContent: "center", justifyContent: "center"}}>
 
-            <Box sx={{mr: "30%", mt: "2%", width: "30%"}}>
+            <Box sx={{mr: "30%", mt: "2%", width: "30vw"}}>
                 <TableContainer sx={{ minHeight: "200px", maxHeight: "550px", maxWidth: "100%", minWidth: "100%", overflowY: "auto" }} >
     
                     <Table stickyHeader>
@@ -585,7 +585,7 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, match
                 </TableContainer>
             </Box>
 
-            <Box sx={{ mt: "2%", width: "30%"}}>
+            <Box sx={{ mt: "2%", width: "30vw"}}>
                 <TableContainer sx={{ minHeight: "200px", maxHeight: "550px", maxWidth: "100%", minWidth: "100%", overflowY: "auto", }} >
     
                     <Table stickyHeader>
