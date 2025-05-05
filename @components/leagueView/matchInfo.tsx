@@ -14,6 +14,7 @@ import getRedCardPlayersWithTeamFromPreviousMatchday from '../utils/getRedCardPl
 import getPlayersWithXYellowCardsWithReset from '../utils/getPlayersWithXYellowCardsWithReset';
 import getInjuredPlayers from '../utils/getInjuredPlayers';
 import findTeamNameByPlayerName from '../utils/findTeamNameByPlayerName';
+import getNYCardsPlayer from '../utils/getNYCardsPlayer';
 
 interface MatchInfoDashboardProps {
     matchInfo: MatchInfo; 
@@ -458,6 +459,7 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, match
                                                 },  // Change color when unchecked (e.g., blue)
                                               }}
                                         />
+                                        <Typography variant="caption">({getNYCardsPlayer(row.nickname!, schedule, matchDay, leagueInfo.card_reset_amount!, leagueInfo.card_reset_injury!, leagueInfo.card_reset_red!)}/{leagueInfo.card_suspension_amount})</Typography>
 
                                     </TableCell>
 
@@ -654,7 +656,7 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, match
 
                                     </TableCell>
 
-                                    <TableCell >
+                                    <TableCell sx={{ borderLeft: '1px solid rgba(0, 0, 0, 0.12)' }}>
 
                                         <Checkbox
                                             checked={matchStats[row.nickname!].ycard}
@@ -667,6 +669,7 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, match
                                                 },  // Change color when unchecked (e.g., blue)
                                               }}
                                         />
+                                        <Typography variant="caption">({getNYCardsPlayer(row.nickname!, schedule, matchDay, leagueInfo.card_reset_amount!, leagueInfo.card_reset_injury!, leagueInfo.card_reset_red!)}/{leagueInfo.card_suspension_amount})</Typography>
 
                                     </TableCell>
 

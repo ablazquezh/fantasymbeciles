@@ -47,7 +47,7 @@ export default function getPlayersWithXYellowCardsWithReset(
           for (const player of team.rcards) {
             playersWithRedCard.add(player);
           }
-          for (const player of team.rcards) {
+          for (const player of team.injuries) {
             playersWithInjury.add(player);
           }
         }
