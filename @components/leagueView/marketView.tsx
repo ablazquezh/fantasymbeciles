@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from "next/router";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, TablePagination, Paper, Button } from "@mui/material";
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, TablePagination, Paper, Button, TextField } from "@mui/material";
 import { bonus, players, team_budget } from "@prisma/client";
 import { GetServerSidePropsContext, NextPage } from 'next';
 import CollapsableCard from "../primitive/MovableCard"; // Ruta del componente
@@ -71,7 +71,8 @@ console.log("-----bonuses--------", leagueBonusInfo)
 
   // CUSTOM DROPDOWN CONTROL
   const [selected, setSelected] = useState<string[]>([]); 
-  // CUSTOM DROPDOWN CONTROL
+
+  const [nameFilter, setNameFilter] = useState<string>(""); 
 
   // MIN-MAX CONTROL
   const [minValue, setMinValue] = useState('0');
@@ -84,7 +85,7 @@ console.log("-----bonuses--------", leagueBonusInfo)
 
     setPage(0);
 
-    const res = await fetch(`/api/players?page=${page + 1}&pageSize=${rowsPerPage}&game=${dbleague.game}&minValue=${minValue}&maxValue=${maxValue}&positions=${selected}`);
+    const res = await fetch(`/api/players?page=${page + 1}&pageSize=${rowsPerPage}&game=${dbleague.game}&minValue=${minValue}&maxValue=${maxValue}&positions=${selected}&playerName=${nameFilter}`);
     
     const data = await res.json();
 
@@ -129,7 +130,7 @@ useEffect(() => {
   
   useEffect(() => {
     const fetchPlayers= async () => {
-        const res = await fetch(`/api/players?page=${page + 1}&pageSize=${rowsPerPage}&game=${dbleague.game}&minValue=${minValue}&maxValue=${maxValue}&positions=${selected}`);
+        const res = await fetch(`/api/players?page=${page + 1}&pageSize=${rowsPerPage}&game=${dbleague.game}&minValue=${minValue}&maxValue=${maxValue}&positions=${selected}&playerName=${nameFilter}`);
         const data = await res.json();
         
         setPlayers(data.data);
@@ -605,7 +606,7 @@ console.log(participantData)
 
         <DragDropContext onDragEnd={handleOnDragEnd}>
 
-          <Paper sx={{ padding: 4, marginTop: 10 }}>
+          <Paper sx={{ padding: 4, paddingBottom: 2, marginTop: 10 }}>
             
 
             <Droppable droppableId="mainTable" isDropDisabled={true}>
@@ -670,6 +671,28 @@ console.log(participantData)
             <Box display="flex" marginTop={2} gap={2} sx={{ justifyContent: "center", alignItems: "center", }} >
               
               <MinMax minValue={minValue} maxValue={maxValue} setMinValue={setMinValue} setMaxValue={setMaxValue} />
+
+              <TextField
+                label="Nombre de jugador"
+                variant="outlined"
+                value={nameFilter}
+                onChange={(e) => setNameFilter(e.target.value)}
+                inputProps={{
+                  sx: {
+                    height: 2, // your custom height in pixels
+                    alignItems: 'center', // Ensures input content is centered
+                  },
+                  pattern: '[A-Za-z]*'
+                }}
+                InputLabelProps={{
+                  sx: {
+                    color: 'gray',
+                  },
+                  shrink: true, // Prevent label from floating
+                }}
+                sx={{width: "15%", marginLeft: 2 }}
+              />
+
               <CustomDropdownSelect selected={selected} setSelected={setSelected} />
 
               <Button

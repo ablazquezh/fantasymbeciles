@@ -73,7 +73,7 @@ export default function CustomDropdownSelect ({ selected, setSelected }: NumberR
   };
 
   // Display selected checkboxes as labels (excluding parents)
-  const label = selected.length ? selected.join(', ') : 'Selector de posiciones';
+  const label = selected.length ? selected.join(', ') : 'Posiciones';
 
   return (
     <>
@@ -94,7 +94,7 @@ export default function CustomDropdownSelect ({ selected, setSelected }: NumberR
           whiteSpace: 'nowrap', // Prevent text from wrapping
           fontSize:12,
           height: "20%",
-          width: "20%", // Set a fixed width
+          width: "10%", // Set a fixed width
         }}
       >
         {label}

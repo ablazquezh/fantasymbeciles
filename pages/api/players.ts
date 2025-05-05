@@ -10,7 +10,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(405).json({ message: "Método no permitido" });
     }
 
-    const { page = 1, pageSize = 15, game, positions, minValue=0, maxValue=99 } = req.query;
+    const { page = 1, pageSize = 15, game, positions, minValue=0, maxValue=99, playerName="" } = req.query;
 
     const posList: string[] = Array.isArray(positions)
     ? positions
@@ -33,6 +33,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             skip: (pageNumber - 1) * pageSizeNumber,
             take: pageSizeNumber,
             where: {game: gameQuery,
+              nickname: {
+                contains: "%"+playerName+"%",    // Case-insensitive search
+              },
               positions_join: {
                 some: {
                   positions: {
@@ -76,6 +79,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               average: {
                 gte: minV,  // greater than or equal to 20
                 lte: maxV,  // less than or equal to 30
+              },
+              nickname: {
+                contains: "%"+playerName+"%",    // Case-insensitive search
               },
             },
             include: {

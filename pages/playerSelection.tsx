@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { ChangeEvent, useEffect, useState } from 'react'
 import { useRouter } from "next/router";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, TablePagination, Paper, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button } from "@mui/material";
 import { players, team_budget } from "@prisma/client";
@@ -95,7 +95,9 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
 
   // CUSTOM DROPDOWN CONTROL
   const [selected, setSelected] = useState<string[]>([]); 
-  // CUSTOM DROPDOWN CONTROL
+
+  // PLAYER NAME FILTER
+  const [nameFilter, setNameFilter] = useState<string>(""); 
 
   // MIN-MAX CONTROL
   const [minValue, setMinValue] = useState('0');
@@ -108,7 +110,7 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
 
     setPage(0);
 
-    const res = await fetch(`/api/players?page=${page + 1}&pageSize=${rowsPerPage}&game=${dbleague.game}&minValue=${minValue}&maxValue=${maxValue}&positions=${selected}`);
+    const res = await fetch(`/api/players?page=${page + 1}&pageSize=${rowsPerPage}&game=${dbleague.game}&minValue=${minValue}&maxValue=${maxValue}&positions=${selected}&playerName=${nameFilter}`);
     
     const data = await res.json();
 
@@ -187,7 +189,7 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
 
   useEffect(() => {
     const fetchPlayers= async () => {
-        const res = await fetch(`/api/players?page=${page + 1}&pageSize=${rowsPerPage}&game=${dbleague.game}&minValue=${minValue}&maxValue=${maxValue}&positions=${selected}`);
+        const res = await fetch(`/api/players?page=${page + 1}&pageSize=${rowsPerPage}&game=${dbleague.game}&minValue=${minValue}&maxValue=${maxValue}&positions=${selected}&playerName=${nameFilter}`);
         const data = await res.json();
         
         setPlayers(data.data);
@@ -540,7 +542,7 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
 
         <DragDropContext onDragEnd={handleOnDragEnd}>
 
-          <Paper sx={{ padding: 4, marginTop: 10 }}>
+          <Paper sx={{ padding: 4, paddingBottom: 2, marginTop: 10 }}>
             
 
             <Droppable droppableId="mainTable" isDropDisabled={true}>
@@ -605,6 +607,28 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
             <Box display="flex" marginTop={2} gap={2} sx={{ justifyContent: "center", alignItems: "center", }} >
               
               <MinMax minValue={minValue} maxValue={maxValue} setMinValue={setMinValue} setMaxValue={setMaxValue} />
+
+              <TextField
+                label="Nombre de jugador"
+                variant="outlined"
+                value={nameFilter}
+                onChange={(e) => setNameFilter(e.target.value)}
+                inputProps={{
+                  sx: {
+                    height: 2, // your custom height in pixels
+                    alignItems: 'center', // Ensures input content is centered
+                  },
+                  pattern: '[A-Za-z]*'
+                }}
+                InputLabelProps={{
+                  sx: {
+                    color: 'gray',
+                  },
+                  shrink: true, // Prevent label from floating
+                }}
+                sx={{width: "15%", marginLeft: 2 }}
+              />
+
               <CustomDropdownSelect selected={selected} setSelected={setSelected} />
 
               <Button

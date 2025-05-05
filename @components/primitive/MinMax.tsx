@@ -62,6 +62,7 @@ export default function MinMax ({ minValue, maxValue, setMinValue, setMaxValue }
           }}
           sx={{width: "6%", '& .MuiInputBase-root': { height: '40px', fontSize: 14  } }}
         />
+        
         <TextField
           label="Max"
           variant="outlined"
