@@ -28,6 +28,7 @@ import MarketView from '@/@components/leagueView/marketView';
 import reshapeLeagueTeams from '@/@components/utils/reshapeLeagueTeams';
 import bonusRecordGenerator from '@/@components/utils/bonusRecordGenerator';
 import { BonusRecords } from '@/@components/types/BonusRecords';
+import TeamSelectDropdown from '@/@components/primitive/TeamSelectDropdown';
 
 const prisma = new PrismaClient();
 
@@ -554,6 +555,14 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
   const handleTeamsClick = () => {
     setView("teams"); // may possibly need to update the matchinfo
   };
+  
+  const [selectedTeam, setSelectedTeam] = useState<string>("")
+  const handleEquipoSeleccionado = (equipo: string) => {
+    console.log('Seleccionaste:', equipo);
+    setSelectedTeam(equipo)
+    setView("teams"); // may possibly need to update the matchinfo
+  };
+
   const handleMarketClick = () => {
     setView("market"); // may possibly need to update the matchinfo
   };
@@ -650,7 +659,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
   }, [updatedMatches]);
 
 
-  console.log(schedule)
+
   return (
     <Box sx={{
       margin: "auto",
@@ -661,6 +670,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
     }}>
 
       {view !== "home" && 
+      
         <Button 
           variant="contained"
           onClick={() => handleBackClick(view)} 
@@ -669,12 +679,9 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
           Atrás
         </Button>
       }
-      <Button variant="contained" color="primary" disabled={false}
-        sx={{ width: 150, position: 'absolute', top: '20px', right: 'calc(0% + 180px)', }}
-        onClick={handleTeamsClick} 
-      >            
-        ver equipos
-      </Button>
+
+      <TeamSelectDropdown equipos={Array.from(new Set(leagueTeamsInfo.map(x => x.team_name)))} onEquipoSeleccionado={handleEquipoSeleccionado} />
+
       <Button variant="contained" color="primary" disabled={false}
         sx={{ width: 150, position: 'absolute', top: '20px', right: '0%', }}
         onClick={handleMarketClick} 
@@ -689,7 +696,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
         <MatchInfoDashboard matchInfo={matchInfo!} matchIndex={matchIndex!} matchRound={matchRound!} matchDay={matchDay!} 
           completeLeagueTeams={completeLeagueTeams} game={dbleague.game!} setSchedule={setSchedule} schedule={schedule!} leagueInfo={dbleague} />
       ) : view === "teams" ? (
-        <TeamsView participantData={completeLeagueTeams} game={dbleague.game}/>
+        <TeamsView participantData={completeLeagueTeams.find((team) => team.team_name === selectedTeam)!} game={dbleague.game} />
       ) : view === "market" ? (
         <MarketView dbleague={dbleague} participants={participants} completeLeagueTeams={completeLeagueTeams} setCompleteLeagueTeams={setCompleteLeagueTeams}
           setTransferRecords={setTransferRecords} setBudgetRecords={setBudgetRecords} leagueBonusInfo={leagueBonusInfo} /> 

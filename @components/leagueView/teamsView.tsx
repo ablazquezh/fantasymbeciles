@@ -8,7 +8,7 @@ import groupPlayerData from '../utils/groupPlayerData';
 import getRowColor from '../utils/getRowColor';
 
 interface TeamsViewProps {
-  participantData: ParticipantsFull[]; 
+  participantData: ParticipantsFull; 
   game: string| null; 
 }
 
@@ -23,24 +23,19 @@ const TeamsView: React.FC<TeamsViewProps> = ({participantData, game}) => {
 
     return (
     <Paper
-    sx={{
-        display: "grid",
-        gridTemplateColumns: `repeat(${participantData.length}, 1fr)`, // Distribuye uniformemente
-        justifyItems: "center",
-        alignItems: "stretch",
-        gap: 2, // Espaciado entre imágenes
-        width: "100%", // Usa todo el ancho disponible
-        padding: 2,
-        mt: 10
-    }} >
+        sx={{
+            gap: 2, // Espaciado entre imágenes
+            width: "fit-content", // Usa todo el ancho disponible
+            padding: 2,
+            mt: 10
+        }} 
+    >
     
-    {participantData.map((participant, pindex) => (
-        <Box key={pindex}>
+        <Box >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center',}}>
                 <img
-                key={pindex}
-                src={`/static/teams/${game}/${String(participant["team_name"]).replace("/", "_")}.png`} // Ruta basada en team_name
-                alt={participant.team_name}
+                src={`/static/teams/${game}/${String(participantData["team_name"]).replace("/", "_")}.png`} // Ruta basada en team_name
+                alt={participantData.team_name}
                 style={{
                     width: "100%", // Ocupa todo el espacio disponible en su celda
                     maxWidth: "45px", // Evita que sean demasiado grandes
@@ -53,7 +48,7 @@ const TeamsView: React.FC<TeamsViewProps> = ({participantData, game}) => {
                 }}
                 />
                 <Typography gutterBottom variant="body1" component="div" sx={{margin: "auto"}}>
-                    N. jugadores: {participant.players.length}
+                    N. jugadores: {participantData.players.length}
                 </Typography>
             </div>
 
@@ -62,7 +57,7 @@ const TeamsView: React.FC<TeamsViewProps> = ({participantData, game}) => {
                 <Table stickyHeader>
                 <TableBody sx={{backgroundColor: '#fafafa'}}>
 
-                    {Object.keys(participant.groupedPlayers).map((category) => (
+                    {Object.keys(participantData.groupedPlayers).map((category) => (
                     <React.Fragment key={category}>
                         {/* Render category header */}
                         <TableRow>
@@ -72,7 +67,7 @@ const TeamsView: React.FC<TeamsViewProps> = ({participantData, game}) => {
                         </TableRow>
         
                         {/* Render rows for this category */}
-                        {participant.groupedPlayers[category].map((row, index) => (
+                        {participantData.groupedPlayers[category].map((row, index) => (
                                             
                             <TableRow sx={{ bgcolor: getRowColor(row.global_position), position:"relative"}} >
                         
@@ -109,7 +104,6 @@ const TeamsView: React.FC<TeamsViewProps> = ({participantData, game}) => {
             
         </Box>
                     
-    ))}
     </Paper>
     )
 }
