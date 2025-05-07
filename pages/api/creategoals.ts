@@ -10,6 +10,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const toUpsert = records.records;
     // Debugging: Log the records to check if it's an array
     console.log('Received records:', records.records);
+    console.log(">>>>>>>>>>>>>>>>>")
 
     if (!Array.isArray(records.records)) {
       return res.status(400).json({ error: 'Invalid input format. Expected an array of records.' });

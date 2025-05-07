@@ -46,6 +46,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   }
   );
 
+  console.log("(((((((((((((", dbmatches)
   const dbgoals: goals[] | null = await prisma.goals.findMany({
     where: {matches: {league_id_fk: Number(leagueId)}} ,
     include: {
@@ -78,10 +79,44 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   }
   );
 
-  const leagueTable: LeagueTable[] = await prisma.$queryRaw`
-    SELECT * FROM league_table WHERE league_id = ${dbleague?.ID}
+  const participants: Participant[] = await prisma.$queryRaw`
+      SELECT participant_id, user_name, team_name, team_id FROM league_participants_view WHERE game = ${dbleague?.game} AND league_ID_fk = ${dbleague?.ID}
   `;
+  
+  let leagueTable: any[] = await prisma.$queryRaw`
+  SELECT * FROM league_table WHERE league_id = ${dbleague?.ID}
+`;
 
+if(leagueTable.length < participants.length){
+  
+  const excludedValues = leagueTable.map(item => item.team_name);
+  
+  participants.forEach(team => {
+    if (!excludedValues.includes(team.team_name)) {
+      leagueTable.push(
+        {
+          league_id: dbleague?.ID,
+          league_name: dbleague?.league_name,
+          team_id: team.team_id!,
+          team_name: team.team_name!,
+          n_played_matches: 0,
+          victories: 0,
+          draws: 0,
+          loses: 0,
+          points: 0,
+          goals_favor: 0,
+          goals_against: 0,
+          goal_diff: 0,
+          yellow_cards: 0,
+          red_cards: 0
+        }
+      );
+    }
+  });
+
+}
+console.log("**************>>>>>>><")
+console.log(leagueTable)
   const topScorers = await prisma.$queryRaw`
     SELECT player_name, team_name, goals FROM top_scorers_by_league WHERE league_id = ${dbleague?.ID} AND goals > 0
   `;
@@ -90,9 +125,6 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     SELECT * FROM raw_league_teams WHERE league_id = ${dbleague?.ID} AND team_id in (${Prisma.join(leagueTable.map((item: LeagueTable) => item.team_id))})
   `;
 
-  const participants = await prisma.$queryRaw`
-      SELECT participant_id, user_name, team_name, team_id FROM league_participants_view WHERE game = ${dbleague?.game} AND league_ID_fk = ${dbleague?.ID}
-  `;
 
   return { props: {
     dbleague: {
@@ -109,6 +141,13 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     participants: participants,
     dbbonus: dbbonus
   } };
+}
+
+interface Participant {
+  participant_id: number ;
+  user_name : string ;
+  team_name: string ;
+  team_id: number;
 }
 
 interface TopScorers {
@@ -223,6 +262,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
     if(dbmatches.length === 0){
       if(schedule === null){
       const generatedSchedule = generateRoundRobinSchedule(leagueTableInfo.map(team => team.team_name))
+      console.log(";;;;;;;:;:;:;;:;:;:;:;:SASAsasa")
       console.log(generatedSchedule)
       setSchedule( generatedSchedule )
 
@@ -258,8 +298,13 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
       
     }else{
         console.log("Loaded matches")
-        const generatedSchedule = generateScheduleFromDB(dbmatches, dbcards, dbgoals, dbinjuries, leagueTableInfo, completeLeagueTeams!)
+        const generatedSchedule = generateScheduleFromDB(dbmatches, dbcards, dbgoals, dbinjuries, leagueTable, completeLeagueTeams!)
      
+        console.log(">>>>>>>>>>>>>>>")
+        console.log(generatedSchedule)
+        console.log(leagueTableInfo)
+        console.log(leagueTable)
+        console.log("_______-")
         setSchedule( generatedSchedule )}
       // Means that there were results stored in the DB and here we must reshape them
     
@@ -299,7 +344,10 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
     //setMatchInfo(null);
     if(view === "match"){
       // POST GOALS
-      const goalRecords: GoalRecords[] = goalRecordGenerator(schedule!, leagueTableInfo, leagueTeamsInfo);
+      const goalRecords: GoalRecords[] = goalRecordGenerator(schedule!, leagueTable, leagueTeamsInfo);
+      console.log(leagueTable)
+      console.log("goalRecords:", goalRecords)
+
       const postGoals = async () => {
         try {
           const response = await fetch("/api/creategoals", {
@@ -324,7 +372,9 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
 
 
       // POST BONUS
-      const bonusRecords: BonusRecords[] = bonusRecordGenerator(schedule!, leagueTableInfo, dbleague);
+      if(dbleague.type === "pro"){
+      const bonusRecords: BonusRecords[] = bonusRecordGenerator(schedule!, leagueTable, dbleague);
+      console.log("bonusrecords:", bonusRecords)
       const removeBonusRecords = dbbonus.filter(aObj => 
         !bonusRecords.some(bObj => bObj.match_id_fk === aObj.match_id_fk && bObj.team_id_fk === aObj.team_id_fk)
       ).map(item => item.ID);
@@ -368,11 +418,11 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
         }
       }
       postBonus()
-      removeBonus()
+      removeBonus()}
 
 
       // POST CARDS
-      const cardRecords: CardRecords[] = cardRecordGenerator(schedule!, leagueTableInfo, leagueTeamsInfo);
+      const cardRecords: CardRecords[] = cardRecordGenerator(schedule!, leagueTable, leagueTeamsInfo);
 
       const removeRecords = dbcards.filter(aObj => 
         !cardRecords.some(bObj => bObj.match_id_fk === aObj.match_id_fk && bObj.player_id_fk === aObj.player_id_fk)
@@ -422,7 +472,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
 
 
       // POST CARDS
-      const injuryRecords: InjuryRecords[] = injuryRecordGenerator(schedule!, leagueTableInfo, leagueTeamsInfo);
+      const injuryRecords: InjuryRecords[] = injuryRecordGenerator(schedule!, leagueTable, leagueTeamsInfo);
       
       const removeInjuryRecords = dbinjuries.filter(aObj => 
         !injuryRecords.some(bObj => bObj.match_id_fk === aObj.match_id_fk && bObj.player_id_fk === aObj.player_id_fk)
@@ -570,7 +620,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
   useEffect(() => {
 
     if(schedule){
-      const matchRecords: MatchRecords[] = matchRecordGenerator(schedule, leagueTableInfo, leagueId as string);
+      const matchRecords: MatchRecords[] = matchRecordGenerator(schedule, leagueTable, leagueId as string);
       const postMatches = async () => {
         try {
           const response = await fetch("/api/upsertmatches", {
@@ -608,8 +658,37 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
           throw new Error('Failed to fetch top scorers');
         }
     
-        const leagueTable: LeagueTable[] = await response.json();
-
+        let leagueTable: LeagueTable[] = await response.json();
+        if(leagueTable.length < participants.length){
+  
+          const excludedValues = leagueTable.map(item => item.team_name);
+          
+          participants.forEach(team => {
+            if (!excludedValues.includes(team.team_name)) {
+              leagueTable.push(
+                {
+                  league_id: dbleague?.ID,
+                  league_name: dbleague?.league_name!,
+                  team_id: team.team_id!,
+                  team_name: team.team_name!,
+                  n_played_matches: 0,
+                  victories: 0,
+                  draws: 0,
+                  loses: 0,
+                  points: 0,
+                  goals_favor: 0,
+                  goals_against: 0,
+                  goal_diff: 0,
+                  yellow_cards: 0,
+                  red_cards: 0
+                }
+              );
+            }
+          });
+        
+        }
+        console.log("----->")
+        console.log(leagueTable)
         setLeagueTable(leagueTable);
       } catch (error) {
         console.error(error);
@@ -690,7 +769,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
       </Button>
 
       {schedule && view === "home" ? (
-        <LeagueDashboard dbleague={dbleague} topScorers={topScorersInfo} leagueTable={leagueTableInfo} dbmatches={dbmatches} 
+        <LeagueDashboard dbleague={dbleague} topScorers={topScorersInfo} leagueTable={leagueTableInfo.length < participants.length ? leagueTable: leagueTableInfo} dbmatches={dbmatches} 
           leagueTeams={leagueTeamsInfo} handleMatchClick={handleMatchClick} schedule={schedule} />
       ) : view === "match" ? (
         <MatchInfoDashboard matchInfo={matchInfo!} matchIndex={matchIndex!} matchRound={matchRound!} matchDay={matchDay!} 

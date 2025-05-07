@@ -47,6 +47,10 @@ export default function generateScheduleFromDB(matches: MatchRecords[], dbcards:
       vuelta: []
     };
   
+
+    console.log(":::_____-----")
+    console.log(leagueTable)
+    console.log(matches)
     // Group matches by matchday
     matches.forEach((match) => {
       const matchday = match.matchday!;
