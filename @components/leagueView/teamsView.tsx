@@ -207,12 +207,12 @@ console.log(showTrash)
             
         </Box>
 
-        <Box 
+        <Box sx={{ alignSelf: '' }}
             onDrop={handleDeleteDrop}
             onDragOver={(e) => e.preventDefault()}
         >
             <IconButton sx={{ color: 'white', ml: 2, zIndex: 1000}} onClick={handleClickTrash} >                           
-                <DeleteForeverIcon fontSize='large' sx={{ color: "darkred", fontSize: 60 }} />
+                <DeleteForeverIcon fontSize='large' sx={{ color: showTrash ? "darkred" : "darkgray", fontSize: 60 }} />
             </IconButton>
         </Box>
 
