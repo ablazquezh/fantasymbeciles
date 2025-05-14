@@ -1,11 +1,13 @@
 
-import React, { useEffect, useState } from 'react'
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, Divider, Paper, Button } from "@mui/material";
+import React, { useEffect, useState, useRef } from 'react'
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, IconButton, Divider, Paper, Button } from "@mui/material";
 import { RowData } from '../types/RowData';
 import { ParticipantsFull } from '../types/ParticipantsFull';
 import { TeamWithPlayers } from '../types/TeamWithPlayers';
 import groupPlayerData from '../utils/groupPlayerData';
 import getRowColor from '../utils/getRowColor';
+import ColoredCircle from '../primitive/coloredCircle';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 
 interface TeamsViewProps {
   participantData: ParticipantsFull; 
@@ -18,13 +20,83 @@ const globalColnames = {
     positions: "Posiciones",
   };
 
+type PlayerTuple = [number, number, string];
 
 const TeamsView: React.FC<TeamsViewProps> = ({participantData, game}) => {
+
+    const ref = useRef<HTMLDivElement | null>(null)
+
+    const [diagramPlayers, setDiagramPlayers] = useState< { [key: string]: PlayerTuple } >({})
+
+    const [showTrash, setShowTrash] = useState(false)
+
+    const handleClickTrash = () => {
+        setShowTrash(!showTrash)
+    };
+
+    const handleClickRemove = (nickname: string) => () => {
+        console.log("delete",nickname)
+        setDiagramPlayers((prevPlayers) => {
+            const updatedPlayers = { ...prevPlayers }; // Create a shallow copy of the object
+            delete updatedPlayers[nickname]; // Delete the player with the given key
+            return updatedPlayers; // Return the updated object
+        });
+    };
+
+    const handleDeleteDrop = (event: React.DragEvent<HTMLElement>) => {
+        //console.log(event.dataTransfer.getData("text"))
+        const [nickname, position] = event.dataTransfer.getData("text").split(",")
+        setDiagramPlayers((prevPlayers) => {
+            const updatedPlayers = { ...prevPlayers }; // Create a shallow copy of the object
+            delete updatedPlayers[nickname]; // Delete the player with the given key
+            return updatedPlayers; // Return the updated object
+        });
+    };
+
+    const handleDragStart = (nickname: string, position: string, defaultMode=true) => (event: React.DragEvent<HTMLElement>) => {
+        event.dataTransfer.setData("text/plain", `${nickname},${position}`)
+
+        const target = event.target;
+        if (target instanceof HTMLElement && !defaultMode) {
+            setTimeout(() => {
+                target.style.display = 'none';
+            }, 0)
+
+            // Add dragend listener to restore the element visibility
+            const restoreDisplay = () => {
+                target.style.display = ''; // This restores the element's default display value
+                target.removeEventListener('dragend', restoreDisplay); // Clean up the event listener
+            };
+
+            target.addEventListener('dragend', restoreDisplay);
+        }
+
+    };
+
+    const handleDrop = (event: React.DragEvent<HTMLElement>) => {
+        //console.log(event.dataTransfer.getData("text"))
+        const [nickname, position] = event.dataTransfer.getData("text").split(",")
+        if(ref.current && (Object.keys(diagramPlayers).length < 11 || nickname in diagramPlayers)){
+            const {width, height, left, top} = ref.current.getBoundingClientRect()
+            let x = event.clientX - left
+            let y = event.clientY - top
+
+            if(x < 15){ x = 15}else if(x>width-15){ x = width-15}
+            if(y < 15){ y = 15}else if(y>height-15-24){ y = height-15-24}
+                       
+            setDiagramPlayers(prev => ({
+                ...prev,
+                [nickname]: [x, y, position],  // update or add this key
+            }));
+        }
+    };
+console.log(showTrash)
 
     return (
     <Box sx={{display:"flex", padding: 2, mt: 10,
                 alignItems: 'center',   // Vertical alignment
                 justifyContent: 'center', // Horizontal alignment
+                position: "relative"
     }}>
         <Paper
             sx={{
@@ -73,7 +145,10 @@ const TeamsView: React.FC<TeamsViewProps> = ({participantData, game}) => {
                             {/* Render rows for this category */}
                             {participantData.groupedPlayers[category].map((row, index) => (
                                                 
-                                <TableRow sx={{ bgcolor: getRowColor(row.global_position), position:"relative"}} >
+                                <TableRow draggable  key={row.nickname}
+                                    onDragStart={handleDragStart(row.nickname!, row.global_position!)}
+                                    sx={{ bgcolor: getRowColor(row.global_position), position:"relative"}}  
+                                    style={{ cursor: 'grab' }}>
                             
                                     { Object.keys(globalColnames).map((col) => (
 
@@ -110,13 +185,35 @@ const TeamsView: React.FC<TeamsViewProps> = ({participantData, game}) => {
                         
         </Paper>
 
-        <Box sx={{display: 'flex',
+        <Box 
+            ref={ref}
+            onDrop={handleDrop}
+            onDragOver={(e) => e.preventDefault()}
+            sx={{
+                position: 'relative',
+                display: 'flex',
                 alignItems: 'center',   // Vertical alignment
                 justifyContent: 'center', // Horizontal alignment
                 ml: 20}}
         >
-            <img src="/static/field.png" alt="Logo" style={{height: "35vw"}}/>
+            <img src="/static/field.png" alt="Logo" style={{ height: 672, minHeight: 672, pointerEvents: "none" }} />
             
+            {Object.entries(diagramPlayers).map(([id, [x, y, position]]) => (
+
+                <ColoredCircle key={id} x={x} y={y} playerName={id} position={position} handleDragStart={handleDragStart} 
+                    handleClickRemove={handleClickRemove} showTrash={showTrash}/>
+
+            ))}
+            
+        </Box>
+
+        <Box 
+            onDrop={handleDeleteDrop}
+            onDragOver={(e) => e.preventDefault()}
+        >
+            <IconButton sx={{ color: 'white', ml: 2, zIndex: 1000}} onClick={handleClickTrash} >                           
+                <DeleteForeverIcon fontSize='large' sx={{ color: "darkred", fontSize: 60 }} />
+            </IconButton>
         </Box>
 
     </Box>
