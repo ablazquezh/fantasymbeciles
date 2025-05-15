@@ -8,10 +8,13 @@ import groupPlayerData from '../utils/groupPlayerData';
 import getRowColor from '../utils/getRowColor';
 import ColoredCircle from '../primitive/coloredCircle';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import { PlayerTuple } from '../types/PlayerTuple';
 
 interface TeamsViewProps {
   participantData: ParticipantsFull; 
   game: string| null; 
+  setDiagramPlayers: React.Dispatch<React.SetStateAction<{ [key: string]: PlayerTuple } >>;
+  diagramPlayers: { [key: string]: PlayerTuple };
 }
 
 const globalColnames = {
@@ -20,13 +23,14 @@ const globalColnames = {
     positions: "Posiciones",
   };
 
-type PlayerTuple = [number, number, string];
+//type PlayerTuple = [number, number, string, number];
 
-const TeamsView: React.FC<TeamsViewProps> = ({participantData, game}) => {
+const TeamsView: React.FC<TeamsViewProps> = ({participantData, game, diagramPlayers, setDiagramPlayers}) => {
 
+    console.log("-------------------",diagramPlayers)
     const ref = useRef<HTMLDivElement | null>(null)
 
-    const [diagramPlayers, setDiagramPlayers] = useState< { [key: string]: PlayerTuple } >({})
+    //const [diagramPlayers, setDiagramPlayers] = useState< { [key: string]: PlayerTuple } >({})
 
     const [showTrash, setShowTrash] = useState(false)
 
@@ -45,7 +49,7 @@ const TeamsView: React.FC<TeamsViewProps> = ({participantData, game}) => {
 
     const handleDeleteDrop = (event: React.DragEvent<HTMLElement>) => {
         //console.log(event.dataTransfer.getData("text"))
-        const [nickname, position] = event.dataTransfer.getData("text").split(",")
+        const [nickname, position, teamId, playerId] = event.dataTransfer.getData("text").split(",")
         setDiagramPlayers((prevPlayers) => {
             const updatedPlayers = { ...prevPlayers }; // Create a shallow copy of the object
             delete updatedPlayers[nickname]; // Delete the player with the given key
@@ -53,8 +57,8 @@ const TeamsView: React.FC<TeamsViewProps> = ({participantData, game}) => {
         });
     };
 
-    const handleDragStart = (nickname: string, position: string, defaultMode=true) => (event: React.DragEvent<HTMLElement>) => {
-        event.dataTransfer.setData("text/plain", `${nickname},${position}`)
+    const handleDragStart = (nickname: string, playerId: number, position: string, defaultMode=true) => (event: React.DragEvent<HTMLElement>) => {
+        event.dataTransfer.setData("text/plain", `${nickname},${position},${participantData.team_id},${playerId}`)
 
         const target = event.target;
         if (target instanceof HTMLElement && !defaultMode) {
@@ -75,7 +79,7 @@ const TeamsView: React.FC<TeamsViewProps> = ({participantData, game}) => {
 
     const handleDrop = (event: React.DragEvent<HTMLElement>) => {
         //console.log(event.dataTransfer.getData("text"))
-        const [nickname, position] = event.dataTransfer.getData("text").split(",")
+        const [nickname, position, teamId, playerId] = event.dataTransfer.getData("text").split(",")
         if(ref.current && (Object.keys(diagramPlayers).length < 11 || nickname in diagramPlayers)){
             const {width, height, left, top} = ref.current.getBoundingClientRect()
             let x = event.clientX - left
@@ -86,11 +90,13 @@ const TeamsView: React.FC<TeamsViewProps> = ({participantData, game}) => {
                        
             setDiagramPlayers(prev => ({
                 ...prev,
-                [nickname]: [x, y, position],  // update or add this key
+                [nickname]: [x, y, position, Number(teamId), Number(playerId)],  // update or add this key
             }));
         }
     };
-console.log(showTrash)
+
+    console.log(diagramPlayers)
+    console.log(participantData.team_name)
 
     return (
     <Box sx={{display:"flex", padding: 2, mt: 10,
@@ -146,7 +152,7 @@ console.log(showTrash)
                             {participantData.groupedPlayers[category].map((row, index) => (
                                                 
                                 <TableRow draggable  key={row.nickname}
-                                    onDragStart={handleDragStart(row.nickname!, row.global_position!)}
+                                    onDragStart={handleDragStart(row.nickname!, row.ID!, row.global_position!)}
                                     sx={{ bgcolor: getRowColor(row.global_position), position:"relative"}}  
                                     style={{ cursor: 'grab' }}>
                             
@@ -198,12 +204,15 @@ console.log(showTrash)
         >
             <img src="/static/field.png" alt="Logo" style={{ height: 672, minHeight: 672, pointerEvents: "none" }} />
             
-            {Object.entries(diagramPlayers).map(([id, [x, y, position]]) => (
+            {Object.entries(diagramPlayers).map(([id, [x, y, position, teamId, playerId]]) => teamId === participantData.team_id ?  (
 
-                <ColoredCircle key={id} x={x} y={y} playerName={id} position={position} handleDragStart={handleDragStart} 
+                
+                <ColoredCircle key={id} x={x} y={y} playerName={id} playerId={playerId} position={position} handleDragStart={handleDragStart} 
                     handleClickRemove={handleClickRemove} showTrash={showTrash}/>
-
-            ))}
+                    
+                
+            ) : null
+            )}
             
         </Box>
 

@@ -69,6 +69,7 @@ model leagues {
   draw_bonus             Int?
   game                   String?               @db.VarChar(50)
   created_at             DateTime?             @default(now()) @db.Timestamp(0)
+  diagram_positions      diagram_positions[]
   league_participants    league_participants[]
   market                 market[]
   matches                matches[]
@@ -124,39 +125,40 @@ model player_transfers {
 }
 
 model players {
-  ID               Int                @id @default(autoincrement())
-  name             String?            @db.VarChar(255)
-  nickname         String?            @db.VarChar(255)
-  country_code     String?            @db.VarChar(10)
-  age              Int?
-  height           Int?
-  average          Int?
-  global_position  String?            @db.VarChar(50)
-  value            Float?             @db.Float
-  wage             Float?             @db.Float
-  best_foot        String?            @db.VarChar(50)
-  weak_foot_5stars Int?
-  heading          Int?
-  jump             Int?
-  long_pass        Int?
-  short_pass       Int?
-  dribbling        Int?
-  acceleration     Int?
-  speed            Int?
-  shot_power       Int?
-  long_shot        Int?
-  stamina          Int?
-  defense          Int?
-  interception     Int?
-  team_id_fk       Int?
-  game             String?            @db.VarChar(50)
-  cards            cards[]
-  goals            goals[]
-  injuries         injuries[]
-  market           market[]
-  player_transfers player_transfers[]
-  teams            teams?             @relation(fields: [team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "players_ibfk_1")
-  positions_join   positions_join[]
+  ID                Int                 @id @default(autoincrement())
+  name              String?             @db.VarChar(255)
+  nickname          String?             @db.VarChar(255)
+  country_code      String?             @db.VarChar(10)
+  age               Int?
+  height            Int?
+  average           Int?
+  global_position   String?             @db.VarChar(50)
+  value             Float?              @db.Float
+  wage              Float?              @db.Float
+  best_foot         String?             @db.VarChar(50)
+  weak_foot_5stars  Int?
+  heading           Int?
+  jump              Int?
+  long_pass         Int?
+  short_pass        Int?
+  dribbling         Int?
+  acceleration      Int?
+  speed             Int?
+  shot_power        Int?
+  long_shot         Int?
+  stamina           Int?
+  defense           Int?
+  interception      Int?
+  team_id_fk        Int?
+  game              String?             @db.VarChar(50)
+  cards             cards[]
+  diagram_positions diagram_positions[]
+  goals             goals[]
+  injuries          injuries[]
+  market            market[]
+  player_transfers  player_transfers[]
+  teams             teams?              @relation(fields: [team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "players_ibfk_1")
+  positions_join    positions_join[]
 
   @@index([team_id_fk], map: "team_id_fk")
 }
@@ -188,6 +190,7 @@ model teams {
   team_country                              String?               @db.VarChar(50)
   bonus                                     bonus[]
   cards                                     cards[]
+  diagram_positions                         diagram_positions[]
   goals                                     goals[]
   injuries                                  injuries[]
   league_participants                       league_participants[]
@@ -241,6 +244,22 @@ model bonus {
   teams       teams?   @relation(fields: [team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "bonus_ibfk_2")
 
   @@unique([match_id_fk, team_id_fk], map: "match_id_fk")
+  @@index([team_id_fk], map: "team_id_fk")
+}
+
+model diagram_positions {
+  ID           Int      @id @default(autoincrement())
+  player_id_fk Int?
+  team_id_fk   Int?
+  league_id_fk Int?
+  coord_x      Decimal? @db.Decimal(10, 0)
+  coord_y      Decimal? @db.Decimal(10, 0)
+  players      players? @relation(fields: [player_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "diagram_positions_ibfk_1")
+  teams        teams?   @relation(fields: [team_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "diagram_positions_ibfk_2")
+  leagues      leagues? @relation(fields: [league_id_fk], references: [ID], onDelete: NoAction, onUpdate: NoAction, map: "diagram_positions_ibfk_3")
+
+  @@unique([player_id_fk, league_id_fk], map: "player_id_fk")
+  @@index([league_id_fk], map: "league_id_fk")
   @@index([team_id_fk], map: "team_id_fk")
 }
 

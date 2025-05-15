@@ -9,15 +9,16 @@ type ColoredCircleProps = {
   x: number;
   y: number;
   playerName: string;
+  playerId: number;
   position: string;
-  handleDragStart: (nickname: string, position: string, defaultMode: boolean) => (event: React.DragEvent<HTMLElement>) => void;
+  handleDragStart: (nickname: string, playerId: number, position: string, defaultMode: boolean) => (event: React.DragEvent<HTMLElement>) => void;
   handleClickRemove: (nickname: string) => () => void;
   showTrash: boolean;
 };
 
 
-const ColoredCircle = ({ size = 30, x, y, playerName, position, handleDragStart, handleClickRemove, showTrash}: ColoredCircleProps) => (
-    <div draggable key={playerName} onDragStart={handleDragStart(playerName, position, false)} style={{ cursor: 'grab' }} >
+const ColoredCircle = ({ size = 30, x, y, playerName, playerId, position, handleDragStart, handleClickRemove, showTrash}: ColoredCircleProps) => (
+    <div draggable key={playerName} onDragStart={handleDragStart(playerName, playerId, position, false)} style={{ cursor: 'grab' }} >
 
         <IconButton 
             sx={{

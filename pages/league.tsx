@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef} from 'react'
 import { useRouter } from "next/router";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, Divider, Paper, Button } from "@mui/material";
 import { GetServerSidePropsContext, NextPage } from 'next';
-import { PrismaClient, Prisma, users, leagues, matches, players, goals, cards, injuries, team_budget, bonus } from "@prisma/client";
+import { PrismaClient, Prisma, users, leagues, matches, players, goals, cards, injuries, team_budget, bonus, diagram_positions } from "@prisma/client";
 import generateRoundRobinSchedule from '@/@components/utils/scheduleGenerator';
 import LeagueDashboard from '@/@components/leagueView/leagueDashboard';
 import mergeData from '@/@components/utils/mergeData';
@@ -29,6 +29,9 @@ import reshapeLeagueTeams from '@/@components/utils/reshapeLeagueTeams';
 import bonusRecordGenerator from '@/@components/utils/bonusRecordGenerator';
 import { BonusRecords } from '@/@components/types/BonusRecords';
 import TeamSelectDropdown from '@/@components/primitive/TeamSelectDropdown';
+import { PlayerTuple } from '@/@components/types/PlayerTuple';
+import { DiagramRecords } from '@/@components/types/DiagramRecords';
+import diagramRecordGenerator from '@/@components/utils/diagramRecordGenerator';
 
 const prisma = new PrismaClient();
 
@@ -46,7 +49,6 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   }
   );
 
-  console.log("(((((((((((((", dbmatches)
   const dbgoals: goals[] | null = await prisma.goals.findMany({
     where: {matches: {league_id_fk: Number(leagueId)}} ,
     include: {
@@ -54,6 +56,22 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     }
   }
   );
+
+  const dbdiagrams = await prisma.diagram_positions.findMany({
+    where: {league_id_fk: Number(leagueId)} ,
+    include: {
+      players: {  select: {nickname: true, global_position: true } }
+    }
+  }
+  );
+
+  const dbdiagramsShaped: { [key: string]: PlayerTuple }  = Object.fromEntries(
+    dbdiagrams.map(p => [
+      p.players?.nickname!.toString(),  // or use p.name or another unique field as key
+      [p.coord_x!.toNumber(), p.coord_y!.toNumber(), p.players?.global_position!, p.team_id_fk!, p.player_id_fk!] as PlayerTuple,
+    ])
+);
+  console.log("--------------------->>>>>>>>>>>", dbdiagramsShaped)
 
   const dbbonus: bonus[] | null = await prisma.bonus.findMany({
     where: {matches: {league_id_fk: Number(leagueId)}} ,
@@ -115,8 +133,7 @@ if(leagueTable.length < participants.length){
   });
 
 }
-console.log("**************>>>>>>><")
-console.log(leagueTable)
+
   const topScorers = await prisma.$queryRaw`
     SELECT player_name, team_name, goals FROM top_scorers_by_league WHERE league_id = ${dbleague?.ID} AND goals > 0
   `;
@@ -139,7 +156,8 @@ console.log(leagueTable)
     dbgoals: dbgoals,
     dbinjuries: dbinjuries,
     participants: participants,
-    dbbonus: dbbonus
+    dbbonus: dbbonus,
+    dbdiagrams: dbdiagramsShaped
   } };
 }
 
@@ -187,6 +205,7 @@ interface LeagueProps {
   dbinjuries: injuries[];
   participants: any[];
   dbbonus: bonus[];
+  dbdiagrams: { [key: string]: PlayerTuple };
 }
 
 interface leagueTeams {
@@ -196,7 +215,7 @@ interface leagueTeams {
   team_name: string;
 }
 
-const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, dbmatches, leagueTeams, dbcards, dbgoals, dbinjuries, participants, dbbonus}) => {
+const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, dbmatches, leagueTeams, dbcards, dbgoals, dbinjuries, participants, dbbonus, dbdiagrams}) => {
 
 
   const [topScorersInfo, setTopScorers] = useState<TopScorers[]>(topScorers)
@@ -221,6 +240,8 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
 
   const [transferRecords, setTransferRecords] = useState<any[]>([])
   const [budgetRecords, setBudgetRecords] = useState<any[]>([])
+
+  const [diagramPlayers, setDiagramPlayers] = useState< { [key: string]: PlayerTuple } >(dbdiagrams)
 
   useEffect(() => {
 
@@ -262,8 +283,6 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
     if(dbmatches.length === 0){
       if(schedule === null){
       const generatedSchedule = generateRoundRobinSchedule(leagueTableInfo.map(team => team.team_name))
-      console.log(";;;;;;;:;:;:;;:;:;:;:;:SASAsasa")
-      console.log(generatedSchedule)
       setSchedule( generatedSchedule )
 
       // PUSH MATCHES
@@ -300,11 +319,6 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
         console.log("Loaded matches")
         const generatedSchedule = generateScheduleFromDB(dbmatches, dbcards, dbgoals, dbinjuries, leagueTable, completeLeagueTeams!)
      
-        console.log(">>>>>>>>>>>>>>>")
-        console.log(generatedSchedule)
-        console.log(leagueTableInfo)
-        console.log(leagueTable)
-        console.log("_______-")
         setSchedule( generatedSchedule )}
       // Means that there were results stored in the DB and here we must reshape them
     
@@ -373,52 +387,53 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
 
       // POST BONUS
       if(dbleague.type === "pro"){
-      const bonusRecords: BonusRecords[] = bonusRecordGenerator(schedule!, leagueTable, dbleague);
-      console.log("bonusrecords:", bonusRecords)
-      const removeBonusRecords = dbbonus.filter(aObj => 
-        !bonusRecords.some(bObj => bObj.match_id_fk === aObj.match_id_fk && bObj.team_id_fk === aObj.team_id_fk)
-      ).map(item => item.ID);
-      const postBonus = async () => {
-        try {
-          const response = await fetch("/api/createbonus", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ records: bonusRecords }),
-            });
-      
-          const data = await response.json();
-      
-          if (response.ok) {
-            console.log("Success:", data);
-            setUpdatedGoals(true)
-          } else {
-            console.error("Error:", data.error);
+        const bonusRecords: BonusRecords[] = bonusRecordGenerator(schedule!, leagueTable, dbleague);
+        console.log("bonusrecords:", bonusRecords)
+        const removeBonusRecords = dbbonus.filter(aObj => 
+          !bonusRecords.some(bObj => bObj.match_id_fk === aObj.match_id_fk && bObj.team_id_fk === aObj.team_id_fk)
+        ).map(item => item.ID);
+        const postBonus = async () => {
+          try {
+            const response = await fetch("/api/createbonus", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ records: bonusRecords }),
+              });
+        
+            const data = await response.json();
+        
+            if (response.ok) {
+              console.log("Success:", data);
+              setUpdatedGoals(true)
+            } else {
+              console.error("Error:", data.error);
+            }
+          } catch (error) {
+            console.error("Request failed:", error);
           }
-        } catch (error) {
-          console.error("Request failed:", error);
         }
-      }
-      const removeBonus = async () => {
-        try {
-          const response = await fetch("/api/removebonus", {
-              method: "DELETE",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ idList: removeBonusRecords }),
-            });
-      
-          const data = await response.json();
-      
-          if (response.ok) {
-            console.log("Success:", data);
-          } else {
-            console.error("Error:", data.error);
+        const removeBonus = async () => {
+          try {
+            const response = await fetch("/api/removebonus", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ idList: removeBonusRecords }),
+              });
+        
+            const data = await response.json();
+        
+            if (response.ok) {
+              console.log("Success:", data);
+            } else {
+              console.error("Error:", data.error);
+            }
+          } catch (error) {
+            console.error("Request failed:", error);
           }
-        } catch (error) {
-          console.error("Request failed:", error);
         }
+        postBonus()
+        removeBonus()
       }
-      postBonus()
-      removeBonus()}
 
 
       // POST CARDS
@@ -565,8 +580,6 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
           console.error("League teams GET failed.");
           return;
         }
-        console.log("________")
-        console.log(leagueteamsUpdated)
         setLeagueTeams(leagueteamsUpdated);
 
 
@@ -598,12 +611,69 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
       }
       postTransfers()
       setTransferRecords([]);
+    }else if(view === "teams"){
+
+      
+      const diagramRecords: DiagramRecords[] = diagramRecordGenerator(diagramPlayers, dbleague);
+      console.log("diagramRecords:", diagramRecords)
+
+      
+      const usedPlayerIds = new Set(
+        diagramRecords
+          .map(r => r.player_id_fk)
+          .filter((id): id is number => id !== null)
+      );
+
+      const toRemove = Object.fromEntries(
+        Object.entries(dbdiagrams).filter(([_, value]) => !usedPlayerIds.has(value[4]))
+      );
+      console.log("to remove", toRemove)
+
+      const postDiagram = async () => {
+        try {
+          const response = await fetch("/api/creatediagram", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ records: diagramRecords }),
+            });
+      
+          const data = await response.json();
+      
+          if (response.ok) {
+            console.log("Success:", data);
+          } else {
+            console.error("Error:", data.error);
+          }
+        } catch (error) {
+          console.error("Request failed:", error);
+        }
+      }
+      const removeDiagram = async () => {
+        console.log("rermeoremroemrmeroe",Object.values(toRemove).map(item => item[4]))
+        try {
+          const response = await fetch("/api/removediagram", {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ nameList: Object.values(toRemove).map(item => item[4]), leagueId: dbleague.ID }),
+            });
+      
+          const data = await response.json();
+      
+          if (response.ok) {
+            console.log("Success:", data);
+          } else {
+            console.error("Error:", data.error);
+          }
+        } catch (error) {
+          console.error("Request failed:", error);
+        }
+      }
+      postDiagram()
+      if(Object.keys(toRemove).length > 0){
+        removeDiagram()
+      }
     }
     setView("home"); // may possibly need to update the matchinfo
-  };
-
-  const handleTeamsClick = () => {
-    setView("teams"); // may possibly need to update the matchinfo
   };
   
   const [selectedTeam, setSelectedTeam] = useState<string>("")
@@ -687,8 +757,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
           });
         
         }
-        console.log("----->")
-        console.log(leagueTable)
+        
         setLeagueTable(leagueTable);
       } catch (error) {
         console.error(error);
@@ -775,7 +844,8 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
         <MatchInfoDashboard matchInfo={matchInfo!} matchIndex={matchIndex!} matchRound={matchRound!} matchDay={matchDay!} 
           completeLeagueTeams={completeLeagueTeams} game={dbleague.game!} setSchedule={setSchedule} schedule={schedule!} leagueInfo={dbleague} />
       ) : view === "teams" ? (
-        <TeamsView participantData={completeLeagueTeams.find((team) => team.team_name === selectedTeam)!} game={dbleague.game} />
+        <TeamsView participantData={completeLeagueTeams.find((team) => team.team_name === selectedTeam)!} game={dbleague.game} 
+          diagramPlayers={diagramPlayers} setDiagramPlayers={setDiagramPlayers} />
       ) : view === "market" ? (
         <MarketView dbleague={dbleague} participants={participants} completeLeagueTeams={completeLeagueTeams} setCompleteLeagueTeams={setCompleteLeagueTeams}
           setTransferRecords={setTransferRecords} setBudgetRecords={setBudgetRecords} leagueBonusInfo={leagueBonusInfo} /> 

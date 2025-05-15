@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import { useRouter } from "next/router";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, List,  ListItem,  ListItemText,  Box, Typography, Chip, TablePagination, Paper, Button, TextField } from "@mui/material";
 import { bonus, players, team_budget } from "@prisma/client";
 import { GetServerSidePropsContext, NextPage } from 'next';
@@ -56,10 +55,6 @@ interface PlayerSelectProps {
 //const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participants}) => {
 const MarketView: React.FC<PlayerSelectProps> = ({dbleague, participants, completeLeagueTeams, setCompleteLeagueTeams, setTransferRecords, setBudgetRecords, leagueBonusInfo}) => {
 
-console.log("-----bonuses--------", leagueBonusInfo)
-  const router = useRouter();
-  const [league, setLeague] = useState<string | null>(null);
-
   const [team_budgets, setTeamBudgets] = useState<team_budget[]>([])
 
   const [players, setPlayers] = useState<playersFull[]>([]);
@@ -95,30 +90,12 @@ console.log("-----bonuses--------", leagueBonusInfo)
     setTotal(data.total);
   };
 
-  /*useEffect(() => {
-    if (leagueId) {
-        setLeague(leagueId as string);
-    }
-  }, [leagueId]);
-*/
-
 useEffect(() => {
     if(dbleague.type === "pro"){ 
 
       const fetchTeamBudgets = async () => {
           const res = await fetch(`/api/teambudgets?game=${dbleague.game}&idList=${participants.map((item: participant) => item.team_id).join(",")}&leagueId=${dbleague.ID}`);
           const data = await res.json();
-
-          /*data.teams.forEach((obj: team_budget) => {
-            if (Number(obj.team_avg_std!) >= 80) {
-              obj.budget! *= dbleague.big_team_multiplier!;
-            } else if (Number(obj.team_avg_std!) >= 75) {
-              obj.budget! *= dbleague.medium_team_multiplier!;
-            } else {
-              obj.budget! *= dbleague.small_team_multiplier!;
-            }
-          });*/
-        
 
           setTeamBudgets(data.teams);
       };
