@@ -540,6 +540,45 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
       // Insert transfer records in DB and re-set league teams
       const postTransfers = async () => {
 
+        const matchingKeys: string[] = [];
+
+        const playerIds = new Set(transferRecords.map(obj => obj.player_id_fk));
+
+        for (const [key, tuple] of Object.entries(diagramPlayers)) {
+          if (playerIds.has(tuple[4])) {
+            matchingKeys.push(key);
+          }
+        }
+        const filteredDict = Object.fromEntries(
+          Object.entries(diagramPlayers).filter(
+            ([_, tuple]) => !playerIds.has(tuple[4])
+          )
+        );
+        
+        setDiagramPlayers(filteredDict);
+        // remove transferred players from any diagram
+        try {
+          const response = await fetch("/api/removediagram", {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ nameList: matchingKeys, leagueId: dbleague.ID }),
+            });
+      
+          const data = await response.json();
+      
+          if (response.ok) {
+            console.log("Success:", data);
+          } else {
+            console.error("Error:", data.error);
+          }
+        } catch (error) {
+          console.error("Request failed:", error);
+        }
+/*{
+          player_id_fk: Number(inputPlayer.ID),
+          team_id_fk: participants.find((item) => item.team_name === destination.droppableId).team_id,
+          league_id_fk: Number(dbleague.ID)
+        };*/ 
         const response = await fetch("/api/createtransfers", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -649,7 +688,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
         }
       }
       const removeDiagram = async () => {
-        console.log("rermeoremroemrmeroe",Object.values(toRemove).map(item => item[4]))
+
         try {
           const response = await fetch("/api/removediagram", {
               method: "DELETE",
