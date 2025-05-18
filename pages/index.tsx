@@ -14,6 +14,7 @@ import { Fade, Container, Paper } from "@mui/material";
 import { useEffect, useState } from "react";
 import { PrismaClient, Prisma, users, leagues } from "@prisma/client";
 import LoadLeagueStep from '@/@components/leagueCreation/LoadLeagueStep';
+import TrophyRoom from '@/@components/primitive/TrophyRoom';
   
 const prisma = new PrismaClient();
 
@@ -96,6 +97,9 @@ const FantasyHomePage: NextPage = () => {
 
         <Fade in={step === 999} timeout={500} unmountOnExit>
           <div>{step === 999 && <LoadLeagueStep leagues={leagues} />}</div>
+        </Fade>
+        <Fade in={step === 1000} timeout={500} unmountOnExit>
+          <div>{step === 1000 && <TrophyRoom leagues={leagues} />}</div>
         </Fade>
 
       
