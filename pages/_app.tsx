@@ -6,6 +6,7 @@ import { ThemeProvider } from '@mui/material'
 import theme from '../styles/theme'
 import { CacheProvider } from "@emotion/react";
 import createCache from "@emotion/cache";
+import { useRouter } from 'next/router'
 
 const client = new QueryClient()
 
@@ -17,12 +18,15 @@ export default function App({  Component,
   pageProps,
   emotionCache = clientSideEmotionCache, // Use the Emotion cache
 }: AppProps & { emotionCache?: ReturnType<typeof createEmotionCache> }) {
+  const router = useRouter()
+
+  const hideAppBar = router.pathname === '/securelogin'
   return (
     <CacheProvider value={emotionCache}>
       <QueryClientProvider client={client}>
         <ThemeProvider theme={theme}>
           
-            <AppBar />
+            {!hideAppBar && <AppBar />}
             <Component {...pageProps} />
           
         </ ThemeProvider>
