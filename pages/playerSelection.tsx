@@ -225,7 +225,7 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
       const { source, destination } = result;
       if (!destination) return; // If dropped outside
   
-      if (source.droppableId === destination.droppableId && source.index === destination.index) {
+      if (source.droppableId === destination.droppableId){// && source.index === destination.index) {
         return; // If dropped in the same place
       }
       
