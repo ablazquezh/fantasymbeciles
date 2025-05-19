@@ -142,10 +142,11 @@ useEffect(() => {
   
   const { prompt, Modal } = NegotiationModal();
   const handleOnDragEnd = async(result: DropResult) => {
+    console.log(result)
         const { source, destination } = result;
         if (!destination) return; // If dropped outside
     
-        if (source.droppableId === destination.droppableId && source.index === destination.index) {
+        if (source.droppableId === destination.droppableId){// && source.index === destination.index) {
           return; // If dropped in the same place
         }
         
