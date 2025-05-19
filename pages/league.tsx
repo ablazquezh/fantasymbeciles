@@ -324,6 +324,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
     
   }, [completeLeagueTeams]);
 
+  console.log("ññññññkñññ,ñ,ñ,ñ,ñ,ñ,ñ,ñ,ñ,ñ,",completeLeagueTeams)
   useEffect(() => {
     // Select the parent and child elements
     const parent = document.querySelector('.parent') as HTMLElement | null;

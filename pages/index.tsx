@@ -98,8 +98,9 @@ const FantasyHomePage: NextPage = () => {
         <Fade in={step === 999} timeout={500} unmountOnExit>
           <div>{step === 999 && <LoadLeagueStep leagues={leagues} />}</div>
         </Fade>
+        
         <Fade in={step === 1000} timeout={500} unmountOnExit>
-          <div>{step === 1000 && <TrophyRoom leagues={leagues} />}</div>
+          <div>{step === 1000 && <TrophyRoom />}</div>
         </Fade>
 
       

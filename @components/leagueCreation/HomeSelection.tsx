@@ -30,7 +30,8 @@ const HomeSelection: React.FC<StepOneProps> = ({ setStep }) => {
           </Card>
 
           <Card sx={{ maxWidth: 345 }}>
-            <CardActionArea>
+            <CardActionArea
+              onClick={() => setStep(1000)}>
               <CardMedia
                 component="img"
                 height="200"
