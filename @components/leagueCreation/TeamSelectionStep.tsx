@@ -16,6 +16,7 @@ import { Height } from '@mui/icons-material';
 import CardMedia from '@mui/material/CardMedia';
 import CloseIcon from '@mui/icons-material/Close';
 import { useRouter } from "next/router";
+import modalStyle from '../types/ModalStyle';
 
   interface StepFiveProps {
     setStep: (step: number) => void;
@@ -24,16 +25,7 @@ import { useRouter } from "next/router";
     users: users[];
     leagues: leagues[];
   }
-  const modalStyle = {
-    position: 'absolute' as 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: '30%',
-    bgcolor: 'background.paper',
-    boxShadow: 24,
-    p: 4,
-  };
+
 
   const TeamSelectStep: React.FC<StepFiveProps> = ({ setStep, setFormData, formData, users, leagues }) => {
 
