@@ -80,7 +80,7 @@ const TeamsView: React.FC<TeamsViewProps> = ({participantData, game, diagramPlay
     const handleDrop = (event: React.DragEvent<HTMLElement>) => {
         //console.log(event.dataTransfer.getData("text"))
         const [nickname, position, teamId, playerId] = event.dataTransfer.getData("text").split(",")
-        if(ref.current && (Object.keys(diagramPlayers).length < 11 || nickname in diagramPlayers)){
+        if(ref.current && (Object.keys(diagramPlayers).length < 44 || nickname in diagramPlayers)){
             const {width, height, left, top} = ref.current.getBoundingClientRect()
             let x = event.clientX - left
             let y = event.clientY - top

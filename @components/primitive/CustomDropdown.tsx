@@ -13,7 +13,7 @@ import {
 const positionCheckboxes: Record<string, string[]> = {
   "Delantero": ["DC", "SD", "EI", "ED"],
   "Centrocampista": ["MC", "MCD", "MCO", "MD", "MI"],
-  "Defensa": ["DFC", "LD", "LI", "CAR"],
+  "Defensa": ["DFC", "LD", "LI", "CAR", "CAD", "CAI"],
   "Portero": ["POR"],
 } as const; // `as const` ensures keys and values are literal types
 

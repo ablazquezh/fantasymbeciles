@@ -136,7 +136,7 @@ export default function Row(props: { dbleague: leagues, row: RowData, gamekey: s
                   }}
                 >
                   <img
-                    src={`/static/players/${gamekey}/${row["ID"]-1}.png`} // Load the image based on team_name
+                    src={`/static/players/${gamekey}/${gamekey === 'fifa10' ? row["ID"] : row["ID"] - 1}.png`}
                     alt={row[col as keyof typeof globalColnames] as string}
                     onError={(e) => {
                       e.currentTarget.onerror = null; // Prevent infinite loop
