@@ -32,6 +32,7 @@ import TeamSelectDropdown from '@/@components/primitive/TeamSelectDropdown';
 import { PlayerTuple } from '@/@components/types/PlayerTuple';
 import { DiagramRecords } from '@/@components/types/DiagramRecords';
 import diagramRecordGenerator from '@/@components/utils/diagramRecordGenerator';
+import { safeJson } from "@/@components/utils/bigint";
 
 const prisma = new PrismaClient();
 
@@ -144,20 +145,20 @@ if(leagueTable.length < participants.length){
 
 
   return { props: {
-    dbleague: {
+    dbleague: safeJson({
       ...dbleague,
       created_at: dbleague?.created_at ? dbleague.created_at.toISOString() : null,
-    },
-    topScorers: topScorers,
-    leagueTable: leagueTable,
-    dbmatches: dbmatches,
-    leagueTeams: leagueTeams,
-    dbcards: dbcards,
-    dbgoals: dbgoals,
-    dbinjuries: dbinjuries,
-    participants: participants,
-    dbbonus: dbbonus,
-    dbdiagrams: dbdiagramsShaped
+    }),
+    topScorers: safeJson(topScorers),
+    leagueTable: safeJson(leagueTable),
+    dbmatches: safeJson(dbmatches),
+    leagueTeams: safeJson(leagueTeams),
+    dbcards: safeJson(dbcards),
+    dbgoals: safeJson(dbgoals),
+    dbinjuries: safeJson(dbinjuries),
+    participants: safeJson(participants),
+    dbbonus: safeJson(dbbonus),
+    dbdiagrams: safeJson(dbdiagramsShaped)
   } };
 }
 
