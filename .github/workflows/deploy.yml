@@ -31,7 +31,7 @@ jobs:
         uses: appleboy/ssh-action@master
         with:
           host: ssh.housebamboo.casa    # el túnel de Cloudflare
-          port: 22                       # el puerto que el túnel expone
+          port: 2222                       # el puerto que el túnel expone
           username: beelinkabh
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
