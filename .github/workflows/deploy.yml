@@ -20,7 +20,7 @@ jobs:
 
       - name: Deploy via SSH
         run: |
-          ssh -o StrictHostKeyChecking=no -p 2222 usuario@tu-servidor << 'EOF'
+          ssh -o StrictHostKeyChecking=no -p 2222 beelinkabh@192.168.1.35 << 'EOF'
             cd /srv/fifitas
             git reset --hard
             git pull origin main
