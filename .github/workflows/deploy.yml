@@ -1,4 +1,4 @@
-name: Deploy Fífitas
+name: Deploy Fifitas
 
 on:
   push:
@@ -22,11 +22,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-        working-directory: ./fantasymbeciles
 
       - name: Build frontend
         run: npm run build
-        working-directory: ./fantasymbeciles
 
       # 3️⃣ Conectar al servidor vía SSH a través del túnel
       - name: Deploy via SSH
