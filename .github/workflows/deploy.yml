@@ -3,7 +3,7 @@ name: Deploy to Server
 on:
   push:
     branches:
-      - main  # cada push a main dispara el deploy
+      - main
 
 jobs:
   deploy:
@@ -18,11 +18,10 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Deploy via SSH
+      - name: Deploy to server
         run: |
-          ssh -o StrictHostKeyChecking=no -p 2222 beelinkabh@192.168.1.35 << 'EOF'
+          ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
             cd /srv/fifitas
-            git reset --hard
             git pull origin main
             docker-compose down
             docker-compose up -d --build
