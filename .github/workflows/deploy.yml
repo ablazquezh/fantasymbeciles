@@ -1,4 +1,4 @@
-name: Deploy Fifitas
+name: Deploy to Server
 
 on:
   push:
@@ -10,32 +10,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout del repositorio
-      - name: Checkout repo
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      # 2️⃣ Configurar Node.js si necesitas build de frontend
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 20
+    - name: Setup SSH key
+      uses: webfactory/ssh-agent@v0.9.1
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Install dependencies
-        run: npm ci
+    - name: Deploy to server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ssh.housebamboo.casa
+        port: 2222
+        username: beelinkabh
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          cd /srv/fifitas/fantasymbeciles
+          git pull origin main
+          docker-compose down
+          docker-compose up -d --build
 
-      - name: Build frontend
-        run: npm run build
-
-      # 3️⃣ Conectar al servidor vía SSH a través del túnel
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@master
-        with:
-          host: ssh.housebamboo.casa    # el túnel de Cloudflare
-          port: 2222                       # el puerto que el túnel expone
-          username: beelinkabh
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /srv/fifitas
-            git pull origin main
-            docker-compose down
-            docker-compose up -d --build
