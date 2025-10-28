@@ -19,15 +19,14 @@ jobs:
           chmod +x cloudflared
           sudo mv cloudflared /usr/local/bin/
 
-      - name: Setup SSH key
+      - name: Setup Cloudflare Access cert
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github-action-key
-          chmod 600 ~/.ssh/github-action-key
+          mkdir -p ~/.cloudflared
+          echo "${{ secrets.CF_CERT }}" > ~/.cloudflared/cert.pem
+          chmod 600 ~/.cloudflared/cert.pem
 
       - name: Deploy on server via Cloudflare Access SSH
         run: |
           cloudflared access ssh \
             --hostname ssh.housebamboo.casa \
-            --identity ~/.ssh/github-action-key \
-            "/srv/fifitas/deploy.sh"
+            "bash /srv/fifitas/deploy.sh"
