@@ -3,31 +3,36 @@ name: Deploy to Server
 on:
   push:
     branches:
-      - main
+      - main  
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Setup SSH key
-      uses: webfactory/ssh-agent@v0.9.1
-      with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Install cloudflared
+        run: |
+          curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
+          sudo mv cloudflared /usr/local/bin/cloudflared
+          sudo chmod +x /usr/local/bin/cloudflared
+          cloudflared --version
 
-    - name: Deploy to server
-      uses: appleboy/ssh-action@master
-      with:
-        host: ssh.housebamboo.casa
-        port: 2222
-        username: beelinkabh
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: |
-          cd /srv/fifitas/fantasymbeciles
-          git pull origin main
-          docker-compose down
-          docker-compose up -d --build
+      - name: Save SSH private key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.GITHUB_ACTION_KEY }}" > ~/.ssh/github-action-key
+          chmod 600 ~/.ssh/github-action-key
 
+      - name: Deploy via Cloudflare Access SSH
+        env:
+          SSH_KEY_PATH: ~/.ssh/github-action-key
+        run: |
+          cloudflared access ssh --hostname ssh.housebamboo.casa --identity $SSH_KEY_PATH << 'EOF'
+            cd /srv/fifitas/fantasymbeciles
+            git pull origin main
+            docker-compose down
+            docker-compose up -d --build
+          EOF
