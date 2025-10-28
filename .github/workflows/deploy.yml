@@ -27,7 +27,8 @@ jobs:
 
       - name: Deploy on server via Cloudflare Access SSH
         run: |
-          ssh -o "ProxyCommand=cloudflared access ssh --hostname ssh.housebamboo.casa %h:%p" \
-              -i ~/.ssh/github-action-key \
-              beelinkabh@ssh.housebamboo.casa \
-              "bash /srv/fifitas/deploy.sh"
+            ssh -o "ProxyCommand=cloudflared access ssh --hostname ssh.housebamboo.casa %h:%p" \
+                -i ~/.ssh/github-action-key \
+                beelinkabh@ssh.housebamboo.casa \
+                "bash /srv/fifitas/deploy.sh"
+
