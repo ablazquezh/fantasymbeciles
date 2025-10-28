@@ -8,19 +8,18 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github-action-key
-          chmod 600 ~/.ssh/github-action-key
-
       - name: Deploy on server
-        run: |
-          cloudflared access ssh \
-            --hostname ssh.housebamboo.casa \
-            --identity ~/.ssh/github-action-key \
-            "/srv/fifitas/deploy.sh"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ssh.housebamboo.casa
+          port: 2222
+          username: beelinkabh
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /srv/fifitas
+            ./deploy.sh
