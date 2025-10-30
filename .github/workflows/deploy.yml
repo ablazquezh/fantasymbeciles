@@ -1,4 +1,4 @@
-name: Deploy to Server
+name: Deploy via Cloudflare Access
 
 on:
   push:
@@ -10,8 +10,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v3
+
+      - name: Install cloudflared
+        run: |
+          curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
+          chmod +x cloudflared
+          sudo mv cloudflared /usr/local/bin/
 
       - name: Setup SSH key
         run: |
@@ -19,10 +25,11 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github-action-key
           chmod 600 ~/.ssh/github-action-key
 
-      - name: Test SSH connection (optional)
+      - name: Connect and deploy via Cloudflare Access
+        env:
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
         run: |
-          ssh -o "StrictHostKeyChecking=no" -p 2222 beelinkabh@ssh.housebamboo.casa "whoami && hostname"
-
-      - name: Run deploy script
-        run: |
-          ssh -o "StrictHostKeyChecking=no" -p 2222 beelinkabh@ssh.housebamboo.casa "bash /srv/fifitas/deploy.sh"
+          cloudflared access tcp --hostname ssh.housebamboo.casa --url localhost:2222 &
+          sleep 5
+          ssh -o "StrictHostKeyChecking=no" -i ~/.ssh/github-action-key -p 2222 beelinkabh@localhost "bash /srv/fifitas/deploy.sh"
