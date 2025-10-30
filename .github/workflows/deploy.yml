@@ -1,4 +1,4 @@
-name: Deploy via Cloudflare Access
+name: Deploy to Server via Cloudflare Access
 
 on:
   push:
@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Install cloudflared
@@ -25,11 +25,20 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github-action-key
           chmod 600 ~/.ssh/github-action-key
 
-      - name: Connect and deploy via Cloudflare Access
+      - name: Deploy via Cloudflare Access (Service Token)
         env:
           CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
           CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
         run: |
-          cloudflared access tcp --hostname ssh.housebamboo.casa --url localhost:2222 &
+          # Establece túnel TCP autenticado
+          cloudflared access tcp \
+            --hostname ssh.housebamboo.casa \
+            --url localhost:2222 \
+            --service-token-id $CF_ACCESS_CLIENT_ID \
+            --service-token-secret $CF_ACCESS_CLIENT_SECRET &
           sleep 5
-          ssh -o "StrictHostKeyChecking=no" -i ~/.ssh/github-action-key -p 2222 beelinkabh@localhost "bash /srv/fifitas/deploy.sh"
+
+          ssh -o "StrictHostKeyChecking=no" \
+              -i ~/.ssh/github-action-key \
+              -p 2222 beelinkabh@localhost \
+              "bash /srv/fifitas/deploy.sh"
