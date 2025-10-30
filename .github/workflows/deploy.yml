@@ -35,5 +35,5 @@ jobs:
           echo "Connecting to remote via SSH..."
           ssh -o "StrictHostKeyChecking=no" \
               -i ~/.ssh/github-action-key \
-              -p 2222 beelinkabh@localhost \
+              -p 22 beelinkabh@localhost \
               "bash /srv/fifitas/deploy.sh"
