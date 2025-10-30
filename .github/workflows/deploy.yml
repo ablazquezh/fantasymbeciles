@@ -25,14 +25,20 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github-action-key
           chmod 600 ~/.ssh/github-action-key
 
-      - name: Deploy via Cloudflare Access Service Token
+      - name: Start Cloudflare Access Tunnel
         env:
           CF_CLIENT_ID: ${{ secrets.CLOUDFLARE_CLIENT_ID }}
           CF_CLIENT_SECRET: ${{ secrets.CLOUDFLARE_CLIENT_SECRET }}
         run: |
-          echo "🚀 Connecting via Cloudflare Access"
-          cloudflared access ssh \
-            --hostname "${{ secrets.CLOUDFLARE_TUNNEL_HOST }}" \
+          echo "🚀 Starting Cloudflare Access tunnel..."
+          cloudflared access tcp \
+            --hostname ssh.housebamboo.casa \
             --service-token-id "$CF_CLIENT_ID" \
             --service-token-secret "$CF_CLIENT_SECRET" \
-            --command "bash /srv/fifitas/deploy.sh"
+            --url localhost:2222 &
+          sleep 5
+
+      - name: Deploy via SSH through tunnel
+        run: |
+          echo "🔐 Connecting to remote via SSH..."
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/github-action-key -p 2222 beelinkabh@localhost "bash /srv/fifitas/deploy.sh"
