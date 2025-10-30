@@ -1,4 +1,4 @@
-name: Deploy to Server
+name: Deploy to Server via Cloudflare Access
 
 on:
   push:
@@ -25,10 +25,14 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github-action-key
           chmod 600 ~/.ssh/github-action-key
 
-      - name: Test connection (optional)
+      - name: Deploy via Cloudflare Access Service Token
+        env:
+          CF_CLIENT_ID: ${{ secrets.CLOUDFLARE_CLIENT_ID }}
+          CF_CLIENT_SECRET: ${{ secrets.CLOUDFLARE_CLIENT_SECRET }}
         run: |
-          ssh -o StrictHostKeyChecking=no -p 2222 -i ~/.ssh/github-action-key beelinkabh@ssh.housebamboo.casa "whoami && hostname"
-
-      - name: Deploy via Cloudflare Access
-        run: |
-          cloudflared access ssh --hostname ssh.housebamboo.casa --command "bash /srv/fifitas/deploy.sh"
+          echo "🚀 Connecting via Cloudflare Access"
+          cloudflared access ssh \
+            --hostname "${{ secrets.CLOUDFLARE_TUNNEL_HOST }}" \
+            --service-token-id "$CF_CLIENT_ID" \
+            --service-token-secret "$CF_CLIENT_SECRET" \
+            --command "bash /srv/fifitas/deploy.sh"
