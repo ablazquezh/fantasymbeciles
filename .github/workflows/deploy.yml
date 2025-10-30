@@ -1,4 +1,4 @@
-name: 🚀 Deploy to Server via Cloudflare Access
+name: Deploy to Server
 
 on:
   push:
@@ -10,30 +10,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🧩 Checkout repository
+      # 1️⃣ Clonar repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: 🧱 Install cloudflared
+      # 2️⃣ Instalar cloudflared
+      - name: Install cloudflared
         run: |
           curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
           chmod +x cloudflared
-          sudo mv cloudflared /usr/local/bin/cloudflared
+          sudo mv cloudflared /usr/local/bin/
 
-      - name: 🔑 Setup SSH key
+      # 3️⃣ Configurar clave SSH
+      - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github-action-key
           chmod 600 ~/.ssh/github-action-key
 
-      - name: 🌩️ Start Cloudflare tunnel to SSH Access app
+      # 4️⃣ Test conexión SSH (opcional pero recomendable)
+      - name: Test SSH connection
         run: |
-          cloudflared access tcp --hostname ssh.housebamboo.casa --url localhost:2222 &
-          sleep 5
-
-      - name: 🔐 Connect via SSH through Cloudflare Access
-        run: |
-          echo "Connecting to remote via SSH..."
           ssh -o "StrictHostKeyChecking=no" \
-              -i ~/.ssh/github-action-key \
-              -p 22 beelinkabh@localhost \
-              "bash /srv/fifitas/deploy.sh"
+              -o "ProxyCommand=cloudflared access ssh --hostname ssh.housebamboo.casa %h:%p" \
+              beelinkabh@localhost "whoami && hostname"
+
+      # 5️⃣ Ejecutar deploy en el servidor
+      - name: Deploy on server
+        run: |
+          ssh -o "StrictHostKeyChecking=no" \
+              -o "ProxyCommand=cloudflared access ssh --hostname ssh.housebamboo.casa %h:%p" \
+              beelinkabh@localhost "bash /srv/fifitas/deploy.sh"
