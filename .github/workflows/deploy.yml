@@ -1,4 +1,4 @@
-name: Deploy to Server via Cloudflare Access
+name: 🚀 Deploy to Server via Cloudflare Access
 
 on:
   push:
@@ -10,47 +10,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: 🧩 Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Install cloudflared
+      - name: 🧱 Install cloudflared
         run: |
           curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
           chmod +x cloudflared
-          sudo mv cloudflared /usr/local/bin/
+          sudo mv cloudflared /usr/local/bin/cloudflared
 
-      - name: Setup SSH key
+      - name: 🔑 Setup SSH key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github-action-key
           chmod 600 ~/.ssh/github-action-key
 
-      - name: Start Cloudflare Access tunnel
-        env:
-          CF_CLIENT_ID: ${{ secrets.CLOUDFLARE_CLIENT_ID }}
-          CF_CLIENT_SECRET: ${{ secrets.CLOUDFLARE_CLIENT_SECRET }}
+      - name: 🌩️ Start Cloudflare tunnel to SSH Access app
         run: |
-          echo "🚀 Starting Cloudflare Access tunnel to ssh.housebamboo.casa ..."
-          nohup cloudflared access tcp \
-            --hostname ssh.housebamboo.casa \
-            --service-token-id "$CF_CLIENT_ID" \
-            --service-token-secret "$CF_CLIENT_SECRET" \
-            --destination 127.0.0.1:22 \
-            --url localhost:2222 > tunnel.log 2>&1 &
-          
-          # Esperar a que el túnel responda
-          echo "⏳ Waiting for tunnel to be ready..."
-          for i in {1..10}; do
-            nc -z localhost 2222 && echo "✅ Tunnel is ready" && break
-            echo "Still waiting... ($i)"
-            sleep 3
-          done
+          cloudflared access tcp --hostname ssh.housebamboo.casa --url localhost:2222 &
+          sleep 5
 
-          echo "---- Tunnel logs ----"
-          cat tunnel.log || true
-          echo "---------------------"
-
-      - name: Deploy via SSH through Cloudflare tunnel
+      - name: 🔐 Connect via SSH through Cloudflare Access
         run: |
-          echo "🔐 Connecting to remote via SSH..."
-          ssh -v -o StrictHostKeyChecking=no -i ~/.ssh/github-action-key -p 2222 beelinkabh@localhost "bash /srv/fifitas/deploy.sh"
+          echo "Connecting to remote via SSH..."
+          ssh -o "StrictHostKeyChecking=no" \
+              -i ~/.ssh/github-action-key \
+              -p 2222 beelinkabh@localhost \
+              "bash /srv/fifitas/deploy.sh"
