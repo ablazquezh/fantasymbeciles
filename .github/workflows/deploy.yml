@@ -32,7 +32,7 @@ jobs:
       - name: Test SSH connection
         run: |
           ssh -o "StrictHostKeyChecking=no" \
-              -o "ProxyCommand=cloudflared access ssh --hostname ssh.housebamboo.casa %h:%p" \
+              -o "ProxyCommand=cloudflared access ssh --hostname ssh.housebamboo.casa %h:2222" \
               beelinkabh@localhost "whoami && hostname"
 
       # 5️⃣ Ejecutar deploy en el servidor
