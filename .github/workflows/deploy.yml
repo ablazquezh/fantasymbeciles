@@ -1,43 +1,31 @@
-name: Deploy to Server
+name: CI → Deploy to server
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      # 1️⃣ Clonar repo
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      # 2️⃣ Instalar cloudflared
-      - name: Install cloudflared
-        run: |
-          curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
-          chmod +x cloudflared
-          sudo mv cloudflared /usr/local/bin/
+      - name: Install SSH key
+        uses: webfactory/ssh-agent@v0.8.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      # 3️⃣ Configurar clave SSH
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github-action-key
-          chmod 600 ~/.ssh/github-action-key
-
-      # 4️⃣ Test conexión SSH (opcional pero recomendable)
-      - name: Test SSH connection
-        run: |
-          ssh -o "StrictHostKeyChecking=no" \
-              -o "ProxyCommand=cloudflared access ssh --hostname ssh.housebamboo.casa %h:2222" \
-              beelinkabh@localhost "whoami && hostname"
-
-      # 5️⃣ Ejecutar deploy en el servidor
-      - name: Deploy on server
-        run: |
-          ssh -o "StrictHostKeyChecking=no" \
-              -o "ProxyCommand=cloudflared access ssh --hostname ssh.housebamboo.casa %h:%p" \
-              beelinkabh@localhost "bash /srv/fifitas/deploy.sh"
+      - name: Run deploy script via SSH
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Opcional: ver donde se está, versión de docker, etc (debug)
+            id
+            pwd
+            # Ejecuta el deploy con sudo (según el sudoers que creamos)
+            sudo /bin/bash /srv/fifitas/deploy.sh
