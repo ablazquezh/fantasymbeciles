@@ -40,7 +40,7 @@ const HomeSelection: React.FC<StepOneProps> = ({ setStep }) => {
               />
               <CardContent>
                 <Typography gutterBottom variant="h5" component="div">
-                  Salón de trofeos (checkk22k)
+                  Salón de trofeos (checkkeeqwe22k)
                 </Typography>
               </CardContent>
             </CardActionArea>
