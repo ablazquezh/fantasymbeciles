@@ -23,7 +23,12 @@ const getScheduleInfo = (match: MatchRecords, dbgoals: goals[], dbcards: cards[]
   //const matchday = match.matchday!;
   //const stage = matchday! <= 3 ? "ida" : "vuelta"; // Determine stage (ida or vuelta)
   
+  console.log("=============================================")
+  console.log(dbgoals)
+
   const scoredGoals = dbgoals.filter(item => item.match_id_fk === match.ID && item.team_id_fk == team_fk)
+  console.log("????????????????????????????????????????????")
+  console.log(dbgoals)
   const goalList = scoredGoals.map(item => ({
     
     player: findPlayerNameByPlayerID(participants, item.player_id_fk!),
