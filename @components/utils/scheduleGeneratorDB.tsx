@@ -53,6 +53,9 @@ export default function generateScheduleFromDB(matches: MatchRecords[], dbcards:
     console.log(matches)
     // Group matches by matchday
     matches.forEach((match) => {
+
+      console.log("Check this match", match)
+      console.log("Check this match",getScheduleInfo(match, dbgoals, dbcards, dbinjuries, participants, match.visitor_team_id_fk!))
       const matchday = match.matchday!;
       const stage = matchday! <= 3 ? "ida" : "vuelta"; // Determine stage (ida or vuelta)
 
