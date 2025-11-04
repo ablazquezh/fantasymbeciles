@@ -318,6 +318,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
       
     }else{
         console.log("Loaded matches")
+        console.log(dbgoals)
         const generatedSchedule = generateScheduleFromDB(dbmatches, dbcards, dbgoals, dbinjuries, leagueTable, completeLeagueTeams!)
      
         setSchedule( generatedSchedule )}
