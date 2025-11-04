@@ -4,6 +4,10 @@ import { Schedule } from "../types/Schedule";
 import { ParticipantsFull } from "../types/ParticipantsFull";
 
 const findPlayerNameByPlayerID = (participants: ParticipantsFull[], playerId: number): string | undefined => {
+  console.log("[[[[[[[[[[[][][][[][][][")
+  console.log(participants)
+  console.log(playerId)
+  console.log("[[[[[[[[[[[][][][[][][][")
 // Iterate over all participants
   for (const participant of participants) {
       // Check if any player in the current participant's players array matches the given player name
