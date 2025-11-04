@@ -28,12 +28,13 @@ const getScheduleInfo = (match: MatchRecords, dbgoals: goals[], dbcards: cards[]
 
   const scoredGoals = dbgoals.filter(item => item.match_id_fk === match.ID && item.team_id_fk == team_fk)
   console.log("????????????????????????????????????????????")
-  console.log(dbgoals)
+  console.log(scoredGoals)
   const goalList = scoredGoals.map(item => ({
     
     player: findPlayerNameByPlayerID(participants, item.player_id_fk!),
     n: item.quantity,
   }));
+  console.log(goalList)
   const shownYCards = dbcards.filter(item => item.match_id_fk === match.ID && item.team_id_fk == team_fk && item.type === "yellow")
   const yCardList = shownYCards.map(item => (findPlayerNameByPlayerID(participants, item.player_id_fk!)) );
 
