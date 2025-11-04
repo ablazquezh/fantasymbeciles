@@ -321,6 +321,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
         console.log(dbgoals)
         const generatedSchedule = generateScheduleFromDB(dbmatches, dbcards, dbgoals, dbinjuries, leagueTable, completeLeagueTeams!)
      
+        console.log("CHEKC HCECHKECHKEH", generatedSchedule)
         setSchedule( generatedSchedule )}
       // Means that there were results stored in the DB and here we must reshape them
     
