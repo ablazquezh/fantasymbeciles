@@ -120,9 +120,11 @@ const MovableCard: React.FC<MovableCardProps> = ({team_budgets, dbleague, gameke
   const [participantData, setParticipantData] = useState<ParticipantsFull[]>([])
   useEffect(() => {
     if (participants.length > 0) {
+      console.log("checking stuff")
+      console.log(participants)
       const transformed = participants.map((participant) => ({
         ...participant,
-        groupedPlayers: groupPlayerData(participant.players),
+        groupedPlayers: groupPlayerData(participant.players ?? []),
       }));
       setParticipantData(transformed);
     }

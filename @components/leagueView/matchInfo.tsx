@@ -366,10 +366,6 @@ const MatchInfoDashboard: React.FC<MatchInfoDashboardProps> = ({matchInfo, match
           });
              
     };
-    console.log("?=====================")
-    console.log(completeLeagueTeams)
-    console.log(participantData)
-    console.log("--=====================")
 
     return (
     <Paper className="parent" sx={{ padding: 4, marginTop: 10, display: "flex", flexDirection: "row", flexWrap: "wrap", mb: 10}}>

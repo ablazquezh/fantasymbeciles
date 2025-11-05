@@ -27,7 +27,6 @@ const globalColnames = {
 
 const TeamsView: React.FC<TeamsViewProps> = ({participantData, game, diagramPlayers, setDiagramPlayers}) => {
 
-    console.log("-------------------",diagramPlayers)
     const ref = useRef<HTMLDivElement | null>(null)
 
     //const [diagramPlayers, setDiagramPlayers] = useState< { [key: string]: PlayerTuple } >({})
@@ -39,7 +38,7 @@ const TeamsView: React.FC<TeamsViewProps> = ({participantData, game, diagramPlay
     };
 
     const handleClickRemove = (nickname: string) => () => {
-        console.log("delete",nickname)
+
         setDiagramPlayers((prevPlayers) => {
             const updatedPlayers = { ...prevPlayers }; // Create a shallow copy of the object
             delete updatedPlayers[nickname]; // Delete the player with the given key

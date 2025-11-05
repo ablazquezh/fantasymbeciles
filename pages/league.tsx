@@ -72,7 +72,6 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
       [p.coord_x!.toNumber(), p.coord_y!.toNumber(), p.players?.global_position!, p.team_id_fk!, p.player_id_fk!] as PlayerTuple,
     ])
 );
-  console.log("--------------------->>>>>>>>>>>", dbdiagramsShaped)
 
   const dbbonus: bonus[] | null = await prisma.bonus.findMany({
     where: {matches: {league_id_fk: Number(leagueId)}} ,
@@ -266,6 +265,10 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
 
   useEffect(() => {
     if (!Array.isArray(players) || players.length === 0) return;
+    console.log("need to know")
+    console.log(reshapeLeagueTeams(leagueTeamsInfo, players))
+    console.log(players)
+    console.log(leagueTeamsInfo)
     const participants = reshapeLeagueTeams(leagueTeamsInfo, players)
 
     const transformed = participants.map((participant) => ({
@@ -290,7 +293,6 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
       const matchRecords: MatchRecords[] = matchRecordGenerator(generatedSchedule, leagueTableInfo, leagueId as string);
       
       const postMatches = async () => {
-        console.log("insert")
         try {
           const response = await fetch("/api/creatematches", {
               method: "POST",
@@ -317,17 +319,14 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
       }*/
       
     }else{
-        console.log("Loaded matches")
-        console.log(dbgoals)
+        console.log("Loaded matches from DB.")
         const generatedSchedule = generateScheduleFromDB(dbmatches, dbcards, dbgoals, dbinjuries, leagueTable, completeLeagueTeams!)
      
-        console.log("CHEKC HCECHKECHKEH", generatedSchedule)
         setSchedule( generatedSchedule )}
       // Means that there were results stored in the DB and here we must reshape them
     
   }, [completeLeagueTeams]);
 
-  console.log("ññññññkñññ,ñ,ñ,ñ,ñ,ñ,ñ,ñ,ñ,ñ,",completeLeagueTeams)
   useEffect(() => {
     // Select the parent and child elements
     const parent = document.querySelector('.parent') as HTMLElement | null;
@@ -670,7 +669,6 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
       const toRemove = Object.fromEntries(
         Object.entries(dbdiagrams).filter(([_, value]) => !usedPlayerIds.has(value[4]))
       );
-      console.log("to remove", toRemove)
 
       const postDiagram = async () => {
         try {
@@ -835,8 +833,7 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
         }
     
         const leagueBonus: bonus[] = await response.json();
-        console.log(":::::::::::::::::")
-        console.log(leagueBonus)
+
         setLeagueBonus(leagueBonus);
       } catch (error) {
         console.error(error);
@@ -850,7 +847,8 @@ const LeaguePage: NextPage<LeagueProps> = ({dbleague, topScorers, leagueTable, d
   }, [updatedMatches]);
 
 
-
+  console.log("xxxxxxxxx")
+  console.log(participants)
   return (
     <Box sx={{
       margin: "auto",

@@ -83,8 +83,6 @@ const SettingsStep: React.FC<StepFourProps> = ({ setStep, setFormData, formData 
     setLocalOptions((prev) => ({ ...prev, cardResetRed: event.target.checked }))
   }
 
-  console.log("******")
-  console.log(formData.options?.leaguetype)
   return (
     <Paper sx={{ paddingTop: 4, paddingBottom: 4, marginTop: 11 }}>
 

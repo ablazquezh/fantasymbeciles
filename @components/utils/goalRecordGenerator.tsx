@@ -4,13 +4,6 @@ import { Schedule } from "../types/Schedule";
 
 export default function goalRecordGenerator(schedule: Schedule, leagueTable: any[], leagueTeams: any[]) {
 
-    console.log("______________________________??????????======")
-    console.log("______________________________??????????======")
-    console.log("______________________________??????????======")
-    console.log(schedule)
-    console.log(leagueTable)
-    console.log(leagueTeams)
-
     const goalRecords: GoalRecords[] = [];
     
     schedule!.ida.forEach(day => {

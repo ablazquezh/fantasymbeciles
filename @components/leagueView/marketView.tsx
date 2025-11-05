@@ -134,9 +134,11 @@ useEffect(() => {
   const completePlayerInfo = mergeData(players, playerPositions)
   const shapedData = reshapeData(completePlayerInfo)
   
+  console.log("almbost there")
+  console.log(completeLeagueTeams)
   const [participantData, setParticipantData] = useState(participants.map(item => ({
     ...item,
-    players: completeLeagueTeams.find(item2 => item2.team_id === item.team_id)?.players // Empty array for 'items'
+    players: completeLeagueTeams.find(item2 => item2.team_id === item.team_id)?.players ?? [] // Empty array for 'items'
   })))
 
   
@@ -345,6 +347,7 @@ useEffect(() => {
         let result = null;
   
         if(prev !== "Sin traspaso" && team_name === "Sin traspaso"){
+          
           // REMOVAL FROM TEAM OF THE LEAGUE
           const newSellerBudget = team_budgets!.find(item => item.team_name === prev)?.budget! + Number(player.value);//+ inputPlayer.value!
           setTeamBudgets(prevItems =>
@@ -422,10 +425,19 @@ useEffect(() => {
       }
       
       if(allowance){
+        // ToDo: Fix removal from team
+
+
+        if(prev !== "Sin traspaso" && team_name === "Sin traspaso"){
+
+          // REMOVAL FROM TEAM OF THE LEAGUE
+        }
+
+        const team = participants.find(item => item.team_name === team_name);
 
         const transferRecord = {
           player_id_fk: Number(player.ID),
-          team_id_fk: participants.find((item) => item.team_name === team_name).team_id,
+          team_id_fk: team ? team.team_id : null,
           league_id_fk: Number(dbleague.ID)
         };
         setTransferRecords(prev => [...prev, transferRecord]);

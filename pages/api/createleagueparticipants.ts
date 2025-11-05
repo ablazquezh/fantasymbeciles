@@ -10,7 +10,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   
   try {
     const { records } = req.body; // Expecting an array of records
-    console.log("___________")
 
     console.log(records)
       if (!Array.isArray(records) || records.length === 0) {

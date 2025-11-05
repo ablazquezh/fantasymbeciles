@@ -518,13 +518,6 @@ const PlayerSelectionPage: NextPage<PlayerSelectProps> = ({dbleague, participant
     }
   };
 
-  console.log("***********")
-  console.log(participantData)
-
-
-
-
-
     return (
       <Box sx={{
         margin: "auto",

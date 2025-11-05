@@ -4,10 +4,7 @@ import { Schedule } from "../types/Schedule";
 import { ParticipantsFull } from "../types/ParticipantsFull";
 
 const findPlayerNameByPlayerID = (participants: ParticipantsFull[], playerId: number): string | undefined => {
-  console.log("[[[[[[[[[[[][][][[][][][")
-  console.log(participants)
-  console.log(playerId)
-  console.log("[[[[[[[[[[[][][][[][][][")
+  
 // Iterate over all participants
   for (const participant of participants) {
       // Check if any player in the current participant's players array matches the given player name
@@ -27,12 +24,8 @@ const getScheduleInfo = (match: MatchRecords, dbgoals: goals[], dbcards: cards[]
   //const matchday = match.matchday!;
   //const stage = matchday! <= 3 ? "ida" : "vuelta"; // Determine stage (ida or vuelta)
   
-  console.log("=============================================")
-  console.log(dbgoals)
-
   const scoredGoals = dbgoals.filter(item => item.match_id_fk === match.ID && item.team_id_fk == team_fk)
-  console.log("????????????????????????????????????????????")
-  console.log(scoredGoals)
+  
   const goalList = scoredGoals.map(item => ({
     
     player: findPlayerNameByPlayerID(participants, item.player_id_fk!),
@@ -56,16 +49,9 @@ export default function generateScheduleFromDB(matches: MatchRecords[], dbcards:
       ida: [],
       vuelta: []
     };
-  
-
-    console.log(":::_____-----")
-    console.log(leagueTable)
-    console.log(matches)
     // Group matches by matchday
     matches.forEach((match) => {
 
-      console.log("Check this match", match)
-      console.log("Check this match",getScheduleInfo(match, dbgoals, dbcards, dbinjuries, participants, match.visitor_team_id_fk!))
       const matchday = match.matchday!;
       const stage = matchday! <= 3 ? "ida" : "vuelta"; // Determine stage (ida or vuelta)
 
