@@ -95,6 +95,26 @@ const GameSelectionStep: React.FC<StepTwoProps> = ({ setStep, setFormData }) => 
 
       </Box>
 
+      <Box>
+
+        <Card sx={{ maxWidth: 345 }}>
+          <CardActionArea sx={{ height: "100%" }}
+            onClick={() => handleSelect("fifa12")}>
+            <CardMedia
+              component="img"
+              image="/static/fifa12.png"
+              alt="FIFA12"
+              sx={{
+                height: "100%", // Take full height
+                width: "100%", // Take full width
+                objectFit: "cover", // Ensure it covers the area without distortion
+              }}
+            />
+          </CardActionArea>
+        </Card>
+
+      </Box>
+
     </Box>
   );
 };
